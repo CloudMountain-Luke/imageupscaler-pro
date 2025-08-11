@@ -22,7 +22,6 @@ A professional-grade web application for AI-powered image upscaling using Real-E
 ### Replicate API (Primary)
 - **Model**: Real-ESRGAN x4 for photos, SwinIR for art, specialized anime model
 - **Quality**: Professional-grade results with detail preservation
-- **Cost**: ~$0.0055 per image
 - **Processing Time**: 15-60 seconds depending on image size and scale
 
 ### Supported Features
@@ -77,8 +76,6 @@ npm run dev
 3. **Add to Environment**: Copy token to `VITE_REPLICATE_API_TOKEN` in `.env`
 4. **Verify Setup**: The app will show "AI Upscaling Ready" when configured
 
-### Cost Estimation
-- **Replicate**: ~$0.0055 per image
 - **Processing Time**: 15-60 seconds per image
 - **Monthly Limits**: Based on your Replicate plan
 
