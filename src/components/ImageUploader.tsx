@@ -73,13 +73,15 @@ const ImageUpscaler = () => {
   const {
     uploadedFiles,
     processedImages,
-    currentProcessing,
-    latestUploadedFile,
-    latestProcessedImage,
+    processQueue,
+    processing,
+    userStats,
+    userProfile,
     isApiConfigured,
-    uploadImage,
-    processImage,
-    downloadImage
+    addToQueue,
+    removeFromQueue,
+    addUploadedFile,
+    clearUploadedFiles
   } = useImageProcessing();
 
   const [upscaleSettings, setUpscaleSettings] = useState({
@@ -88,11 +90,18 @@ const ImageUpscaler = () => {
     outputFormat: 'original'
   });
 
+  // Get the latest uploaded file and processed image
+  const latestUploadedFile = uploadedFiles[uploadedFiles.length - 1];
+  const latestProcessedImage = processedImages.find(img => img.status === 'completed');
+  const currentProcessing = processQueue.find(item => item.status === 'processing');
+
   const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles.length > 0) {
-      uploadImage(acceptedFiles[0]);
+      const file = acceptedFiles[0];
+      const imageUrl = URL.createObjectURL(file);
+      addUploadedFile(file, imageUrl);
     }
-  }, [uploadImage]);
+  }, [addUploadedFile]);
 
   const { isDragActive } = useDropzone({
     onDrop,
@@ -106,9 +115,17 @@ const ImageUpscaler = () => {
 
   const handleUpscaleImage = useCallback(() => {
     if (latestUploadedFile && !currentProcessing) {
-      processImage(latestUploadedFile.id, upscaleSettings);
+      const processingItem = {
+        id: Date.now(),
+        file: latestUploadedFile.file,
+        settings: upscaleSettings,
+        status: 'pending' as const,
+        progress: 0,
+        originalImage: latestUploadedFile.imageUrl,
+      };
+      addToQueue(processingItem);
     }
-  }, [latestUploadedFile, currentProcessing, processImage, upscaleSettings]);
+  }, [latestUploadedFile, currentProcessing, addToQueue, upscaleSettings]);
 
   return (
     <>
