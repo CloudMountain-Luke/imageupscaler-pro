@@ -10,10 +10,11 @@ type SidebarState = 'open' | 'collapsed' | 'hidden';
 interface HeaderProps {
   onMenuClick: () => void;
   sidebarState: SidebarState;
+  isApiConfigured: boolean;
   onLogout?: () => void;
 }
 
-export function Header({ onMenuClick, sidebarState, onLogout }: HeaderProps) {
+export function Header({ onMenuClick, sidebarState, isApiConfigured, onLogout }: HeaderProps) {
   const { userStats, userProfile: realUserProfile } = useImageProcessing();
   const { user } = useAuth();
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
@@ -113,6 +114,14 @@ export function Header({ onMenuClick, sidebarState, onLogout }: HeaderProps) {
         </div>
 
         <div className="flex items-center space-x-4">
+          {/* API Status Indicator */}
+          {isApiConfigured && (
+            <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium text-gray-900 dark:text-gray-100">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Upscaler Active</span>
+            </div>
+          )}
+          
           <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium border-2 text-gray-900 dark:text-gray-100" style={{ borderColor: '#FF8C67' }}>
             <span>{remainingUpscales} Remaining</span>
           </div>

@@ -182,6 +182,7 @@ function App() {
       <Header 
         onMenuClick={() => setSidebarState(sidebarState === 'hidden' ? 'open' : 'hidden')}
         sidebarState={sidebarState}
+        isApiConfigured={isApiConfigured}
         onLogout={handleLogout}
       />
       
