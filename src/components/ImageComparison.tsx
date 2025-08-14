@@ -169,7 +169,6 @@ export function ImageComparison() {
             {selectedImage.settings.scale}x Upscaled
           </div>
         </div>
-        </div>
 
         {/* Slider Line */}
         <div
