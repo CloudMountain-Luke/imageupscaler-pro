@@ -8,6 +8,8 @@ interface UploadedFile {
   id: string;
   file: File;
   imageUrl: string;
+  originalWidth?: number;
+  originalHeight?: number;
 }
 
 interface ProcessingItem {
@@ -227,12 +229,28 @@ export function ImageProcessingProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addUploadedFile = useCallback((file: File, imageUrl: string) => {
-    const uploadedFile: UploadedFile = {
-      id: Date.now().toString(),
-      file,
-      imageUrl
+    // Load image to get dimensions
+    const img = new Image();
+    img.onload = () => {
+      const uploadedFile: UploadedFile = {
+        id: Date.now().toString(),
+        file,
+        imageUrl,
+        originalWidth: img.naturalWidth,
+        originalHeight: img.naturalHeight
+      };
+      setUploadedFiles(prev => [...prev, uploadedFile]);
     };
-    setUploadedFiles(prev => [...prev, uploadedFile]);
+    img.onerror = () => {
+      // Fallback if image fails to load
+      const uploadedFile: UploadedFile = {
+        id: Date.now().toString(),
+        file,
+        imageUrl
+      };
+      setUploadedFiles(prev => [...prev, uploadedFile]);
+    };
+    img.src = imageUrl;
   }, []);
 
   const clearUploadedFiles = useCallback(() => {
