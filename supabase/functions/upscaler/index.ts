@@ -25,6 +25,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.2";
 const MODELS = {
   photo: 'nightmareai/real-esrgan:42fed1c4974146d4d2414e2be2c5277c7fcf05fcc3a73abf41610695738c1d7b', // Real-ESRGAN x4 for photos
   art: 'jingyunliang/swinir:660d922d33153019e8c263a3bba265de882e7f4f70396546b6c9c8f9d47a021a', // SwinIR for art/illustrations
+}
 // CORS headers for browser fetch requests
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
