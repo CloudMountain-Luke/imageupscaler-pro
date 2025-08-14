@@ -90,9 +90,9 @@ function App() {
     setShowHomepage(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     console.log('handleLogout called');
-    logout();
+    await logout();
     setShowHomepage(true);
     setActiveTab('upscaler');
     setSidebarState('hidden');
