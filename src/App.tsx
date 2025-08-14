@@ -6,7 +6,7 @@ import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { Homepage } from './components/Homepage';
 import { AuthModal } from './components/AuthModal';
-import { ImageUploader } from './components/ImageUploader';
+import ImageUpscaler from './components/ImageUploader';
 import { ProcessingHistory } from './components/ProcessingHistory';
 import { UserStats } from './components/UserStats';
 import { UserAccount } from './components/UserAccount';
@@ -145,7 +145,7 @@ function App() {
             </div>
 
             {/* Use the dedicated ImageUploader component */}
-            <ImageUploader />
+            <ImageUpscaler />
 
             {/* Image Comparison Component */}
             {latestProcessedImage && (
