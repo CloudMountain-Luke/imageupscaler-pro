@@ -166,9 +166,9 @@ export function ImageComparison() {
             draggable={false}
           />
           <div className="absolute top-4 right-4 text-white px-3 py-1 rounded-lg text-sm font-medium" style={{background: 'linear-gradient(to right, #0082CA, #98D738)'}}>
-          <div className="absolute top-4 right-4 bg-gradient-to-r from-blue-600 to-green-600 text-white px-3 py-1 rounded-lg text-sm font-medium">
             {selectedImage.settings.scale}x Upscaled
           </div>
+        </div>
         </div>
 
         {/* Slider Line */}
@@ -199,6 +199,4 @@ export function ImageComparison() {
       </div>
     </div>
   );
-}
-  )
 }
