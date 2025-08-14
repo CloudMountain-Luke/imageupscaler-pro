@@ -8,7 +8,7 @@ const SUPPORTED_FORMATS = edgeFunctionService.getSupportedFormats();
 const MAX_FILE_SIZE = edgeFunctionService.getMaxFileSize();
 
 // Helper component for the image display boxes.
-const ImageUploadBox = ({ image, onImageUpload, isProcessing = false, isUpscaledBox = false, width, height }) => {
+const ImageUploadBox = ({ image, onImageUpload, isProcessing = false, isUpscaledBox = false }) => {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: onImageUpload,
     multiple: false,
@@ -20,14 +20,10 @@ const ImageUploadBox = ({ image, onImageUpload, isProcessing = false, isUpscaled
     disabled: isUpscaledBox
   });
 
-  // Calculate aspect ratio - default to square (1:1) when no image or dimensions
-  const aspectRatio = (image && width && height) ? width / height : 1;
-
   return (
     <div
       {...getRootProps()}
-      style={{ aspectRatio }}
-      className={`bg-gray-700 rounded-lg p-4 shadow-inner min-h-[300px] flex flex-col items-center justify-center relative border-2 border-dashed border-gray-600 transition-colors ${
+      className={`bg-gray-700 rounded-lg p-4 shadow-inner aspect-square flex flex-col items-center justify-center relative border-2 border-dashed border-gray-600 transition-colors ${
         isUpscaledBox ? 'cursor-default' : 'hover:border-blue-500 cursor-pointer'
       }`}
     >
@@ -232,15 +228,11 @@ const ImageUpscaler = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <ImageUploadBox
                 image={latestUploadedFile?.imageUrl}
-                width={latestUploadedFile?.originalWidth}
-                height={latestUploadedFile?.originalHeight}
                 onImageUpload={onDrop}
                 isUpscaledBox={false}
               />
               <ImageUploadBox
                 image={latestProcessedImage?.upscaledImage}
-                width={latestProcessedImage?.upscaledWidth}
-                height={latestProcessedImage?.upscaledHeight}
                 isProcessing={!!currentProcessing}
                 isUpscaledBox={true}
               />
@@ -252,8 +244,6 @@ const ImageUpscaler = () => {
         <div className="flex flex-col space-y-4 md:hidden w-full">
           <ImageUploadBox
             image={latestUploadedFile?.imageUrl}
-            width={latestUploadedFile?.originalWidth}
-            height={latestUploadedFile?.originalHeight}
             onImageUpload={onDrop}
             isUpscaledBox={false}
           />
@@ -303,8 +293,6 @@ const ImageUpscaler = () => {
 
           <ImageUploadBox
             image={latestProcessedImage?.upscaledImage}
-            width={latestProcessedImage?.upscaledWidth}
-            height={latestProcessedImage?.upscaledHeight}
             isProcessing={!!currentProcessing}
             isUpscaledBox={true}
           />
