@@ -8,6 +8,7 @@ interface AuthModalProps {
   onLogin?: (email: string, password: string) => void;
   onRegister?: (email: string, password: string, name: string, promoCode?: string) => void;
   selectedPlan?: string;
+  onAuthSuccess?: () => void;
 }
 
 export function AuthModal({ isOpen, onClose, onLogin, onRegister, selectedPlan }: AuthModalProps) {
@@ -97,6 +98,7 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister, selectedPlan }
       
       // If we get here, auth was successful
       onClose();
+      onAuthSuccess?.();
     } catch (error) {
       console.error('Authentication error:', error);
       if (error instanceof Error) {

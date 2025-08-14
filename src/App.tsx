@@ -120,6 +120,7 @@ function App() {
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
           selectedPlan={selectedPlan}
+         onAuthSuccess={handleAuthSuccess}
         />
       </>
     );
@@ -195,6 +196,7 @@ function App() {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         selectedPlan={selectedPlan}
+       onAuthSuccess={handleAuthSuccess}
       />
     </div>
   );
