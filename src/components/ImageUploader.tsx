@@ -78,6 +78,16 @@ const ImageUpscaler = () => {
     }
   }, [uploadImage]);
 
+  const { isDragActive } = useDropzone({
+    onDrop,
+    multiple: false,
+    accept: {
+      'image/jpeg': ['.jpeg', '.jpg'],
+      'image/png': ['.png'],
+      'image/webp': ['.webp'],
+    },
+  });
+
   const handleUpscaleImage = useCallback(() => {
     if (latestUploadedFile && !currentProcessing) {
       processImage(latestUploadedFile.id, upscaleSettings);
