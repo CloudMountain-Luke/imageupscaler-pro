@@ -8,7 +8,7 @@ const SUPPORTED_FORMATS = edgeFunctionService.getSupportedFormats();
 const MAX_FILE_SIZE = edgeFunctionService.getMaxFileSize();
 
 // Helper component for the image display boxes.
-const ImageUploadBox = ({ label, image, onImageUpload, isProcessing = false }) => {
+const ImageUploadBox = ({ image, onImageUpload, isProcessing = false, placeholder }) => {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: onImageUpload,
     multiple: false,
@@ -17,23 +17,22 @@ const ImageUploadBox = ({ label, image, onImageUpload, isProcessing = false }) =
       'image/png': ['.png'],
       'image/webp': ['.webp'],
     },
-    disabled: label === "Upscaled Image"
+    disabled: placeholder === "Upscaled image will appear here"
   });
 
   return (
     <div
       {...getRootProps()}
       className={`bg-gray-700 rounded-lg p-4 shadow-inner min-h-[300px] flex flex-col items-center justify-center relative border-2 border-dashed border-gray-600 transition-colors ${
-        label === "Upscaled Image" ? 'cursor-default' : 'hover:border-blue-500 cursor-pointer'
+        placeholder === "Upscaled image will appear here" ? 'cursor-default' : 'hover:border-blue-500 cursor-pointer'
       }`}
     >
       <input {...getInputProps()} />
-      <label className="text-gray-400 text-sm font-medium absolute top-2 left-2">{label}</label>
       {image ? (
-        <img src={image} alt={label} className="max-h-full max-w-full object-contain rounded-md" />
+        <img src={image} alt="Image" className="max-h-full max-w-full object-contain rounded-md" />
       ) : (
         <div className="flex flex-col items-center justify-center p-4 text-center">
-          {label === "Upscaled Image" ? (
+          {placeholder === "Upscaled image will appear here" ? (
             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mb-4">
               <span className="text-2xl text-gray-400">✨</span>
             </div>
@@ -41,11 +40,7 @@ const ImageUploadBox = ({ label, image, onImageUpload, isProcessing = false }) =
             <Upload className="w-16 h-16 text-gray-500 mb-4" />
           )}
           <span className="text-gray-400">
-            {label === "Upscaled Image" ? (
-              isProcessing ? 'Processing...' : 'Upscaled image will appear here'
-            ) : (
-              isDragActive ? 'Drop the image here ...' : 'Click to upload or drag & drop'
-            )}
+            {isProcessing ? 'Processing...' : placeholder}
           </span>
         </div>
       )}
@@ -95,91 +90,75 @@ const ImageUpscaler = () => {
         {/* Desktop Layout */}
         <div className="hidden md:flex flex-col lg:flex-row lg:space-x-6 space-y-6 lg:space-y-0">
           <div className="flex-1 space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <ImageUploadBox
-                label="Original Image"
-                image={latestUploadedFile?.imageUrl}
-                onImageUpload={onDrop}
-              />
-              <ImageUploadBox
-                label="Upscaled Image"
-                image={latestProcessedImage?.upscaledImage}
-                isProcessing={!!currentProcessing}
-              />
-            </div>
-          </div>
-
-          {/* Controls Panel */}
-          <div className="w-full lg:w-80 space-y-4">
+            {/* Controls Panel - Now above the image boxes */}
             <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50 dark:border-gray-700/50">
-              <div className="flex items-center space-x-2 mb-4">
-                <Settings className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Settings</h3>
-              </div>
-              
-              {/* Scale Factor */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Scale Factor
-                </label>
-                <select
-                  value={upscaleSettings.scale}
-                  onChange={(e) => setUpscaleSettings({ ...upscaleSettings, scale: Number(e.target.value) })}
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value={2}>2x Enhancement</option>
-                  <option value={4}>4x Enhancement</option>
-                  <option value={8}>8x Enhancement</option>
-                </select>
-              </div>
+              <div className="flex flex-wrap items-end gap-4">
+                {/* Scale Factor */}
+                <div className="flex-1 min-w-[150px]">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Scale Factor
+                  </label>
+                  <select
+                    value={upscaleSettings.scale}
+                    onChange={(e) => setUpscaleSettings({ ...upscaleSettings, scale: Number(e.target.value) })}
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value={2}>2x Enhancement</option>
+                    <option value={4}>4x Enhancement</option>
+                    <option value={8}>8x Enhancement</option>
+                  </select>
+                </div>
 
-              {/* Quality Preset */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Quality Preset
-                </label>
-                <select
-                  value={upscaleSettings.quality}
-                  onChange={(e) => setUpscaleSettings({ ...upscaleSettings, quality: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="photo">Photo (Natural Images)</option>
-                  <option value="art">Art & Illustrations</option>
-                  <option value="anime">Anime & Cartoons</option>
-                  <option value="text">Text & Documents</option>
-                </select>
-              </div>
+                {/* Quality Preset */}
+                <div className="flex-1 min-w-[150px]">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Quality Preset
+                  </label>
+                  <select
+                    value={upscaleSettings.quality}
+                    onChange={(e) => setUpscaleSettings({ ...upscaleSettings, quality: e.target.value })}
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="photo">Photo (Natural Images)</option>
+                    <option value="art">Art & Illustrations</option>
+                    <option value="anime">Anime & Cartoons</option>
+                    <option value="text">Text & Documents</option>
+                  </select>
+                </div>
 
-              {/* Output Format */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Output Format
-                </label>
-                <select
-                  value={upscaleSettings.outputFormat}
-                  onChange={(e) => setUpscaleSettings({ ...upscaleSettings, outputFormat: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="original">Keep Original Format</option>
-                  <option value="png">PNG (Lossless)</option>
-                  <option value="jpg">JPEG (Smaller Size)</option>
-                  <option value="webp">WebP (Modern)</option>
-                </select>
-              </div>
+                {/* Output Format */}
+                <div className="flex-1 min-w-[150px]">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Output Format
+                  </label>
+                  <select
+                    value={upscaleSettings.outputFormat}
+                    onChange={(e) => setUpscaleSettings({ ...upscaleSettings, outputFormat: e.target.value })}
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="original">Keep Original Format</option>
+                    <option value="png">PNG (Lossless)</option>
+                    <option value="jpg">JPEG (Smaller Size)</option>
+                    <option value="webp">WebP (Modern)</option>
+                  </select>
+                </div>
 
-              {/* Upscale Button */}
-              <button
-                onClick={handleUpscaleImage}
-                disabled={!!currentProcessing || !latestUploadedFile || !isApiConfigured}
-                className={`w-full px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center space-x-2 ${
-                  (!!currentProcessing || !latestUploadedFile || !isApiConfigured) 
-                    ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed' 
-                    : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
-                }`}
-              >
-                <Sparkles className="w-5 h-5" />
-                <span>{currentProcessing ? 'Processing...' : 'AI Upscale'}</span>
-              </button>
+                {/* Upscale Button - Aligned to the right */}
+                <div className="flex-shrink-0">
+                  <button
+                    onClick={handleUpscaleImage}
+                    disabled={!!currentProcessing || !latestUploadedFile || !isApiConfigured}
+                    className={`px-6 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center space-x-2 ${
+                      (!!currentProcessing || !latestUploadedFile || !isApiConfigured) 
+                        ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
+                    }`}
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    <span>{currentProcessing ? 'Processing...' : 'AI Upscale'}</span>
+                  </button>
+                </div>
+              </div>
 
               {/* Processing Status */}
               {currentProcessing && (
@@ -226,15 +205,28 @@ const ImageUpscaler = () => {
                 </div>
               )}
             </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ImageUploadBox
+                image={latestUploadedFile?.imageUrl}
+                onImageUpload={onDrop}
+                placeholder={isDragActive ? 'Drop the image here ...' : 'Upload Images'}
+              />
+              <ImageUploadBox
+                image={latestProcessedImage?.upscaledImage}
+                isProcessing={!!currentProcessing}
+                placeholder="Upscaled image will appear here"
+              />
+            </div>
           </div>
         </div>
 
         {/* Mobile Layout */}
         <div className="flex flex-col space-y-4 md:hidden w-full">
           <ImageUploadBox
-            label="Original Image"
             image={latestUploadedFile?.imageUrl}
             onImageUpload={onDrop}
+            placeholder={isDragActive ? 'Drop the image here ...' : 'Upload Images'}
           />
 
           {/* Mobile Controls */}
@@ -281,9 +273,9 @@ const ImageUpscaler = () => {
           </div>
 
           <ImageUploadBox
-            label="Upscaled Image"
             image={latestProcessedImage?.upscaledImage}
             isProcessing={!!currentProcessing}
+            placeholder="Upscaled image will appear here"
           />
         </div>
       </div>
