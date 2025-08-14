@@ -16,6 +16,38 @@ export type UserProfile = {
   } | null;
 };
 
+interface UpscaleTransaction {
+  user_id: string;
+  scale_factor: 2 | 4 | 8;
+  quality_preset: string;
+  api_cost: number;
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'queued';
+  original_image_url?: string;
+  upscaled_image_url?: string;
+  processing_time_seconds?: number;
+  error_message?: string;
+}
+
+interface ApiUsageLog {
+  transaction_id: string;
+  api_provider: string;
+  api_endpoint: string;
+  request_payload: any;
+  response_data: any;
+  http_status_code: number;
+  processing_time_ms: number;
+  api_cost: number;
+  credits_consumed: number;
+}
+
+interface SystemAlert {
+  alert_type: 'low_credits' | 'api_outage' | 'high_usage' | 'billing_issue' | 'system_error';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  message: string;
+  metadata?: any;
+}
+
 export class UpscaleTrackingService {
   // Helper method to ensure user is authenticated
   private static async getAuthenticatedUser() {
@@ -151,6 +183,253 @@ export class UpscaleTrackingService {
     }
   }
 
+  static async checkApiCredits() {
+    try {
+      const { data, error } = await supabase
+        .from('api_credit_monitoring')
+        .select('current_balance, threshold_warning, threshold_critical')
+        .eq('provider', 'replicate')
+        .maybeSingle();
+
+      if (error) {
+        console.warn('Error checking API credits:', error);
+        // Return default values if table doesn't exist or has issues
+        return {
+          current_balance: 100,
+          threshold_warning: 50,
+          threshold_critical: 10,
+          severity: 'low' as const
+        };
+      }
+
+      const balance = data?.current_balance ?? 100;
+      const warning = data?.threshold_warning ?? 50;
+      const critical = data?.threshold_critical ?? 10;
+
+      let severity: 'low' | 'medium' | 'high' | 'critical' = 'low';
+      if (balance <= critical) {
+        severity = 'critical';
+      } else if (balance <= warning) {
+        severity = 'medium';
+      }
+
+      return {
+        current_balance: balance,
+        threshold_warning: warning,
+        threshold_critical: critical,
+        severity
+      };
+    } catch (error) {
+      console.error('Error in checkApiCredits:', error);
+      return {
+        current_balance: 100,
+        threshold_warning: 50,
+        threshold_critical: 10,
+        severity: 'low' as const
+      };
+    }
+  }
+
+  static async createUpscaleTransaction(transaction: UpscaleTransaction): Promise<string | null> {
+    try {
+      const { data, error } = await supabase
+        .from('upscale_transactions')
+        .insert({
+          user_id: transaction.user_id,
+          scale_factor: transaction.scale_factor,
+          quality_preset: transaction.quality_preset,
+          api_cost: transaction.api_cost,
+          status: transaction.status,
+          original_image_url: transaction.original_image_url,
+          upscaled_image_url: transaction.upscaled_image_url,
+          processing_time_seconds: transaction.processing_time_seconds,
+          error_message: transaction.error_message
+        })
+        .select('id')
+        .single();
+
+      if (error) {
+        console.error('Error creating upscale transaction:', error);
+        return null;
+      }
+
+      return data.id;
+    } catch (error) {
+      console.error('Error in createUpscaleTransaction:', error);
+      return null;
+    }
+  }
+
+  static async updateUpscaleTransaction(transactionId: string, updates: Partial<UpscaleTransaction>): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('upscale_transactions')
+        .update(updates)
+        .eq('id', transactionId);
+
+      if (error) {
+        console.error('Error updating upscale transaction:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error in updateUpscaleTransaction:', error);
+      return false;
+    }
+  }
+
+  static async logApiUsage(usage: ApiUsageLog): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('api_usage_logs')
+        .insert({
+          transaction_id: usage.transaction_id,
+          api_provider: usage.api_provider,
+          api_endpoint: usage.api_endpoint,
+          request_payload: usage.request_payload,
+          response_data: usage.response_data,
+          http_status_code: usage.http_status_code,
+          processing_time_ms: usage.processing_time_ms,
+          api_cost: usage.api_cost,
+          credits_consumed: usage.credits_consumed
+        });
+
+      if (error) {
+        console.error('Error logging API usage:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error in logApiUsage:', error);
+      return false;
+    }
+  }
+
+  static async updateApiCredits(newBalance: number): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('api_credit_monitoring')
+        .update({ 
+          current_balance: newBalance,
+          last_balance_check: new Date().toISOString()
+        })
+        .eq('provider', 'replicate');
+
+      if (error) {
+        console.error('Error updating API credits:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error in updateApiCredits:', error);
+      return false;
+    }
+  }
+
+  static async createAlert(alert: SystemAlert): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('system_alerts')
+        .insert({
+          alert_type: alert.alert_type,
+          severity: alert.severity,
+          title: alert.title,
+          message: alert.message,
+          metadata: alert.metadata || {}
+        });
+
+      if (error) {
+        console.error('Error creating system alert:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error in createAlert:', error);
+      return false;
+    }
+  }
+
+  static async addToQueue(userId: string, transactionId: string, priority: number = 1): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('upscale_queue')
+        .insert({
+          user_id: userId,
+          transaction_id: transactionId,
+          priority: priority,
+          status: 'queued'
+        });
+
+      if (error) {
+        console.error('Error adding to queue:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error in addToQueue:', error);
+      return false;
+    }
+  }
+
+  static async getQueuedItems(limit: number = 10) {
+    try {
+      const { data, error } = await supabase
+        .from('upscale_queue')
+        .select(`
+          *,
+          upscale_transactions (
+            id,
+            scale_factor,
+            quality_preset,
+            original_image_url
+          )
+        `)
+        .eq('status', 'queued')
+        .order('priority', { ascending: false })
+        .order('created_at', { ascending: true })
+        .limit(limit);
+
+      if (error) {
+        console.error('Error getting queued items:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error in getQueuedItems:', error);
+      return [];
+    }
+  }
+
+  static async getUserTransactionHistory(userId: string, limit: number = 10) {
+    try {
+      const { data, error } = await supabase
+        .from('upscale_transactions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        console.error('Error getting user transaction history:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error in getUserTransactionHistory:', error);
+      return [];
+    }
+  }
+
+  // Add supabase property for compatibility with enhanced service
+  static supabase = supabase;
+
   // Legacy methods for backward compatibility
   async getUserProfile(userId: string): Promise<UserProfile | null> {
     try {
@@ -193,6 +472,43 @@ export class UpscaleTrackingService {
       console.error('Error checking user upscale eligibility:', error);
       return { canUpscale: false, reason: 'System error' };
     }
+  }
+
+  // Instance methods for compatibility with enhanced service
+  async checkApiCredits() {
+    return await UpscaleTrackingService.checkApiCredits();
+  }
+
+  async createUpscaleTransaction(transaction: UpscaleTransaction): Promise<string | null> {
+    return await UpscaleTrackingService.createUpscaleTransaction(transaction);
+  }
+
+  async updateUpscaleTransaction(transactionId: string, updates: Partial<UpscaleTransaction>): Promise<boolean> {
+    return await UpscaleTrackingService.updateUpscaleTransaction(transactionId, updates);
+  }
+
+  async logApiUsage(usage: ApiUsageLog): Promise<boolean> {
+    return await UpscaleTrackingService.logApiUsage(usage);
+  }
+
+  async updateApiCredits(newBalance: number): Promise<boolean> {
+    return await UpscaleTrackingService.updateApiCredits(newBalance);
+  }
+
+  async createAlert(alert: SystemAlert): Promise<boolean> {
+    return await UpscaleTrackingService.createAlert(alert);
+  }
+
+  async addToQueue(userId: string, transactionId: string, priority: number = 1): Promise<boolean> {
+    return await UpscaleTrackingService.addToQueue(userId, transactionId, priority);
+  }
+
+  async getQueuedItems(limit: number = 10) {
+    return await UpscaleTrackingService.getQueuedItems(limit);
+  }
+
+  async getUserTransactionHistory(userId: string, limit: number = 10) {
+    return await UpscaleTrackingService.getUserTransactionHistory(userId, limit);
   }
 }
 
