@@ -26,11 +26,25 @@ export class EdgeFunctionService {
 
   public async upscaleImage(request: UpscaleRequest): Promise<UpscaleResponse> {
     try {
+      // Preprocess image to ensure it fits GPU memory constraints
+      const { imageProcessor } = await import('./imageProcessor');
+      const preprocessResult = await imageProcessor['preprocessImage'](request.image, {
+        quality: request.quality,
+        scale: request.scale
+      });
+      
+      if (preprocessResult.metadata.wasResized) {
+        console.log(`Image was resized from ${preprocessResult.metadata.originalPixelCount} to ${preprocessResult.metadata.targetPixelCount} pixels to fit GPU memory`);
+      }
+      
       // Convert file to base64
-      const base64Image = await this.fileToBase64(request.image);
+      const base64Image = await this.fileToBase64(preprocessResult.processedFile);
       
       // Get original image dimensions
-      const originalDimensions = await this.getImageDimensions(request.image);
+      const originalDimensions = {
+        width: preprocessResult.metadata.originalWidth,
+        height: preprocessResult.metadata.originalHeight
+      };
       
       // Prepare request payload
       const payload = {
@@ -43,7 +57,8 @@ export class EdgeFunctionService {
         scale: request.scale,
         quality: request.quality,
         originalSize: originalDimensions,
-        fileSize: `${(request.image.size / 1024 / 1024).toFixed(2)}MB`
+        processedSize: `${(preprocessResult.processedFile.size / 1024 / 1024).toFixed(2)}MB`,
+        wasResized: preprocessResult.metadata.wasResized
       });
 
       // Call the serverless function
