@@ -102,21 +102,40 @@ export class ImageProcessor {
           // Get original dimensions
           const originalWidth = img.width;
           const originalHeight = img.height;
+          const originalPixelCount = originalWidth * originalHeight;
+          
+          // GPU memory limit from the error: 2096704 pixels
+          const MAX_PIXELS = 2096704;
+          
+          let targetWidth = originalWidth;
+          let targetHeight = originalHeight;
+          
+          // Check if image exceeds GPU memory limit
+          if (originalPixelCount > MAX_PIXELS) {
+            console.log(`Image too large for GPU: ${originalPixelCount} pixels > ${MAX_PIXELS} pixels. Resizing...`);
+            
+            // Calculate scale factor to fit within pixel limit
+            const scaleFactor = Math.sqrt(MAX_PIXELS / originalPixelCount);
+            targetWidth = Math.floor(originalWidth * scaleFactor);
+            targetHeight = Math.floor(originalHeight * scaleFactor);
+            
+            console.log(`Resizing from ${originalWidth}x${originalHeight} to ${targetWidth}x${targetHeight}`);
+          }
           
           // Apply preprocessing based on quality preset
-          canvas.width = originalWidth;
-          canvas.height = originalHeight;
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
           
           if (!ctx) throw new Error('Could not get canvas context');
           
-          // Basic preprocessing
-          ctx.drawImage(img, 0, 0);
+          // Draw image at target size (this handles resizing if needed)
+          ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
           
           // Apply filters based on quality preset
           if (settings.quality === 'photo') {
-            this.applyPhotoEnhancement(ctx, originalWidth, originalHeight);
+            this.applyPhotoEnhancement(ctx, targetWidth, targetHeight);
           } else if (settings.quality === 'art') {
-            this.applyArtEnhancement(ctx, originalWidth, originalHeight);
+            this.applyArtEnhancement(ctx, targetWidth, targetHeight);
           }
           
           // Convert back to file
@@ -136,6 +155,11 @@ export class ImageProcessor {
               metadata: {
                 originalWidth,
                 originalHeight,
+                targetWidth,
+                targetHeight,
+                wasResized: originalPixelCount > MAX_PIXELS,
+                originalPixelCount,
+                targetPixelCount: targetWidth * targetHeight,
                 fileSize: blob.size,
               },
             });
