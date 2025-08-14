@@ -68,7 +68,7 @@ export function ImageProcessingProvider({ children }: { children: ReactNode }) {
     }
 
     // Calculate estimated processing time based on file size and scale
-    const estimatedTime = enhancedUpscaleService.getEstimatedProcessingTime(item.file.size, item.settings.scale);
+    const estimatedTime = edgeFunctionService.getEstimatedProcessingTime(item.file.size, item.settings.scale);
     const startTime = Date.now();
 
     setProcessQueue(prev => 
