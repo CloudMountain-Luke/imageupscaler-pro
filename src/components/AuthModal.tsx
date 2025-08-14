@@ -82,21 +82,28 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister, selectedPlan }
     try {
       setAuthError('');
       
+     console.log('Attempting authentication...', { isLoginMode, email: formData.email });
+     
       if (isLoginMode) {
         if (onLogin) {
           await onLogin(formData.email, formData.password);
         } else {
+         console.log('Calling login function...');
           await login(formData.email, formData.password);
         }
+       console.log('Login successful');
       } else {
         if (onRegister) {
           await onRegister(formData.email, formData.password, formData.name, formData.promoCode);
         } else {
+         console.log('Calling register function...');
           await register(formData.email, formData.password, formData.name, formData.promoCode);
         }
+       console.log('Registration successful');
       }
       
       // If we get here, auth was successful
+     console.log('Authentication completed, closing modal and calling onAuthSuccess');
       onClose();
       onAuthSuccess?.();
     } catch (error) {
