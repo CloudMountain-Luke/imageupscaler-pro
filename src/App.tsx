@@ -85,6 +85,7 @@ function App() {
   };
 
   const handleAuthSuccess = () => {
+   console.log('handleAuthSuccess called');
     setShowAuthModal(false);
     setShowHomepage(false);
   };
