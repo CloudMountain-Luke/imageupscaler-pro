@@ -11,7 +11,6 @@ interface AuthModalProps {
   onAuthSuccess?: () => void;
 }
 
-export function AuthModal({ isOpen, onClose, onLogin, onRegister, selectedPlan }: AuthModalProps) {
 export function AuthModal({ isOpen, onClose, onLogin, onRegister, selectedPlan, onAuthSuccess }: AuthModalProps) {
   const { isReady, userProfile, login, register, recoverPassword } = useAuth();
   const [isLoginMode, setIsLoginMode] = useState(true);
