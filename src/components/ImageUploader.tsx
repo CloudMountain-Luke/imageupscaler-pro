@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useImageProcessing } from '../contexts/ImageProcessingContext';
 import { edgeFunctionService } from '../services/edgeFunctionService';
-import { Download, Clock, CheckCircle, AlertCircle, UploadCloud, Plus, Settings } from 'lucide-react';
+import { Download, Clock, CheckCircle, AlertCircle, UploadCloud, Plus, Settings, Star } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 
 const SUPPORTED_FORMATS = edgeFunctionService.getSupportedFormats();
