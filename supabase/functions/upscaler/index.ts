@@ -17,7 +17,7 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.2";
-// Import image processing functions for Deno
+// IMPORTANT: Using imagescript@1.2.15 for better stability and JPEG encoding
 import { decode, encode } from "https://deno.land/x/imagescript@1.2.15/mod.ts";
 
 // CORS headers for browser fetch requests
