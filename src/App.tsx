@@ -91,11 +91,13 @@ function App() {
   };
 
   const handleLogout = () => {
+    console.log('handleLogout called');
     logout();
     setShowHomepage(true);
     setActiveTab('upscaler');
     setSidebarState('hidden');
     clearUploadedFiles();
+    console.log('App state reset to homepage');
   };
 
   // Listen for navigation events from header dropdown

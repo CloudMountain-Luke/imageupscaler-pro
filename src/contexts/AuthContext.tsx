@@ -74,6 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return;
       
+      console.log('Auth state change:', _event, session?.user?.email || 'no user');
+      
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -129,11 +131,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
+      console.log('Logging out user...');
       await supabase.auth.signOut();
+      console.log('Supabase signOut completed');
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Force clear all auth state
+      setSession(null);
+      setUser(null);
       setUserProfile(null);
+      console.log('Auth state cleared');
     }
   };
 
