@@ -180,7 +180,7 @@ const ImageUpscaler = () => {
                         : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
                     }`}
                   >
-                    <Sparkles className="w-5 h-5" />
+                    <Star className="w-5 h-5" />
                     <span>{currentProcessing ? 'Processing...' : 'AI Upscale'}</span>
                   </button>
                 </div>
