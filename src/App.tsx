@@ -106,6 +106,7 @@ function App() {
 
   const handleLogout = async () => {
     console.log('handleLogout called');
+    console.log('Current sidebarState:', sidebarState, 'user:', user?.email);
     await logout();
     setShowHomepage(true);
     setActiveTab('upscaler');
@@ -152,16 +153,6 @@ function App() {
       case 'upscaler':
         return (
           <div className="space-y-6">
-            {/* Main Title */}
-            <div className="text-center mb-8">
-              <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-                AI Image Upscaler
-              </h1>
-              <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                Transform your images with professional AI-powered upscaling
-              </p>
-            </div>
-
             {/* Use the dedicated ImageUploader component */}
             <ImageUpscaler />
 

@@ -24,7 +24,7 @@ export function Sidebar({ activeTab, setActiveTab, sidebarState, setSidebarState
     const baseClasses = "fixed top-20 bottom-0 left-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-r border-gray-200/50 dark:border-gray-700/50 transform transition-all duration-300 ease-in-out";
     
     if (sidebarState === 'hidden') {
-      return `${baseClasses} w-64 -translate-x-full lg:-translate-x-full`;
+      return `${baseClasses} w-64 -translate-x-full lg:translate-x-0 lg:w-64`;
     } else if (sidebarState === 'collapsed') {
       return `${baseClasses} w-20 translate-x-0 lg:translate-x-0`;
     } else {
