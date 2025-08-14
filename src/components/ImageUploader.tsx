@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useImageProcessing } from '../contexts/ImageProcessingContext';
 import { edgeFunctionService } from '../services/edgeFunctionService';
-import { Download, Clock, CheckCircle, AlertCircle, Upload, Sparkles, Plus, Settings } from 'lucide-react';
+import { Download, Clock, CheckCircle, AlertCircle, UploadCloud, Star, Plus, Settings } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 
 const SUPPORTED_FORMATS = edgeFunctionService.getSupportedFormats();
@@ -34,14 +34,18 @@ const ImageUploadBox = ({ image, onImageUpload, isProcessing = false, isUpscaled
         <div className="flex flex-col items-center justify-center p-4 text-center">
           {isUpscaledBox ? (
             <>
-              <Sparkles className="w-16 h-16 text-yellow-400 mb-4" />
+              <div className="relative mb-4">
+                <Star className="w-16 h-16 text-yellow-400" fill="currentColor" />
+                <Star className="w-4 h-4 text-yellow-300 absolute -top-1 -right-1" fill="currentColor" />
+                <Star className="w-3 h-3 text-yellow-300 absolute -bottom-1 -left-1" fill="currentColor" />
+              </div>
               <span className="text-gray-400 text-lg">
                 Upscaled image will appear here
               </span>
             </>
           ) : (
             <>
-              <Upload className="w-16 h-16 text-gray-500 mb-4" />
+              <UploadCloud className="w-16 h-16 text-gray-500 mb-4" />
               <div className="text-center">
                 <div className="text-white text-xl font-bold mb-2">Upload Images</div>
                 <div className="text-gray-400 mb-2">Click or drag images here</div>
