@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { enhancedUpscaleService } from '../services/enhancedUpscaleService';
 import { UpscaleTrackingService } from '../services/upscaleTrackingService';
+import { edgeFunctionService } from '../services/edgeFunctionService';
 import { useAuth } from './AuthContext';
 
 interface UploadedFile {
