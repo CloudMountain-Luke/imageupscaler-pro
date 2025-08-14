@@ -180,8 +180,11 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister, selectedPlan }
               You are signed in as {userProfile.displayName}
             </p>
             <button 
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white rounded-lg font-medium transition-all duration-200" 
-              onClick={onClose}
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white rounded-lg font-medium transition-all duration-200"
+              onClick={() => {
+                onClose();
+                onAuthSuccess?.();
+              }}
             >
               Continue
             </button>
