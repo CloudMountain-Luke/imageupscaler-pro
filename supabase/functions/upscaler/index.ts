@@ -12,6 +12,7 @@
   - Comprehensive error handling and validation
   - CORS support for web applications
   - Dynamic model selection based on quality preset
+  - Dynamic model selection based on quality preset
 */
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
@@ -25,7 +26,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.2";
 const MODELS = {
   photo: 'nightmareai/real-esrgan:42fed1c4974146d4d2414e2be2c5277c7fcf05fcc3a73abf41610695738c1d7b', // Real-ESRGAN x4 for photos
   art: 'jingyunliang/swinir:660d922d33153019e8c263a3bba265de882e7f4f70396546b6c9c8f9d47a021a', // SwinIR for art/illustrations
-}
+// Real-ESRGAN model versions for different use cases
+const MODELS = {
+  photo: 'nightmareai/real-esrgan:42fed1c4974146d4d2414e2be2c5277c7fcf05fcc3a73abf41610695738c1d7b', // Real-ESRGAN x4 for photos
+  art: 'jingyunliang/swinir:660d922d33153019e8c263a3bba265de882e7f4f70396546b6c9c8f9d47a021a', // SwinIR for art/illustrations
 // CORS headers for browser fetch requests
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -142,25 +146,14 @@ serve(async (req: Request) => {
       throw new Error(`Failed to upload original image: ${inputUploadError.message}`);
     }
 
-    // Upload upscaled image
-    const { error: outputUploadError } = await supabase.storage.from("images").upload(`images/${outputFileName}`, outputBuf, {
-      contentType: "image/png",
-      upsert: false,
-    });
-    if (outputUploadError) {
-      console.error("Error uploading upscaled image:", outputUploadError);
-      throw new Error(`Failed to upload upscaled image: ${outputUploadError.message}`);
-    }
-
-    // Get public URLs for both images
+    // Get public URL for input image and use Replicate CDN URL for output
     const { data: inUrlData } = supabase.storage.from("images").getPublicUrl(`images/${inputFileName}`);
-    const { data: outUrlData } = supabase.storage.from("images").getPublicUrl(`images/${outputFileName}`);
 
     const processingTime = Date.now() - startTime;
     const response = {
       success: true,
       inputUrl: inUrlData.publicUrl,
-      outputUrl: outUrlData.publicUrl,
+      outputUrl: prediction.output, // Use Replicate CDN URL directly
       processingTime,
     };
     return new Response(JSON.stringify(response), {
