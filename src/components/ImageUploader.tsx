@@ -8,7 +8,7 @@ const SUPPORTED_FORMATS = edgeFunctionService.getSupportedFormats();
 const MAX_FILE_SIZE = edgeFunctionService.getMaxFileSize();
 
 // Helper component for the image display boxes.
-const ImageUploadBox = ({ image, onImageUpload, isProcessing = false, placeholder }) => {
+const ImageUploadBox = ({ image, onImageUpload, isProcessing = false, isUpscaledBox = false }) => {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: onImageUpload,
     multiple: false,
@@ -17,14 +17,14 @@ const ImageUploadBox = ({ image, onImageUpload, isProcessing = false, placeholde
       'image/png': ['.png'],
       'image/webp': ['.webp'],
     },
-    disabled: placeholder === "Upscaled image will appear here"
+    disabled: isUpscaledBox
   });
 
   return (
     <div
       {...getRootProps()}
       className={`bg-gray-700 rounded-lg p-4 shadow-inner min-h-[300px] flex flex-col items-center justify-center relative border-2 border-dashed border-gray-600 transition-colors ${
-        placeholder === "Upscaled image will appear here" ? 'cursor-default' : 'hover:border-blue-500 cursor-pointer'
+        isUpscaledBox ? 'cursor-default' : 'hover:border-blue-500 cursor-pointer'
       }`}
     >
       <input {...getInputProps()} />
@@ -32,16 +32,28 @@ const ImageUploadBox = ({ image, onImageUpload, isProcessing = false, placeholde
         <img src={image} alt="Image" className="max-h-full max-w-full object-contain rounded-md" />
       ) : (
         <div className="flex flex-col items-center justify-center p-4 text-center">
-          {placeholder === "Upscaled image will appear here" ? (
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mb-4">
-              <span className="text-2xl text-gray-400">✨</span>
-            </div>
+          {isUpscaledBox ? (
+            <>
+              <Sparkles className="w-16 h-16 text-yellow-400 mb-4" />
+              <span className="text-gray-400 text-lg">
+                Upscaled image will appear here
+              </span>
+            </>
           ) : (
-            <Upload className="w-16 h-16 text-gray-500 mb-4" />
+            <>
+              <Upload className="w-16 h-16 text-gray-500 mb-4" />
+              <div className="text-center">
+                <div className="text-white text-xl font-bold mb-2">Upload Images</div>
+                <div className="text-gray-400 mb-2">Click or drag images here</div>
+                <div className="text-gray-500 text-sm">JPEG, PNG, WebP • Max 25MB</div>
+              </div>
+            </>
           )}
-          <span className="text-gray-400">
-            {isProcessing ? 'Processing...' : placeholder}
-          </span>
+          {isDragActive && !isUpscaledBox && (
+            <div className="absolute inset-0 bg-blue-500/20 border-2 border-blue-500 rounded-lg flex items-center justify-center">
+              <span className="text-blue-200 font-medium">Drop the image here...</span>
+            </div>
+          )}
         </div>
       )}
       {isProcessing && (
@@ -194,38 +206,18 @@ const ImageUpscaler = () => {
                 </div>
               )}
 
-              {/* API Status */}
-              {isApiConfigured ? (
-                <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                      AI Upscaling Ready
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                  <div className="flex items-center space-x-2">
-                    <AlertCircle className="w-4 h-4 text-amber-600" />
-                    <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                      AI Service Not Configured
-                    </span>
-                  </div>
-                </div>
-              )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <ImageUploadBox
                 image={latestUploadedFile?.imageUrl}
                 onImageUpload={onDrop}
-                placeholder={isDragActive ? 'Drop the image here ...' : 'Upload Images'}
+                isUpscaledBox={false}
               />
               <ImageUploadBox
                 image={latestProcessedImage?.upscaledImage}
                 isProcessing={!!currentProcessing}
-                placeholder="Upscaled image will appear here"
+                isUpscaledBox={true}
               />
             </div>
           </div>
@@ -236,7 +228,7 @@ const ImageUpscaler = () => {
           <ImageUploadBox
             image={latestUploadedFile?.imageUrl}
             onImageUpload={onDrop}
-            placeholder={isDragActive ? 'Drop the image here ...' : 'Upload Images'}
+            isUpscaledBox={false}
           />
 
           {/* Mobile Controls */}
@@ -285,7 +277,7 @@ const ImageUpscaler = () => {
           <ImageUploadBox
             image={latestProcessedImage?.upscaledImage}
             isProcessing={!!currentProcessing}
-            placeholder="Upscaled image will appear here"
+            isUpscaledBox={true}
           />
         </div>
       </div>
