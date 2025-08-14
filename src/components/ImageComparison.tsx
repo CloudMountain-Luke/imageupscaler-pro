@@ -200,5 +200,3 @@ export function ImageComparison() {
     </div>
   );
 }
-  )
-}
