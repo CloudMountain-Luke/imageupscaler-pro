@@ -23,7 +23,7 @@ type ActiveTab = 'upscaler' | 'queue' | 'history' | 'stats' | 'billing' | 'accou
 type SidebarState = 'open' | 'collapsed' | 'hidden';
 
 function App() {
-  const { user, userProfile, logout } = useAuth();
+  const { user, userProfile, logout, isReady } = useAuth();
   const {
     uploadedFiles,
     processedImages,
@@ -39,7 +39,21 @@ function App() {
   const [sidebarState, setSidebarState] = useState<SidebarState>('open');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string>('');
-  const [showHomepage, setShowHomepage] = useState(!user);
+  const [showHomepage, setShowHomepage] = useState(true); // Start with homepage until we know auth state
+
+  // Update homepage state when auth state is ready
+  React.useEffect(() => {
+    if (isReady) {
+      setShowHomepage(!user);
+    }
+  }, [user, isReady]);
+  
+  // Update homepage state when auth state changes
+  React.useEffect(() => {
+    if (isReady) {
+      setShowHomepage(!user);
+    }
+  }, [user, isReady]);
 
   const [upscaleSettings, setUpscaleSettings] = useState({
     scale: 2,
