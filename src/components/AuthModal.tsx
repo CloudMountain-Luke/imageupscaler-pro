@@ -12,7 +12,7 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose, onLogin, onRegister, selectedPlan, onAuthSuccess }: AuthModalProps) {
-  const { isReady, userProfile, login, register, recoverPassword } = useAuth();
+  const { isReady, user, userProfile, login, register, recoverPassword } = useAuth();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [formData, setFormData] = useState({
     email: '',
