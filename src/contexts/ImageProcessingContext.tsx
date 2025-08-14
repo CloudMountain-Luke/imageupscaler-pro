@@ -39,6 +39,7 @@ interface ImageProcessingContextType {
   processing: boolean;
   userStats: any;
   userProfile: any;
+  isApiConfigured: boolean;
   addToQueue: (item: ProcessingItem) => void;
   removeFromQueue: (id: number) => void;
   addUploadedFile: (file: File, imageUrl: string) => void;
@@ -55,6 +56,7 @@ export function ImageProcessingProvider({ children }: { children: ReactNode }) {
   const [processing, setProcessing] = useState(false);
   const [userStats, setUserStats] = useState<any>(null);
   const [realUserProfile, setRealUserProfile] = useState<any>(null);
+  const [isApiConfigured, setIsApiConfigured] = useState(false);
 
   const simulateProcessing = useCallback(async (item: ProcessingItem) => {
     if (!user) {
@@ -236,6 +238,11 @@ export function ImageProcessingProvider({ children }: { children: ReactNode }) {
     setUploadedFiles([]);
   }, []);
 
+  // Check API configuration on mount
+  React.useEffect(() => {
+    setIsApiConfigured(edgeFunctionService.isConfigured());
+  }, []);
+
   // Load user stats on mount
   React.useEffect(() => {
     if (user) {
@@ -297,6 +304,7 @@ export function ImageProcessingProvider({ children }: { children: ReactNode }) {
       processing,
       userStats,
       userProfile: realUserProfile, // Use real profile from database
+      isApiConfigured,
       addToQueue,
       removeFromQueue,
       addUploadedFile,
