@@ -8,7 +8,7 @@ import { Homepage } from './components/Homepage';
 import { AuthModal } from './components/AuthModal';
 import ImageUpscaler from './components/ImageUploader';
 import { ProcessingHistory } from './components/ProcessingHistory';
-import { UserStats } => './components/UserStats';
+import { UserStats } from './components/UserStats'; // Corrected line
 import { UserAccount } from './components/UserAccount';
 import { BillingSection } from './components/BillingSection';
 import { ApiSetupGuide } from './components/ApiSetupGuide';
