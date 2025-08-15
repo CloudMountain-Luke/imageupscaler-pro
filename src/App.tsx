@@ -13,13 +13,14 @@ import { UserAccount } from './components/UserAccount';
 import { BillingSection } from './components/BillingSection';
 import { ApiSetupGuide } from './components/ApiSetupGuide';
 import { ImageComparison } from './components/ImageComparison';
+import { PricingPlans } from './components/PricingPlans'; // Import the new component
 import { Download, Clock, CheckCircle, AlertCircle, Upload, Sparkles, Plus } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 
 const SUPPORTED_FORMATS = edgeFunctionService.getSupportedFormats();
 const MAX_FILE_SIZE = edgeFunctionService.getMaxFileSize();
 
-type ActiveTab = 'upscaler' | 'queue' | 'history' | 'stats' | 'billing' | 'account';
+type ActiveTab = 'upscaler' | 'queue' | 'history' | 'stats' | 'billing' | 'account' | 'pricing'; // Add 'pricing' to ActiveTab
 type SidebarState = 'open' | 'collapsed' | 'hidden';
 
 function App() {
@@ -102,7 +103,7 @@ function App() {
    console.log('handleAuthSuccess called');
     setShowAuthModal(false);
     setShowHomepage(false);
-    setSidebarState('open'); // <--- ADDED THIS LINE
+    setSidebarState('open');
   };
 
   const handleLogout = async () => {
@@ -120,20 +121,19 @@ function App() {
   React.useEffect(() => {
     const handleNavigateToAccount = () => setActiveTab('account');
     const handleNavigateToBilling = () => setActiveTab('billing');
-    const handleShowPricingPlans = () => { // <--- ADDED THIS HANDLER
-      setShowHomepage(true);
-      setActiveTab('upscaler'); // Optionally reset tab if homepage is shown
-      setSidebarState('hidden'); // Hide sidebar when showing homepage
+    const handleShowPricingPlans = () => {
+      setActiveTab('pricing'); // Change active tab to 'pricing'
+      setSidebarState('open'); // Ensure sidebar is open when navigating to pricing
     };
 
     window.addEventListener('navigate-to-account', handleNavigateToAccount);
     window.addEventListener('navigate-to-billing', handleNavigateToBilling);
-    window.addEventListener('show-pricing-plans', handleShowPricingPlans); // <--- ADDED THIS LISTENER
+    window.addEventListener('show-pricing-plans', handleShowPricingPlans);
 
     return () => {
       window.removeEventListener('navigate-to-account', handleNavigateToAccount);
       window.removeEventListener('navigate-to-billing', handleNavigateToBilling);
-      window.removeEventListener('show-pricing-plans', handleShowPricingPlans); // <--- CLEANUP
+      window.removeEventListener('show-pricing-plans', handleShowPricingPlans);
     };
   }, []);
 
@@ -180,6 +180,8 @@ function App() {
         return <UserAccount />;
       case 'billing':
         return <BillingSection />;
+      case 'pricing': // New case for pricing plans
+        return <PricingPlans onGetStarted={handleGetStarted} />;
       default:
         return <div>Content for {activeTab}</div>;
     }
@@ -220,4 +222,3 @@ function App() {
 }
 
 export default App;
-
