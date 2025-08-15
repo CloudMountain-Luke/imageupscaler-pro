@@ -8,7 +8,7 @@ import { Homepage } from './components/Homepage';
 import { AuthModal } from './components/AuthModal';
 import ImageUpscaler from './components/ImageUploader';
 import { ProcessingHistory } from './components/ProcessingHistory';
-import { UserStats } from './components/UserStats';
+import { UserStats } => './components/UserStats';
 import { UserAccount } from './components/UserAccount';
 import { BillingSection } from './components/BillingSection';
 import { ApiSetupGuide } from './components/ApiSetupGuide';
@@ -41,6 +41,7 @@ function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string>('');
   const [showHomepage, setShowHomepage] = useState(true); // Start with homepage until we know auth state
+  const [previousTab, setPreviousTab] = useState<ActiveTab | null>(null); // New state for previous tab
 
   // Update homepage state when auth state is ready
   React.useEffect(() => {
@@ -122,6 +123,7 @@ function App() {
     const handleNavigateToAccount = () => setActiveTab('account');
     const handleNavigateToBilling = () => setActiveTab('billing');
     const handleShowPricingPlans = () => {
+      setPreviousTab(activeTab); // Store current tab before changing
       setActiveTab('pricing'); // Change active tab to 'pricing'
       setSidebarState('open'); // Ensure sidebar is open when navigating to pricing
     };
@@ -135,7 +137,7 @@ function App() {
       window.removeEventListener('navigate-to-billing', handleNavigateToBilling);
       window.removeEventListener('show-pricing-plans', handleShowPricingPlans);
     };
-  }, []);
+  }, [activeTab]); // Add activeTab to dependency array
 
   // Show homepage for non-authenticated users
   if (showHomepage) {
@@ -181,7 +183,12 @@ function App() {
       case 'billing':
         return <BillingSection />;
       case 'pricing': // New case for pricing plans
-        return <PricingPlans onGetStarted={handleGetStarted} />;
+        return (
+          <PricingPlans 
+            onGetStarted={handleGetStarted} 
+            onBack={() => setActiveTab(previousTab || 'upscaler')} // Pass onBack prop
+          />
+        );
       default:
         return <div>Content for {activeTab}</div>;
     }
