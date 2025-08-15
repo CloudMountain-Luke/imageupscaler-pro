@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Check, Star, Zap, Crown, ArrowRight, Upload, Sparkles, Users, Shield, Clock, TrendingUp, LogIn, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, Star, Zap, Crown, ArrowRight, Upload, Sparkles, Users, Shield, Clock, TrendingUp, LogIn, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react'; // Import ArrowLeft
 
 interface PricingPlansProps {
   onGetStarted: (plan: string) => void;
+  onBack: () => void; // New prop for back functionality
 }
 
-export function PricingPlans({ onGetStarted }: PricingPlansProps) {
+export function PricingPlans({ onGetStarted, onBack }: PricingPlansProps) {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
   const plans = [
@@ -87,6 +88,17 @@ export function PricingPlans({ onGetStarted }: PricingPlansProps) {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <div className="text-center mb-16">
+        {/* Back Button */}
+        <div className="flex justify-start mb-8">
+          <button
+            onClick={onBack}
+            className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back</span>
+          </button>
+        </div>
+
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
           Choose Your Plan
         </h2>
