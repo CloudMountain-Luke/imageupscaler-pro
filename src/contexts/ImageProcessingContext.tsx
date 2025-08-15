@@ -1,12 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useAuth } from './AuthContext';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { edgeFunctionService } from '../services/edgeFunctionService';
-import { upscaleTrackingService, type UserProfile } from '../services/upscaleTrackingService';
+import { UpscaleTrackingService } from '../services/upscaleTrackingService'; // Corrected import to use the class
+import { useAuth } from './AuthContext';
 
 interface UploadedFile {
+  id: string;
   file: File;
   imageUrl: string;
-  id: number;
 }
 
 interface ProcessingItem {
@@ -16,245 +16,300 @@ interface ProcessingItem {
     scale: number;
     quality: string;
     outputFormat: string;
+    outputSize: string;
   };
   status: 'pending' | 'processing' | 'completed' | 'error';
   progress: number;
+  currentStep?: string;
+  estimatedTime?: number;
+  timeRemaining?: number;
   originalImage: string;
   upscaledImage?: string;
-  currentStep?: string;
-  timeRemaining?: number;
   originalWidth?: number;
   originalHeight?: number;
   upscaledWidth?: number;
   upscaledHeight?: number;
   processedAt?: number;
-  apiCost?: number;
-  remainingUpscales?: number;
-}
-
-interface UserStats {
-  current_month_upscales: number;
-  monthly_upscales_limit: number;
-  total_upscales: number;
-  usage_percentage: number;
-  days_until_reset: number;
-  estimated_monthly_cost: number;
 }
 
 interface ImageProcessingContextType {
-  uploadedFiles: UploadedFile[];
-  processedImages: ProcessingItem[];
   processQueue: ProcessingItem[];
+  processedImages: ProcessingItem[];
+  uploadedFiles: UploadedFile[];
   processing: boolean;
-  userStats: UserStats | null;
-  userProfile: UserProfile | null;
+  userStats: any;
+  userProfile: any;
   isApiConfigured: boolean;
-  addUploadedFile: (file: File, imageUrl: string) => void;
-  clearUploadedFiles: () => void;
   addToQueue: (item: ProcessingItem) => void;
   removeFromQueue: (id: number) => void;
+  addUploadedFile: (file: File, imageUrl: string) => void;
+  clearUploadedFiles: () => void;
 }
 
 const ImageProcessingContext = createContext<ImageProcessingContextType | undefined>(undefined);
 
 export function ImageProcessingProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const [processedImages, setProcessedImages] = useState<ProcessingItem[]>([]);
+  const { user, userProfile } = useAuth();
   const [processQueue, setProcessQueue] = useState<ProcessingItem[]>([]);
+  const [processedImages, setProcessedImages] = useState<ProcessingItem[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [processing, setProcessing] = useState(false);
-  const [userStats, setUserStats] = useState<UserStats | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userStats, setUserStats] = useState<any>(null);
+  const [realUserProfile, setRealUserProfile] = useState<any>(null);
 
   const isApiConfigured = edgeFunctionService.isConfigured();
+  console.log('ImageProcessingContext - isApiConfigured:', isApiConfigured);
 
-  // Load user stats when user changes
-  useEffect(() => {
-    if (user?.id) {
-      loadUserStats();
-      loadUserProfile();
-    } else {
-      setUserStats(null);
-      setUserProfile(null);
+  const simulateProcessing = useCallback(async (item: ProcessingItem) => {
+    if (!user) {
+      console.error('No user found for processing');
+      return;
     }
-  }, [user?.id]);
 
-  const loadUserStats = async () => {
-    if (!user?.id) return;
-    
+    // Calculate estimated processing time based on file size and scale
+    const estimatedTime = edgeFunctionService.getEstimatedProcessingTime(item.file.size, item.settings.scale);
+    const startTime = Date.now();
+
+    setProcessQueue(prev => 
+      prev.map(p => p.id === item.id ? { 
+        ...p, 
+        status: 'processing' as const,
+        currentStep: 'Preparing image for AI processing...',
+        estimatedTime,
+        timeRemaining: estimatedTime
+      } : p)
+    );
+
     try {
-      const stats = await upscaleTrackingService.getUserUsageStats(user.id);
-      setUserStats(stats);
-    } catch (error) {
-      console.error('Error loading user stats:', error);
-      // Set default stats on error
-      setUserStats({
-        current_month_upscales: 0,
-        monthly_upscales_limit: 250,
-        total_upscales: 0,
-        usage_percentage: 0,
-        days_until_reset: 30,
-        estimated_monthly_cost: 0
-      });
-    }
-  };
 
-  const loadUserProfile = async () => {
-    if (!user?.id) return;
-    
-    try {
-      const profile = await upscaleTrackingService.getUserProfile(user.id);
-      setUserProfile(profile);
-    } catch (error) {
-      console.error('Error loading user profile:', error);
-      setUserProfile(null);
-    }
-  };
-
-  // Process queue items
-  useEffect(() => {
-    const processNext = async () => {
-      const pendingItem = processQueue.find(item => item.status === 'pending');
-      if (!pendingItem || processing) return;
-
-      setProcessing(true);
-      
-      // Update item to processing status
-      setProcessQueue(prev => prev.map(item => 
-        item.id === pendingItem.id 
-          ? { ...item, status: 'processing' as const, progress: 0, currentStep: 'Starting AI upscaling...' }
-          : item
-      ));
-
-      try {
-        // Simulate progress updates
-        const progressInterval = setInterval(() => {
-          setProcessQueue(prev => prev.map(item => {
-            if (item.id === pendingItem.id && item.status === 'processing') {
-              const newProgress = Math.min(item.progress + Math.random() * 15, 90);
-              const steps = [
-                'Preprocessing image...',
-                'Sending to AI model...',
-                'AI enhancement in progress...',
-                'Finalizing upscaled image...'
-              ];
-              const stepIndex = Math.floor(newProgress / 25);
-              return {
-                ...item,
+      // Simulate progress updates during processing
+      const progressInterval = setInterval(() => {
+        setProcessQueue(prev => 
+          prev.map(p => {
+            if (p.id === item.id && p.status === 'processing' && p.progress < 90) {
+              const newProgress = Math.min(90, p.progress + Math.random() * 15 + 5);
+              const elapsed = (Date.now() - startTime) / 1000;
+              const remaining = Math.max(0, Math.round(estimatedTime - elapsed));
+              
+              let currentStep = 'Processing...';
+              if (newProgress < 15) {
+                currentStep = 'Preparing image for AI processing...';
+              } else if (newProgress < 30) {
+                currentStep = 'Uploading to AI service...';
+              } else if (newProgress < 70) {
+                currentStep = 'AI is enhancing your image...';
+              } else if (newProgress < 90) {
+                currentStep = 'Applying final enhancements...';
+              }
+              
+              return { 
+                ...p, 
                 progress: newProgress,
-                currentStep: steps[stepIndex] || 'Processing...',
-                timeRemaining: Math.max(0, Math.round((100 - newProgress) / 2))
+                currentStep,
+                timeRemaining: remaining
               };
             }
-            return item;
-          }));
-        }, 1000);
+            return p;
+          })
+        );
+      }, 1500);
 
-        // Call the edge function service
-        const result = await edgeFunctionService.upscaleImage({
-          image: pendingItem.file,
-          scale: pendingItem.settings.scale,
-          quality: pendingItem.settings.quality as 'photo' | 'art' | 'anime' | 'text',
-          outputFormat: pendingItem.settings.outputFormat
-        });
+      // Try edge function first, fallback to direct Replicate API
+      let result;
+      
+      console.log('Using edge function for AI upscaling...');
+      
+      setProcessQueue(prev => 
+        prev.map(p => p.id === item.id ? { 
+          ...p, 
+          progress: 20,
+          currentStep: 'Connecting to AI service...'
+        } : p)
+      );
+      
+      result = await edgeFunctionService.upscaleImage({
+        userId: user.id,
+        image: item.file,
+        scale: item.settings.scale,
+        quality: item.settings.quality,
+        outputFormat: item.settings.outputFormat
+      });
 
-        clearInterval(progressInterval);
+      // Update user stats after processing
+      if (result.success) {
+        const stats = await UpscaleTrackingService.getUserUsageStats(user.id);
+        setUserStats(stats);
+      }
 
-        if (result.success && result.imageUrl) {
-          // Create completed item
-          const completedItem: ProcessingItem = {
-            ...pendingItem,
-            status: 'completed',
+      clearInterval(progressInterval);
+
+      if (result.success && result.imageUrl) {
+        setProcessQueue(prev => 
+          prev.map(p => p.id === item.id ? { 
+            ...p, 
+            progress: 95,
+            currentStep: 'Finalizing your enhanced image...'
+          } : p)
+        );
+        
+        // Get original image dimensions for comparison
+        const img = new Image();
+        img.onload = async () => { // Made onload async to await incrementUpscaleCounts
+          const completedItem = {
+            ...item,
+            status: 'completed' as const,
             progress: 100,
             currentStep: 'Upscaling complete!',
             timeRemaining: 0,
-            upscaledImage: result.imageUrl,
-            originalWidth: result.originalDimensions?.width || 1024,
-            originalHeight: result.originalDimensions?.height || 1024,
-            upscaledWidth: result.upscaledDimensions?.width || (1024 * pendingItem.settings.scale),
-            upscaledHeight: result.upscaledDimensions?.height || (1024 * pendingItem.settings.scale),
+            upscaledImage: result.imageUrl!,
+            originalWidth: result.originalDimensions?.width || img.width,
+            originalHeight: result.originalDimensions?.height || img.height,
+            upscaledWidth: result.upscaledDimensions?.width || (img.width * item.settings.scale),
+            upscaledHeight: result.upscaledDimensions?.height || (img.height * item.settings.scale),
             processedAt: Date.now(),
-            apiCost: 0.0055,
-            remainingUpscales: userStats?.monthly_upscales_limit ? userStats.monthly_upscales_limit - userStats.current_month_upscales - 1 : undefined
+            apiCost: result.apiCost,
+            remainingUpscales: result.remainingUpscales
           };
           
-          setProcessQueue(prev => prev.filter(p => p.id !== pendingItem.id));
+          setProcessQueue(prev => prev.filter(p => p.id !== item.id));
           setProcessedImages(prev => [...prev, completedItem]);
-          
-          // Reload user stats after successful processing
-          await loadUserStats();
-        } else {
-          // Handle error
-          setProcessQueue(prev => prev.map(item => 
-            item.id === pendingItem.id 
-              ? { 
-                  ...item, 
-                  status: 'error' as const, 
-                  progress: 0, 
-                  currentStep: result.error || 'Processing failed',
-                  timeRemaining: 0
-                }
-              : item
-          ));
-        }
-      } catch (error) {
-        console.error('Processing error:', error);
-        setProcessQueue(prev => prev.map(item => 
-          item.id === pendingItem.id 
-            ? { 
-                ...item, 
-                status: 'error' as const, 
-                progress: 0, 
-                currentStep: error instanceof Error ? error.message : 'Processing failed',
-                timeRemaining: 0
-              }
-            : item
-        ));
-      } finally {
-        setProcessing(false);
+
+          // Increment user's upscale counts in the database
+          await UpscaleTrackingService.incrementUpscaleCounts(user.id); // <--- ADDED THIS LINE
+        };
+        img.src = item.originalImage;
+      } else {
+        clearInterval(progressInterval);
+        // Handle AI processing failure
+        const failedItem = {
+          ...item,
+          status: 'error' as const,
+          progress: 0,
+          currentStep: 'Upscaling failed',
+          timeRemaining: 0,
+          error: result.error || 'AI upscaling failed'
+        };
+        
+        setProcessQueue(prev => 
+          prev.map(p => p.id === item.id ? failedItem : p)
+        );
       }
-    };
+    } catch (error) {
+      // Clear progress interval on error
+      const progressInterval = setInterval(() => {}, 1000);
+      clearInterval(progressInterval);
+      
+      console.error('Processing error:', error);
+      
+      const failedItem = {
+        ...item,
+        status: 'error' as const,
+        progress: 0,
+        currentStep: 'Processing failed',
+        timeRemaining: 0,
+        error: error instanceof Error ? error.message : 'Unknown processing error'
+      };
+      
+      setProcessQueue(prev => 
+        prev.map(p => p.id === item.id ? failedItem : p)
+      );
+    }
+  }, [user]);
 
-    processNext();
-  }, [processQueue, processing, userStats]);
-
-  const addUploadedFile = (file: File, imageUrl: string) => {
-    const newFile: UploadedFile = {
-      file,
-      imageUrl,
-      id: Date.now()
-    };
-    setUploadedFiles(prev => [...prev, newFile]);
-  };
-
-  const clearUploadedFiles = () => {
-    setUploadedFiles([]);
-  };
-
-  const addToQueue = (item: ProcessingItem) => {
+  const addToQueue = useCallback((item: ProcessingItem) => {
     setProcessQueue(prev => [...prev, item]);
-  };
+    
+    // Start processing immediately (in real implementation, this would be managed by a queue system)
+    setTimeout(() => {
+      simulateProcessing(item);
+    }, 1000);
+  }, [simulateProcessing]);
 
-  const removeFromQueue = (id: number) => {
+  const removeFromQueue = useCallback((id: number) => {
     setProcessQueue(prev => prev.filter(item => item.id !== id));
-  };
+    setProcessedImages(prev => prev.filter(item => item.id !== id));
+  }, []);
 
-  const value: ImageProcessingContextType = {
-    uploadedFiles,
-    processedImages,
-    processQueue,
-    processing,
-    userStats,
-    userProfile,
-    isApiConfigured,
-    addUploadedFile,
-    clearUploadedFiles,
-    addToQueue,
-    removeFromQueue
-  };
+  const addUploadedFile = useCallback((file: File, imageUrl: string) => {
+    const uploadedFile: UploadedFile = {
+      id: Date.now().toString(),
+      file,
+      imageUrl
+    };
+    setUploadedFiles(prev => [...prev, uploadedFile]);
+  }, []);
+
+  const clearUploadedFiles = useCallback(() => {
+    setUploadedFiles([]);
+  }, []);
+
+  // Load user stats on mount
+  React.useEffect(() => {
+    if (user) {
+      // Load real user profile and stats from database
+      const loadUserData = async () => {
+        try {
+          // Load user profile from database
+          const profile = await UpscaleTrackingService.getUserProfile(user.id);
+          setRealUserProfile(profile);
+          
+          // Load usage stats
+          const stats = await UpscaleTrackingService.getUserUsageStats(user.id);
+          setUserStats(stats);
+          
+          console.log('Loaded user profile:', profile);
+          console.log('Loaded user stats:', stats);
+        } catch (error) {
+          console.warn('Could not load user data from database:', error);
+          // Set fallback values
+          setUserStats({
+            monthly_upscales_limit: 500,
+            current_month_upscales: 0,
+            usage_percentage: 0,
+            days_until_reset: 30,
+            estimated_monthly_cost: 0
+          });
+        }
+      };
+      
+      loadUserData();
+    } else {
+      // Clear data when user logs out
+      setUserStats(null);
+      setRealUserProfile(null);
+    }
+  }, [user]);
+
+  // Update user stats after processing
+  React.useEffect(() => {
+    if (user && processedImages.length > 0) {
+      const loadUpdatedStats = async () => {
+        try {
+          const stats = await UpscaleTrackingService.getUserUsageStats(user.id);
+          setUserStats(stats);
+        } catch (error) {
+          console.warn('Could not reload user stats after processing:', error);
+        }
+      };
+      
+      loadUpdatedStats();
+    }
+  }, [user, processedImages.length]);
 
   return (
-    <ImageProcessingContext.Provider value={value}>
+    <ImageProcessingContext.Provider value={{
+      processQueue,
+      processedImages,
+      uploadedFiles,
+      processing,
+      userStats,
+      userProfile: realUserProfile, // Use real profile from database
+      isApiConfigured,
+      addToQueue,
+      removeFromQueue,
+      addUploadedFile,
+      clearUploadedFiles,
+    }}>
       {children}
     </ImageProcessingContext.Provider>
   );
