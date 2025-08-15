@@ -416,7 +416,12 @@ export function UserAccount() {
       <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50 dark:border-gray-700/50">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Subscription</h3>
-          <button className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors">
+          <button
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('navigate-to-billing'));
+            }}
+            className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors"
+          >
             <CreditCard className="w-4 h-4" />
             <span>Manage Subscription</span>
           </button>
