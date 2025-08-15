@@ -183,6 +183,22 @@ export class UpscaleTrackingService {
     }
   }
 
+  static async incrementUpscaleCounts(userId: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .rpc('increment_upscale_counts', { user_id_param: userId }); // Call a Supabase RPC function
+
+      if (error) {
+        console.error('Error incrementing upscale counts:', error);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('Error in incrementUpscaleCounts:', error);
+      return false;
+    }
+  }
+
   static async checkApiCredits() {
     try {
       const { data, error } = await supabase
@@ -430,7 +446,7 @@ export class UpscaleTrackingService {
   // Add supabase property for compatibility with enhanced service
   static supabase = supabase;
 
-  // Legacy methods for backward compatibility
+  // Instance methods for compatibility with enhanced service
   async getUserProfile(userId: string): Promise<UserProfile | null> {
     try {
       return await UpscaleTrackingService.getUserProfile(userId);
@@ -475,6 +491,10 @@ export class UpscaleTrackingService {
   }
 
   // Instance methods for compatibility with enhanced service
+  async incrementUpscaleCounts(userId: string): Promise<boolean> {
+    return await UpscaleTrackingService.incrementUpscaleCounts(userId);
+  }
+
   async checkApiCredits() {
     return await UpscaleTrackingService.checkApiCredits();
   }
