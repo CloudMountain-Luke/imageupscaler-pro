@@ -1,15 +1,67 @@
 import React from 'react';
 import { useImageProcessing } from '../contexts/ImageProcessingContext';
+import { useAuth } from '../contexts/AuthContext';
+import { UpscaleTrackingService } from '../services/upscaleTrackingService';
 import { Download, Calendar, Image as ImageIcon, Clock } from 'lucide-react';
 
 export function ProcessingHistory() {
   const { processedImages, processQueue } = useImageProcessing();
+  const { user } = useAuth();
+  const [historyItems, setHistoryItems] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
   
-  // Combine completed images and currently processing items for history
+  React.useEffect(() => {
+    const fetchHistory = async () => {
+      if (user?.id) {
+        setLoading(true);
+        try {
+          const data = await UpscaleTrackingService.getUserTransactionHistory(user.id, 20);
+          setHistoryItems(data);
+        } catch (error) {
+          console.error('Failed to fetch processing history:', error);
+          setHistoryItems([]);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setHistoryItems([]);
+        setLoading(false);
+      }
+    };
+
+    fetchHistory();
+  }, [user?.id]);
+
+  // Combine database history with current processing items
   const allHistoryItems = [
-    ...processedImages.filter(item => item.status === 'completed'),
-    ...processQueue.filter(item => item.status === 'processing' || item.status === 'completed')
+    ...historyItems.map(item => ({
+      id: item.id,
+      file: { name: item.original_image_url?.split('/').pop() || 'Unknown' },
+      settings: { 
+        scale: item.scale_factor,
+        quality: item.quality_preset 
+      },
+      status: item.status,
+      originalImage: item.original_image_url,
+      upscaledImage: item.upscaled_image_url,
+      processedAt: new Date(item.created_at).getTime(),
+      originalWidth: null,
+      originalHeight: null,
+      upscaledWidth: null,
+      upscaledHeight: null
+    })),
+    ...processQueue.filter(item => item.status === 'processing')
   ].sort((a, b) => (b.processedAt || Date.now()) - (a.processedAt || Date.now()));
+
+  if (loading) {
+    return (
+      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl p-8 text-center border border-gray-200/50 dark:border-gray-700/50">
+        <Clock className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4 animate-spin" />
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Loading History...</h3>
+        <p className="text-gray-500 dark:text-gray-400">Please wait while we fetch your past upscales.</p>
+      </div>
+    );
+  }
 
   if (allHistoryItems.length === 0) {
     return (
