@@ -120,13 +120,20 @@ function App() {
   React.useEffect(() => {
     const handleNavigateToAccount = () => setActiveTab('account');
     const handleNavigateToBilling = () => setActiveTab('billing');
+    const handleShowPricingPlans = () => { // <--- ADDED THIS HANDLER
+      setShowHomepage(true);
+      setActiveTab('upscaler'); // Optionally reset tab if homepage is shown
+      setSidebarState('hidden'); // Hide sidebar when showing homepage
+    };
 
     window.addEventListener('navigate-to-account', handleNavigateToAccount);
     window.addEventListener('navigate-to-billing', handleNavigateToBilling);
+    window.addEventListener('show-pricing-plans', handleShowPricingPlans); // <--- ADDED THIS LISTENER
 
     return () => {
       window.removeEventListener('navigate-to-account', handleNavigateToAccount);
       window.removeEventListener('navigate-to-billing', handleNavigateToBilling);
+      window.removeEventListener('show-pricing-plans', handleShowPricingPlans); // <--- CLEANUP
     };
   }, []);
 
@@ -213,3 +220,4 @@ function App() {
 }
 
 export default App;
+
