@@ -226,7 +226,10 @@ export function BillingSection() {
         <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Plan Management</h3>
         
         <div className="flex flex-wrap gap-3">
-          <button className="flex items-center space-x-2 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white px-4 py-2 rounded-lg transition-all duration-200">
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('show-pricing-plans'))}
+            className="flex items-center space-x-2 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white px-4 py-2 rounded-lg transition-all duration-200"
+          >
             <Star className="w-4 h-4" />
             <span>Upgrade Plan</span>
           </button>
