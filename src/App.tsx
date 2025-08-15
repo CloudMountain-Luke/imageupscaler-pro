@@ -102,6 +102,7 @@ function App() {
    console.log('handleAuthSuccess called');
     setShowAuthModal(false);
     setShowHomepage(false);
+    setSidebarState('open'); // <--- ADDED THIS LINE
   };
 
   const handleLogout = async () => {
