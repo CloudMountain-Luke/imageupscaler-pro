@@ -8,19 +8,24 @@ import { Homepage } from './components/Homepage';
 import { AuthModal } from './components/AuthModal';
 import ImageUpscaler from './components/ImageUploader';
 import { ProcessingHistory } from './components/ProcessingHistory';
-import { UserStats } from './components/UserStats'; // Corrected line
+import { UserStats } from './components/UserStats';
 import { UserAccount } from './components/UserAccount';
 import { BillingSection } from './components/BillingSection';
 import { ApiSetupGuide } from './components/ApiSetupGuide';
 import { ImageComparison } from './components/ImageComparison';
-import { PricingPlans } from './components/PricingPlans'; // Import the new component
+import { PricingPlans } from './components/PricingPlans';
+import { Footer } from './components/Footer'; // Import the new Footer component
+import { TermsOfService } from './components/TermsOfService'; // Import new policy pages
+import { PrivacyPolicy } from './components/PrivacyPolicy';
+import { RefundPolicy } from './components/RefundPolicy';
+
 import { Download, Clock, CheckCircle, AlertCircle, Upload, Sparkles, Plus } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 
 const SUPPORTED_FORMATS = edgeFunctionService.getSupportedFormats();
 const MAX_FILE_SIZE = edgeFunctionService.getMaxFileSize();
 
-type ActiveTab = 'upscaler' | 'queue' | 'history' | 'stats' | 'billing' | 'account' | 'pricing'; // Add 'pricing' to ActiveTab
+type ActiveTab = 'upscaler' | 'queue' | 'history' | 'stats' | 'billing' | 'account' | 'pricing' | 'terms' | 'privacy' | 'refund'; // Add new policy tabs
 type SidebarState = 'open' | 'collapsed' | 'hidden';
 
 function App() {
@@ -40,17 +45,15 @@ function App() {
   const [sidebarState, setSidebarState] = useState<SidebarState>('open');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string>('');
-  const [showHomepage, setShowHomepage] = useState(true); // Start with homepage until we know auth state
-  const [previousTab, setPreviousTab] = useState<ActiveTab | null>(null); // New state for previous tab
+  const [showHomepage, setShowHomepage] = useState(true);
+  const [previousTab, setPreviousTab] = useState<ActiveTab | null>(null);
 
-  // Update homepage state when auth state is ready
   React.useEffect(() => {
     if (isReady) {
       setShowHomepage(!user);
     }
   }, [user, isReady]);
   
-  // Update homepage state when auth state changes
   React.useEffect(() => {
     if (isReady) {
       setShowHomepage(!user);
@@ -63,7 +66,6 @@ function App() {
     outputFormat: 'original'
   });
 
-  // Get the latest uploaded file and processed image
   const latestUploadedFile = uploadedFiles[uploadedFiles.length - 1];
   const latestProcessedImage = processedImages.find(img => img.status === 'completed');
   const currentProcessing = processQueue.find(item => item.status === 'processing');
@@ -118,31 +120,52 @@ function App() {
     console.log('App state reset to homepage');
   };
 
-  // Listen for navigation events from header dropdown
+  // Listen for navigation events from header dropdown and footer
   React.useEffect(() => {
     const handleNavigateToAccount = () => setActiveTab('account');
     const handleNavigateToBilling = () => setActiveTab('billing');
     const handleShowPricingPlans = () => {
-      setPreviousTab(activeTab); // Store current tab before changing
-      setActiveTab('pricing'); // Change active tab to 'pricing'
-      setSidebarState('open'); // Ensure sidebar is open when navigating to pricing
+      setPreviousTab(activeTab);
+      setActiveTab('pricing');
+      setSidebarState('open');
+    };
+    const handleNavigateToTerms = () => {
+      setPreviousTab(activeTab);
+      setActiveTab('terms');
+      setSidebarState('open');
+    };
+    const handleNavigateToPrivacy = () => {
+      setPreviousTab(activeTab);
+      setActiveTab('privacy');
+      setSidebarState('open');
+    };
+    const handleNavigateToRefund = () => {
+      setPreviousTab(activeTab);
+      setActiveTab('refund');
+      setSidebarState('open');
     };
 
     window.addEventListener('navigate-to-account', handleNavigateToAccount);
     window.addEventListener('navigate-to-billing', handleNavigateToBilling);
     window.addEventListener('show-pricing-plans', handleShowPricingPlans);
+    window.addEventListener('navigate-to-terms', handleNavigateToTerms); // New event listener
+    window.addEventListener('navigate-to-privacy', handleNavigateToPrivacy); // New event listener
+    window.addEventListener('navigate-to-refund', handleNavigateToRefund); // New event listener
 
     return () => {
       window.removeEventListener('navigate-to-account', handleNavigateToAccount);
       window.removeEventListener('navigate-to-billing', handleNavigateToBilling);
       window.removeEventListener('show-pricing-plans', handleShowPricingPlans);
+      window.removeEventListener('navigate-to-terms', handleNavigateToTerms); // Cleanup
+      window.removeEventListener('navigate-to-privacy', handleNavigateToPrivacy); // Cleanup
+      window.removeEventListener('navigate-to-refund', handleNavigateToRefund); // Cleanup
     };
-  }, [activeTab]); // Add activeTab to dependency array
+  }, [activeTab]);
 
   // Show homepage for non-authenticated users
   if (showHomepage) {
     return (
-      <>
+      <div className="min-h-screen flex flex-col"> {/* Added flex-col for sticky footer */}
         <Homepage onGetStarted={handleGetStarted} onLogin={handleLogin} />
         <AuthModal
           isOpen={showAuthModal}
@@ -150,7 +173,8 @@ function App() {
           selectedPlan={selectedPlan}
          onAuthSuccess={handleAuthSuccess}
         />
-      </>
+        <Footer /> {/* Render footer on homepage */}
+      </div>
     );
   }
 
@@ -163,10 +187,7 @@ function App() {
       case 'upscaler':
         return (
           <div className="space-y-6">
-            {/* Use the dedicated ImageUploader component */}
             <ImageUpscaler />
-
-            {/* Image Comparison Component */}
             {latestProcessedImage && (
               <div className="mt-8">
                 <ImageComparison />
@@ -182,20 +203,26 @@ function App() {
         return <UserAccount />;
       case 'billing':
         return <BillingSection />;
-      case 'pricing': // New case for pricing plans
+      case 'pricing':
         return (
           <PricingPlans 
             onGetStarted={handleGetStarted} 
-            onBack={() => setActiveTab(previousTab || 'upscaler')} // Pass onBack prop
+            onBack={() => setActiveTab(previousTab || 'upscaler')}
           />
         );
+      case 'terms': // New case for Terms of Service
+        return <TermsOfService />;
+      case 'privacy': // New case for Privacy Policy
+        return <PrivacyPolicy />;
+      case 'refund': // New case for Refund Policy
+        return <RefundPolicy />;
       default:
         return <div>Content for {activeTab}</div>;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-orange-50 to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-orange-50 to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <Header 
         onMenuClick={() => setSidebarState(sidebarState === 'hidden' ? 'open' : 'hidden')}
         sidebarState={sidebarState}
@@ -203,7 +230,7 @@ function App() {
         onLogout={handleLogout}
       />
       
-      <div className="flex">
+      <div className="flex flex-1"> {/* flex-1 to push footer to bottom */}
         <Sidebar 
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -224,6 +251,7 @@ function App() {
         selectedPlan={selectedPlan}
        onAuthSuccess={handleAuthSuccess}
       />
+      <Footer /> {/* Render footer globally */}
     </div>
   );
 }
