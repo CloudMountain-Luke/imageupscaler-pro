@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Check, Star, Zap, Crown, ArrowRight, Upload, Sparkles, Users, Shield, Clock, TrendingUp, LogIn, ChevronDown, ChevronUp } from 'lucide-react';
 import { PricingPlans } from './PricingPlans'; // Import the new component
-π
+
 interface HomepageProps {
   onGetStarted: (plan: string) => void;
   onLogin?: () => void;
