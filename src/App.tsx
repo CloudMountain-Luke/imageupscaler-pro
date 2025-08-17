@@ -165,7 +165,7 @@ function App() {
   // Show homepage for non-authenticated users
   if (showHomepage) {
     return (
-      <div className="min-h-screen flex flex-col"> {/* Added flex-col for sticky footer */}
+      <div className="min-h-screen flex flex-col"> {/* Removed bg-gray-900 here */}
         <Homepage onGetStarted={handleGetStarted} onLogin={handleLogin} />
         <AuthModal
           isOpen={showAuthModal}
@@ -257,3 +257,4 @@ function App() {
 }
 
 export default App;
+
