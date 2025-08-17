@@ -33,8 +33,10 @@ export function Homepage({ onGetStarted, onLogin }: HomepageProps) {
     setOpenFaq(openFaq === index ? null : index);
   };
 
+  // handleNavigate function removed from here
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-orange-50 to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen flex flex-col"> {/* Added flex-col for sticky footer */}
       {/* Header */}
       <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -59,7 +61,7 @@ export function Homepage({ onGetStarted, onLogin }: HomepageProps) {
       </header>
 
       {/* Hero Section */}
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden flex-1"> {/* flex-1 to push footer to bottom */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-8">
@@ -140,7 +142,7 @@ export function Homepage({ onGetStarted, onLogin }: HomepageProps) {
       </div>
 
       {/* Pricing Section - Now renders the new PricingPlans component */}
-      <PricingPlans onGetStarted={onGetStarted} />
+      <PricingPlans onGetStarted={onGetStarted} onBack={() => {}} /> {/* onBack is not used here, but required by prop type */}
 
       {/* FAQ Section */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -178,29 +180,7 @@ export function Homepage({ onGetStarted, onLogin }: HomepageProps) {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border-t border-gray-200/50 dark:border-gray-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center">
-            <div className="flex items-center justify-center mb-4">
-              <img 
-                src="/CMG Logo_2023_Landscape_300px-42.png" 
-                alt="CMG Logo" 
-                className="w-[150px] h-auto mr-3"
-              />
-              <span className="text-xl font-bold text-white">
-                ImageUpscale Pro
-              </span>
-            </div>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Professional AI-powered image upscaling for creators and businesses
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              © 2025 CMG. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+      {/* Footer - Removed from Homepage.tsx */}
     </div>
   );
 }
