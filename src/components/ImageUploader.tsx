@@ -1,16 +1,16 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import type { Scale, Quality } from '../types/upscale';
 import { useImageProcessing } from '../contexts/ImageProcessingContext';
-import { edgeFunctionService } from '../services/edgeFunctionService';
-import { Download, Clock, CheckCircle, AlertCircle, UploadCloud, Plus, Settings, Star } from 'lucide-react';
+import { Clock, UploadCloud, Star } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 
-const SUPPORTED_FORMATS = edgeFunctionService.getSupportedFormats();
-const MAX_FILE_SIZE = edgeFunctionService.getMaxFileSize();
+// const SUPPORTED_FORMATS = edgeFunctionService.getSupportedFormats();
+// const MAX_FILE_SIZE = edgeFunctionService.getMaxFileSize();
 
 // Helper component for the image display boxes.
-const ImageUploadBox = ({ image, onImageUpload, isProcessing = false, isUpscaledBox = false }) => {
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: onImageUpload,
+const ImageUploadBox = ({ image, onImageUpload, isProcessing = false, isUpscaledBox = false }: { image: string | undefined; onImageUpload?: (files: File[]) => void; isProcessing?: boolean; isUpscaledBox?: boolean }) => {
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop: onImageUpload || (() => {}),
     multiple: false,
     accept: {
       'image/jpeg': ['.jpeg', '.jpg'],
@@ -49,11 +49,7 @@ const ImageUploadBox = ({ image, onImageUpload, isProcessing = false, isUpscaled
               </div>
             </>
           )}
-          {isDragActive && !isUpscaledBox && (
-            <div className="absolute inset-0 bg-blue-500/20 border-2 border-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-blue-200 font-medium">Drop the image here...</span>
-            </div>
-          )}
+          {/* Drag active overlay intentionally disabled */}
         </div>
       )}
       {isProcessing && (
@@ -70,28 +66,57 @@ const ImageUpscaler = () => {
     uploadedFiles,
     processedImages,
     processQueue,
-    processing,
     userStats,
     userProfile,
     isApiConfigured,
     addToQueue,
-    removeFromQueue,
-    addUploadedFile,
-    clearUploadedFiles
+    addUploadedFile
   } = useImageProcessing();
 
-  const [upscaleSettings, setUpscaleSettings] = useState({
-    scale: 2,
-    quality: 'photo',
+  const [upscaleSettings, setUpscaleSettings] = useState<{
+    scale: Scale;
+    quality: Quality;
+    outputFormat: string;
+  }>({
+    scale: 2 as Scale,
+    quality: 'photo' as Quality,
     outputFormat: 'original'
   });
 
-  // Get the latest uploaded file and processed image
-  const latestUploadedFile = uploadedFiles[uploadedFiles.length - 1];
-  const latestProcessedImage = processedImages.find(img => img.status === 'completed');
-  const currentProcessing = processQueue.find(item => item.status === 'processing');
+  // Get the latest uploaded file and processed image **before useEffect**
+  const latestUploadedFile = uploadedFiles.length > 0
+    ? uploadedFiles[uploadedFiles.length - 1]
+    : null;
+  const latestProcessedImage =
+    processedImages.find(img => img.status === 'completed') ?? null;
+  const currentProcessing =
+    processQueue.find(item => item.status === 'processing') ?? null;
 
-  const onDrop = useCallback((acceptedFiles) => {
+  // Track current image dimensions for 12k px guard
+  const [imageWidth, setImageWidth] = useState<number | null>(null);
+  const [imageHeight, setImageHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Safely use latestUploadedFile now
+    const imgUrl = latestUploadedFile?.imageUrl;
+    if (!imgUrl) {
+      setImageWidth(null);
+      setImageHeight(null);
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      setImageWidth(img.naturalWidth);
+      setImageHeight(img.naturalHeight);
+    };
+    img.onerror = () => {
+      setImageWidth(null);
+      setImageHeight(null);
+    };
+    img.src = imgUrl;
+  }, [latestUploadedFile?.imageUrl]);
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       const file = acceptedFiles[0];
       const imageUrl = URL.createObjectURL(file);
@@ -99,7 +124,7 @@ const ImageUpscaler = () => {
     }
   }, [addUploadedFile]);
 
-  const { isDragActive } = useDropzone({
+  useDropzone({
     onDrop,
     multiple: false,
     accept: {
@@ -109,12 +134,43 @@ const ImageUpscaler = () => {
     },
   });
 
+  // Compute remaining upscales using stats/profile fallbacks
+  const remainingUpscales = (() => {
+    if (userStats?.monthly_upscales_limit && typeof userStats.current_month_upscales === 'number') {
+      return Math.max(0, userStats.monthly_upscales_limit - userStats.current_month_upscales);
+    }
+    if (userProfile?.monthly_upscales_limit && typeof userProfile.monthly_upscales_limit === 'number') {
+      const used = userProfile.current_month_upscales ?? 0;
+      return Math.max(0, userProfile.monthly_upscales_limit - used);
+    }
+    if (userProfile?.subscription_tiers?.monthly_upscales && typeof userProfile.subscription_tiers.monthly_upscales === 'number') {
+      const used = userProfile.current_month_upscales ?? 0;
+      return Math.max(0, userProfile.subscription_tiers.monthly_upscales - used);
+    }
+    if (userProfile?.credits_remaining && typeof userProfile.credits_remaining === 'number') {
+      return userProfile.credits_remaining;
+    }
+    const tier = (
+      userProfile?.subscription_tiers?.name ||
+      userProfile?.subscription_tier ||
+      userProfile?.subscriptionTier ||
+      ''
+    ).toLowerCase();
+    const defaults: Record<string, number> = { basic: 100, pro: 500, enterprise: 1250, mega: 2750 };
+    return defaults[tier] ?? 250;
+  })();
+
   const handleUpscaleImage = useCallback(() => {
     if (latestUploadedFile && !currentProcessing) {
       const processingItem = {
         id: Date.now(),
         file: latestUploadedFile.file,
-        settings: upscaleSettings,
+        settings: {
+          scale: upscaleSettings.scale,
+          quality: upscaleSettings.quality,
+          outputFormat: upscaleSettings.outputFormat,
+          outputSize: 'original'
+        },
         status: 'pending' as const,
         progress: 0,
         originalImage: latestUploadedFile.imageUrl,
@@ -137,15 +193,40 @@ const ImageUpscaler = () => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Scale Factor
                   </label>
-                  <select
-                    value={upscaleSettings.scale}
-                    onChange={(e) => setUpscaleSettings({ ...upscaleSettings, scale: Number(e.target.value) })}
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value={2}>2x Enhancement</option>
-                    <option value={4}>4x Enhancement</option>
-                    <option value={8}>8x Enhancement</option>
-                  </select>
+                    <select
+                      value={upscaleSettings.scale}
+                      onChange={(e) => setUpscaleSettings({ ...upscaleSettings, scale: Number(e.target.value) as Scale })}
+                      className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {(() => {
+                        const rawPlan = (userProfile?.subscriptionTier || userProfile?.subscription_tier || userProfile?.subscription_tiers?.name || 'basic');
+                        const plan = (typeof rawPlan === 'string' ? rawPlan : 'basic').toLowerCase();
+                        const scalesByPlan: Record<string, number[]> = {
+                          basic: [2, 4, 8],
+                          pro: [2, 4, 8, 10],
+                          enterprise: [2, 4, 8, 10, 16],
+                          mega: [2, 4, 8, 10, 16, 32],
+                        };
+                        const allowed = scalesByPlan[plan] || [2, 4, 8];
+                        const allowedForQuality = upscaleSettings.quality === 'anime' ? allowed.filter(s => s <= 8) : allowed;
+                        return allowedForQuality;
+                      })().map((sc) => (
+                        <option
+                          key={sc}
+                          value={sc}
+                          disabled={
+                            !!imageWidth && !!imageHeight && (imageWidth * sc > 12000 || imageHeight * sc > 12000)
+                          }
+                          title={
+                            !!imageWidth && !!imageHeight && (imageWidth * sc > 12000 || imageHeight * sc > 12000)
+                              ? 'Would exceed 12k px limit'
+                              : ''
+                          }
+                        >
+                          {sc}x Enhancement
+                        </option>
+                      ))}
+                    </select>
                 </div>
 
                 {/* Quality Preset */}
@@ -155,7 +236,7 @@ const ImageUpscaler = () => {
                   </label>
                   <select
                     value={upscaleSettings.quality}
-                    onChange={(e) => setUpscaleSettings({ ...upscaleSettings, quality: e.target.value })}
+                    onChange={(e) => setUpscaleSettings({ ...upscaleSettings, quality: e.target.value as Quality })}
                     className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="photo">Photo (Natural Images)</option>
@@ -180,6 +261,11 @@ const ImageUpscaler = () => {
                     <option value="jpg">JPEG (Smaller Size)</option>
                     <option value="webp">WebP (Modern)</option>
                   </select>
+                </div>
+
+                {/* Remaining Upscales (Desktop) */}
+                <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium border-2 text-gray-900 dark:text-gray-100" style={{ borderColor: '#FF8C67' }}>
+                  <span>{remainingUpscales.toLocaleString()} Remaining</span>
                 </div>
 
                 {/* Upscale Button - Aligned to the right */}
@@ -255,25 +341,58 @@ const ImageUpscaler = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Scale</label>
                 <select
                   value={upscaleSettings.scale}
-                  onChange={(e) => setUpscaleSettings({ ...upscaleSettings, scale: Number(e.target.value) })}
+                  onChange={(e) => setUpscaleSettings({ ...upscaleSettings, scale: Number(e.target.value) as Scale })}
                   className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-2 px-3"
                 >
-                  <option value={2}>2x</option>
-                  <option value={4}>4x</option>
-                  <option value={8}>8x</option>
+                  {(() => {
+                    const rawPlan = (userProfile?.subscriptionTier || userProfile?.subscription_tier || userProfile?.subscription_tiers?.name || 'basic');
+                    const plan = (typeof rawPlan === 'string' ? rawPlan : 'basic').toLowerCase();
+                    const scalesByPlan: Record<string, number[]> = {
+                      basic: [2, 4, 8],
+                      pro: [2, 4, 8, 10],
+                      enterprise: [2, 4, 8, 10, 16],
+                      mega: [2, 4, 8, 10, 16, 32],
+                    };
+                    const allowed = scalesByPlan[plan] || [2, 4, 8];
+                    const allowedForQuality = upscaleSettings.quality === 'anime' ? allowed.filter(s => s <= 8) : allowed;
+                    return allowedForQuality;
+                  })().map((sc) => (
+                    <option
+                      key={sc}
+                      value={sc}
+                      disabled={
+                        !!imageWidth && !!imageHeight && (imageWidth * sc > 12000 || imageHeight * sc > 12000)
+                      }
+                      title={
+                        !!imageWidth && !!imageHeight && (imageWidth * sc > 12000 || imageHeight * sc > 12000)
+                          ? 'Would exceed 12k px limit'
+                          : ''
+                      }
+                    >
+                      {sc}x
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quality</label>
                 <select
                   value={upscaleSettings.quality}
-                  onChange={(e) => setUpscaleSettings({ ...upscaleSettings, quality: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-2 px-3"
+                  onChange={(e) => setUpscaleSettings({ ...upscaleSettings, quality: e.target.value as Quality })}
+                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark-text-gray-100 py-2 px-3"
                 >
                   <option value="photo">Photo</option>
                   <option value="art">Art</option>
                   <option value="anime">Anime</option>
+                  <option value="text">Text</option>
                 </select>
+              </div>
+            </div>
+
+            {/* Remaining Upscales (Mobile) */}
+            <div className="flex items-center justify-center mb-4">
+              <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium border-2 text-gray-900 dark:text-gray-100" style={{ borderColor: '#FF8C67' }}>
+                <span>{remainingUpscales.toLocaleString()} Remaining</span>
               </div>
             </div>
 
