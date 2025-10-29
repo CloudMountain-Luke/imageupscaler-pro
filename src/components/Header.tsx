@@ -38,17 +38,44 @@ export function Header({ onMenuClick, sidebarState, isApiConfigured, onLogout }:
       return remaining;
     }
     
-    // Try to use credits_remaining from the real user profile
-    if (realUserProfile?.credits_remaining && typeof realUserProfile.credits_remaining === 'number') {
-      console.log('Header - Using credits_remaining:', realUserProfile.credits_remaining);
-      return realUserProfile.credits_remaining;
-    }
-    
     // Try to use monthly_upscales_limit from the real user profile
     if (realUserProfile?.monthly_upscales_limit && typeof realUserProfile.monthly_upscales_limit === 'number') {
       const used = realUserProfile.current_month_upscales ?? 0;
       const remaining = Math.max(0, realUserProfile.monthly_upscales_limit - used);
       console.log('Header - Using profile monthly limit calculation:', remaining);
+      return remaining;
+    }
+
+    // Try to use subscription tier monthly_upscales from joined table
+    if (realUserProfile?.subscription_tiers?.monthly_upscales && typeof realUserProfile.subscription_tiers.monthly_upscales === 'number') {
+      const used = realUserProfile.current_month_upscales ?? 0;
+      const remaining = Math.max(0, realUserProfile.subscription_tiers.monthly_upscales - used);
+      console.log('Header - Using subscription_tiers.monthly_upscales:', remaining);
+      return remaining;
+    }
+
+    // Try to use credits_remaining from the real user profile
+    if (realUserProfile?.credits_remaining && typeof realUserProfile.credits_remaining === 'number') {
+      console.log('Header - Using credits_remaining:', realUserProfile.credits_remaining);
+      return realUserProfile.credits_remaining;
+    }
+
+    // Fallback based on subscription tier defaults
+    const tier = (
+      realUserProfile?.subscription_tiers?.name ||
+      realUserProfile?.subscription_tier ||
+      realUserProfile?.subscriptionTier ||
+      ''
+    ).toLowerCase();
+    if (tier) {
+      const defaultLimits: Record<string, number> = {
+        basic: 100,
+        pro: 500,
+        enterprise: 1250,
+        mega: 2750,
+      };
+      const remaining = defaultLimits[tier] ?? 250;
+      console.log('Header - Using tier default limit:', tier, remaining);
       return remaining;
     }
     
@@ -105,11 +132,22 @@ export function Header({ onMenuClick, sidebarState, isApiConfigured, onLogout }:
           </button>
           
           <div className="flex items-center justify-center flex-1 md:flex-none md:justify-start space-x-2">
-            <img 
-              src="/CMG Logo_2023_Landscape_300px-42.png" 
-              alt="CMG Logo" 
-             className="w-[150px] h-auto"
-            />
+            <button
+              onClick={() => {
+                if (user) {
+                  window.dispatchEvent(new CustomEvent('navigate-to-upscaler'));
+                } else {
+                  window.dispatchEvent(new CustomEvent('show-homepage'));
+                }
+              }}
+              className="focus:outline-none"
+            >
+              <img 
+                src="/CMG Logo_2023_Landscape_300px-42.png" 
+                alt="CMG Logo" 
+               className="w-[150px] h-auto"
+              />
+            </button>
           </div>
         </div>
 
@@ -123,7 +161,7 @@ export function Header({ onMenuClick, sidebarState, isApiConfigured, onLogout }:
           )}
           
           <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium border-2 text-gray-900 dark:text-gray-100" style={{ borderColor: '#FF8C67' }}>
-            <span>{remainingUpscales} Remaining</span>
+            <span>{remainingUpscales.toLocaleString()} Remaining</span>
           </div>
           
           {/* Account Dropdown */}
