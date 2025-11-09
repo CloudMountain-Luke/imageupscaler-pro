@@ -2,14 +2,189 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* These will be overridden by ThemeContext based on tone slider */
+  --primary: hsl(240, 85%, 65%);
+  --secondary: hsl(260, 80%, 70%);
+  --accent: hsl(170, 75%, 55%);
+  --surface: hsl(222, 34%, 16%);
+  --elev: hsl(222, 40%, 26%);
+  --border: hsl(222, 32%, 36%);
+  --text: hsl(210, 32%, 96%);
+  --muted: hsla(220, 24%, 76%, 0.9);
+  --on-primary: hsl(216, 48%, 14%);
+  --focus-ring: 0 0 0 3px hsla(240, 85%, 65%, 0.55);
+  --shadow-1: 0 32px 70px rgba(8, 14, 26, 0.65);
+  --shadow-2: 0 45px 95px rgba(88, 93, 255, 0.35);
+  --radius: 18px;
+}
+
+.tone-slider {
+  appearance: none;
+  width: 160px;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, color-mix(in oklab, var(--primary) 80%, var(--secondary) 20%), color-mix(in oklab, var(--secondary) 55%, var(--accent) 45%));
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.45);
+  outline: none;
+  cursor: pointer;
+  transition: filter 0.2s ease;
+}
+
+.tone-slider:hover {
+  filter: brightness(1.08);
+}
+
+.tone-slider:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.tone-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 3px solid color-mix(in oklab, var(--primary) 70%, var(--accent) 30%);
+  box-shadow: 0 12px 28px color-mix(in oklab, var(--primary) 45%, rgba(0, 0, 0, 0.65) 55%);
+}
+
+.tone-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 3px solid color-mix(in oklab, var(--primary) 70%, var(--accent) 30%);
+  box-shadow: 0 12px 28px color-mix(in oklab, var(--primary) 45%, rgba(0, 0, 0, 0.65) 55%);
+}
+
+.ziggurat-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 160px;
+  padding: 16px 32px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, 
+    color-mix(in oklab, var(--primary) 85%, var(--secondary) 15%), 
+    color-mix(in oklab, var(--primary) 70%, var(--accent) 30%));
+  border: none;
+  color: var(--on-primary);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow: var(--shadow-1), var(--shadow-2);
+  transition: transform 0.2s ease, box-shadow 0.3s ease, filter 0.3s ease;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.ziggurat-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.ziggurat-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.15) 15%,
+    rgba(255, 255, 255, 0.05) 15%,
+    rgba(255, 255, 255, 0.05) 30%,
+    transparent 30%,
+    transparent 45%
+  );
+  background-size: 100% 180%;
+  background-repeat: repeat-y;
+  background-position-y: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ziggurat-button:not(:disabled)::after {
+  opacity: 0.9;
+  animation: zigguratRise 2.8s linear infinite;
+}
+
+.ziggurat-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px color-mix(in oklab, var(--primary) 40%, rgba(0, 0, 0, 0.5) 60%),
+              0 16px 60px color-mix(in oklab, var(--primary) 30%, rgba(0, 0, 0, 0.5) 70%);
+}
+
+.ziggurat-button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring), var(--shadow-1);
+}
+
+.ziggurat-button:active {
+  transform: translateY(0);
+  filter: brightness(0.95);
+}
+
+.ziggurat-button:disabled {
+  cursor: not-allowed;
+  background: color-mix(in oklab, var(--surface) 85%, var(--elev) 15%);
+  color: var(--muted);
+  box-shadow: none;
+  filter: saturate(0.5);
+  opacity: 0.6;
+}
+
+.ziggurat-button:disabled::before {
+  opacity: 0.08;
+}
+
+.ziggurat-button:disabled::after {
+  animation: none;
+  opacity: 0;
+}
+
+@keyframes zigguratRise {
+  0% {
+    background-position-y: 0%;
+  }
+  100% {
+    background-position-y: 100%;
+  }
+}
+
+.toolbar-shell {
+  background: color-mix(in oklab, var(--surface) 92%, transparent 8%);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 50%, transparent 50%);
+  box-shadow: var(--shadow-1);
+}
+
+.muted-label {
+  color: color-mix(in oklab, var(--muted) 85%, transparent 15%);
+}
+
+body {
+  background-color: var(--surface);
+  color: var(--text);
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
 .login-button-animated-gradient {
-  background-image: linear-gradient(to right, #0082CA, #8b5cf6);
+  background-image: linear-gradient(to right, hsl(240, 85%, 65%), hsl(260, 80%, 70%));
   background-size: 100% 100%;
   transition: all 0.5s ease;
 }
 
 .login-button-animated-gradient:hover {
-  background-image: linear-gradient(to right, #0082CA, #8b5cf6, #0082CA);
+  background-image: linear-gradient(to right, hsl(240, 85%, 65%), hsl(260, 80%, 70%), hsl(240, 85%, 65%));
   background-size: 200% 100%;
   animation: smooth-flow 1.5s linear infinite;
 }
@@ -21,4 +196,9 @@
   100% {
     background-position: 0% 50%;
   }
+}
+
+.bg-castle-stone {
+  background: var(--surface);
+  background-size: cover;
 }

@@ -1,218 +1,115 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Menu, User, CreditCard, Upload, Plus, ChevronDown, Settings, LogOut } from 'lucide-react';
-import { useDropzone } from 'react-dropzone';
-import { useImageProcessing } from '../contexts/ImageProcessingContext';
-import { useAuth } from '../contexts/AuthContext';
-
-
-type SidebarState = 'open' | 'collapsed' | 'hidden';
+import React, { useState } from 'react';
+import { User, Bell, Hammer, Palette } from 'lucide-react';
+import { useThemeLab } from '../contexts/ThemeContext';
 
 interface HeaderProps {
-  onMenuClick: () => void;
-  sidebarState: SidebarState;
-  isApiConfigured: boolean;
-  onLogout?: () => void;
+  remainingUpscales?: number;
+  isActive?: boolean;
+  userName?: string | null;
 }
 
-export function Header({ onMenuClick, sidebarState, isApiConfigured, onLogout }: HeaderProps) {
-  const { userStats, userProfile: realUserProfile } = useImageProcessing();
-  const { user } = useAuth();
-  const [showAccountDropdown, setShowAccountDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const [upscaleSettings] = React.useState({
-    scale: 2,
-    quality: 'photo',
-    outputFormat: 'original',
-  });
+export const Header: React.FC<HeaderProps> = ({ 
+  remainingUpscales = 0, 
+  isActive = true,
+  userName = null
+}) => {
+  const [hoveredButton, setHoveredButton] = useState<string | null>(null);
+  const displayName = userName?.trim() || 'Guest';
+  const { tone, setTone, isLabOpen, openLab, closeLab, toggleLab } = useThemeLab();
 
-  // Calculate remaining upscales from database values
-  const remainingUpscales = (() => {
-    // Debug logging to see what values we have
-    console.log('Header - userStats:', userStats);
-    console.log('Header - realUserProfile:', realUserProfile);
-    
-    // First try to use the monthly limit minus current usage from userStats
-    if (userStats?.monthly_upscales_limit && typeof userStats.current_month_upscales === 'number') {
-      const remaining = Math.max(0, userStats.monthly_upscales_limit - userStats.current_month_upscales);
-      console.log('Header - Using monthly limit calculation:', remaining);
-      return remaining;
-    }
-    
-    // Try to use monthly_upscales_limit from the real user profile
-    if (realUserProfile?.monthly_upscales_limit && typeof realUserProfile.monthly_upscales_limit === 'number') {
-      const used = realUserProfile.current_month_upscales ?? 0;
-      const remaining = Math.max(0, realUserProfile.monthly_upscales_limit - used);
-      console.log('Header - Using profile monthly limit calculation:', remaining);
-      return remaining;
-    }
-
-    // Try to use subscription tier monthly_upscales from joined table
-    if (realUserProfile?.subscription_tiers?.monthly_upscales && typeof realUserProfile.subscription_tiers.monthly_upscales === 'number') {
-      const used = realUserProfile.current_month_upscales ?? 0;
-      const remaining = Math.max(0, realUserProfile.subscription_tiers.monthly_upscales - used);
-      console.log('Header - Using subscription_tiers.monthly_upscales:', remaining);
-      return remaining;
-    }
-
-    // Try to use credits_remaining from the real user profile
-    if (realUserProfile?.credits_remaining && typeof realUserProfile.credits_remaining === 'number') {
-      console.log('Header - Using credits_remaining:', realUserProfile.credits_remaining);
-      return realUserProfile.credits_remaining;
-    }
-
-    // Fallback based on subscription tier defaults
-    const tier = (
-      realUserProfile?.subscription_tiers?.name ||
-      realUserProfile?.subscription_tier ||
-      realUserProfile?.subscriptionTier ||
-      ''
-    ).toLowerCase();
-    if (tier) {
-      const defaultLimits: Record<string, number> = {
-        basic: 100,
-        pro: 500,
-        enterprise: 1250,
-        mega: 2750,
-      };
-      const remaining = defaultLimits[tier] ?? 250;
-      console.log('Header - Using tier default limit:', tier, remaining);
-      return remaining;
-    }
-    
-    console.log('Header - Using fallback value: 250');
-    return 250;
-  })();
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowAccountDropdown(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const onDrop = React.useCallback((acceptedFiles: File[]) => {
-    // Just show a notification that files should be uploaded in the main area
-    if (acceptedFiles.length > 0) {
-      // You could add a toast notification here if desired
-      console.log('Please use the main upload area to select images for upscaling');
-    }
-  }, []);
-
-  const { getRootProps, getInputProps } = useDropzone({
-    onDrop,
-    accept: {
-      'image/jpeg': ['.jpg', '.jpeg'],
-      'image/png': ['.png'],
-      'image/webp': ['.webp'],
-    },
-    multiple: true,
-    noClick: true, // Only allow drag & drop in header
-  });
+  const handleToneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setTone(parseInt(event.target.value, 10));
+  };
 
   return (
-    <header 
-      {...getRootProps()}
-      className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50"
-    >
-      <input {...getInputProps()} />
-      <div className="flex items-center justify-between px-4 py-4">
-        <div className="flex items-center space-x-4">
+    <div className="backdrop-blur-xl border-b py-4 relative z-50" style={{ background: 'color-mix(in oklab, var(--surface) 85%, transparent 15%)', borderColor: 'color-mix(in oklab, var(--border) 60%, transparent 40%)' }}>
+      <div className="flex flex-wrap items-center justify-between gap-4 px-6 lg:px-10">
+        {/* Left side - Logo */}
+        <div className="flex items-center space-x-4 pl-0 xl:pl-[76px]">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg border" style={{ background: 'color-mix(in oklab, var(--elev) 90%, transparent 10%)', borderColor: 'var(--border)' }}>
+              <Hammer className="w-5 h-5" style={{ color: 'var(--primary)' }} />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold tracking-tight" style={{ color: 'var(--text)' }}>Upscale Forge</h1>
+            </div>
+          </div>
+        </div>
+
+        {/* Right side - Status, Upscales, and User actions */}
+        <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-4 pr-0 xl:pr-[76px]">
+          <div className="hidden md:flex items-center gap-3 rounded-full border px-4 py-2 shadow-lg order-1" style={{ background: 'color-mix(in oklab, var(--elev) 50%, transparent 50%)', borderColor: 'color-mix(in oklab, var(--border) 60%, transparent 40%)', boxShadow: 'var(--shadow-1)' }}>
+            <input
+              type="range"
+              min={10}
+              max={90}
+              step={1}
+              value={tone}
+              onChange={handleToneChange}
+              className="tone-slider"
+            />
+            <span className="text-xs font-semibold tabular-nums" style={{ color: 'var(--primary)' }}>{tone}%</span>
+            <button
+              type="button"
+              onClick={isLabOpen ? closeLab : openLab}
+              className="text-xs font-semibold transition-colors underline-offset-4 hover:underline"
+              style={{ color: 'var(--primary)' }}
+            >
+              {isLabOpen ? 'Close UI Lab' : 'Open UI Lab'}
+            </button>
+          </div>
+          {/* Status and Upscales Pill */}
+          <div className="flex items-center gap-3 sm:gap-4 order-2 md:order-2">
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 shrink-0 rounded-full ${isActive ? 'bg-emerald-400' : 'bg-red-500'} transition-all duration-300`} />
+              <span className="text-sm font-medium whitespace-nowrap" style={{ color: 'var(--text)' }}>
+                {isActive ? 'Upscaler Active' : 'Upscaler Inactive'}
+              </span>
+            </div>
+            
+            <div className="px-4 py-2 rounded-full text-sm font-semibold border transition-all duration-300 hover:shadow-lg shadow-lg whitespace-nowrap" style={{ background: 'color-mix(in oklab, var(--elev) 80%, transparent 20%)', borderColor: 'var(--border)', color: 'var(--text)', boxShadow: 'var(--shadow-1)' }}>
+              <div className="flex items-center space-x-2">
+                <Hammer className="w-4 h-4" style={{ color: 'var(--primary)' }} />
+                <span>{remainingUpscales.toLocaleString()} Upscales</span>
+              </div>
+            </div>
+          </div>
+          {/* User actions */}
           <button
-            onClick={onMenuClick}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors md:hidden"
+            className={`md:hidden order-1 p-2 rounded-lg transition-all duration-300 ${
+              hoveredButton === 'palette'
+                ? 'text-white bg-gray-700/50 scale-110'
+                : 'text-gray-300 hover:text-white'
+            }`}
+            onMouseEnter={() => setHoveredButton('palette')}
+            onMouseLeave={() => setHoveredButton(null)}
+            onClick={toggleLab}
           >
-            <Menu className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+            <Palette className="w-5 h-5" />
+          </button>
+
+          <button 
+            className={`p-2 rounded-lg transition-all duration-300 order-3 md:order-3 ${
+              hoveredButton === 'bell' 
+                ? 'text-white bg-gray-700/50 scale-110' 
+                : 'text-gray-300 hover:text-white'
+            }`}
+            onMouseEnter={() => setHoveredButton('bell')}
+            onMouseLeave={() => setHoveredButton(null)}
+          >
+            <Bell className="w-5 h-5" />
           </button>
           
-          <div className="flex items-center justify-center flex-1 md:flex-none md:justify-start space-x-2">
-            <button
-              onClick={() => {
-                if (user) {
-                  window.dispatchEvent(new CustomEvent('navigate-to-upscaler'));
-                } else {
-                  window.dispatchEvent(new CustomEvent('show-homepage'));
-                }
-              }}
-              className="focus:outline-none"
-            >
-              <img 
-                src="/CMG Logo_2023_Landscape_300px-42.png" 
-                alt="CMG Logo" 
-               className="w-[150px] h-auto"
-              />
-            </button>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-4">
-          {/* API Status Indicator */}
-          {isApiConfigured && (
-            <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium text-gray-900 dark:text-gray-100">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>Upscaler Active</span>
+          <div className="flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-300 cursor-pointer order-4" style={{ background: 'transparent' }} onMouseEnter={(e) => e.currentTarget.style.background = 'color-mix(in oklab, var(--elev) 60%, transparent 40%)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+            <div className="w-9 h-9 rounded-full flex items-center justify-center shadow-md border" style={{ background: 'var(--elev)', borderColor: 'var(--border)' }}>
+              <User className="w-4 h-4" style={{ color: 'var(--primary)' }} />
             </div>
-          )}
-          
-          <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium border-2 text-gray-900 dark:text-gray-100" style={{ borderColor: '#FF8C67' }}>
-            <span>{remainingUpscales.toLocaleString()} Remaining</span>
+            <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>{displayName}</span>
           </div>
-          
-          {/* Account Dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <button 
-              onClick={() => setShowAccountDropdown(!showAccountDropdown)}
-              className="flex items-center space-x-1 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            >
-              <User className="w-6 h-6 text-gray-700 dark:text-white" />
-              <ChevronDown className={`w-4 h-4 text-gray-700 dark:text-white transition-transform ${showAccountDropdown ? 'rotate-180' : ''}`} />
-            </button>
-
-            {showAccountDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-                <button
-                  onClick={() => {
-                    window.dispatchEvent(new CustomEvent('navigate-to-account'));
-                    setShowAccountDropdown(false);
-                  }}
-                  className="w-full flex items-center space-x-2 px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <Settings className="w-4 h-4" />
-                  <span>Account Settings</span>
-                </button>
-                <button
-                  onClick={() => {
-                    window.dispatchEvent(new CustomEvent('navigate-to-billing'));
-                    setShowAccountDropdown(false);
-                  }}
-                  className="w-full flex items-center space-x-2 px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <CreditCard className="w-4 h-4" />
-                  <span>Billing & Plans</span>
-                </button>
-                <hr className="my-1 border-gray-200 dark:border-gray-600" />
-                <button
-                  onClick={() => {
-                    onLogout?.();
-                    setShowAccountDropdown(false);
-                  }}
-                  className="w-full flex items-center space-x-2 px-4 py-2 text-left text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Sign Out</span>
-                </button>
-              </div>
-            )}
-          </div>
-          
         </div>
       </div>
-    </header>
+    </div>
   );
-}
+};
+
+export default Header;

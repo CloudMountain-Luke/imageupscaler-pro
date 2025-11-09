@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 import { edgeFunctionService } from '../services/edgeFunctionService';
 import { UpscaleTrackingService } from '../services/upscaleTrackingService'; // Corrected import to use the class
 import { useAuth } from './AuthContext';
+import type { PlanTier, Quality, Scale, UpscaleSettings } from '../../shared/types';
 
 interface UploadedFile {
   id: string;
@@ -12,10 +13,7 @@ interface UploadedFile {
 interface ProcessingItem {
   id: number;
   file: File;
-  settings: {
-    scale: number;
-    quality: string;
-    outputFormat: string;
+  settings: UpscaleSettings & {
     outputSize: string;
   };
   status: 'pending' | 'processing' | 'completed' | 'error';
@@ -132,7 +130,10 @@ export function ImageProcessingProvider({ children }: { children: ReactNode }) {
         image: item.file,
         scale: item.settings.scale,
         quality: item.settings.quality,
-        outputFormat: item.settings.outputFormat
+        outputFormat: item.settings.outputFormat,
+        maxDetail: item.settings.maxDetail,
+        plan: item.settings.plan,
+        selectedModel: item.settings.selectedModel,
       });
 
       // Update user stats after processing

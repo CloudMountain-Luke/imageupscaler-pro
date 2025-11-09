@@ -1,7 +1,7 @@
 import React from 'react';
 import { useImageProcessing } from '../contexts/ImageProcessingContext';
 import { useAuth } from '../contexts/AuthContext';
-import { TrendingUp, Image as ImageIcon, Clock, Zap, Calendar, DollarSign } from 'lucide-react';
+import { TrendingUp, Image as ImageIcon, Calendar } from 'lucide-react';
 
 export function UserStats() {
   const { processedImages, userStats } = useImageProcessing();
@@ -12,7 +12,6 @@ export function UserStats() {
   const totalUpscales = userStats?.total_upscales || processedImages.filter(item => item.status === 'completed').length;
   const monthlyLimit = userStats?.monthly_limit || 500;
   const usagePercentage = userStats?.usage_percentage || Math.round((currentMonthUpscales / monthlyLimit) * 100);
-  const estimatedCost = userStats?.estimated_monthly_cost || (currentMonthUpscales * 0.0055);
   const daysUntilReset = userStats?.days_until_reset || 30;
 
   const stats = [
@@ -29,13 +28,6 @@ export function UserStats() {
       icon: TrendingUp,
       color: 'text-green-600 bg-green-100',
       description: 'All time'
-    },
-    {
-      title: 'API Cost',
-      value: `$${estimatedCost}`,
-      icon: DollarSign,
-      color: 'text-purple-600 bg-purple-100',
-      description: 'This month'
     },
     {
       title: 'Days Until Reset',
@@ -150,19 +142,12 @@ export function UserStats() {
         </div>
       </div>
 
-      {/* Cost Breakdown */}
+      {/* Usage Limits */}
       <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50 dark:border-gray-700/50">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Cost Information</h3>
-        
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Usage Limits</h3>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div className="space-y-2">
-            <h4 className="font-medium text-gray-900 dark:text-gray-100">Replicate API Costs</h4>
-            <p className="text-gray-600 dark:text-gray-400">$0.0055 per upscale</p>
-            <p className="text-gray-600 dark:text-gray-400">This month: {currentMonthUpscales} upscales</p>
-            <p className="text-gray-600 dark:text-gray-400">API cost: ${estimatedCost.toFixed(4)}</p>
-          </div>
-          <div className="space-y-2">
-            <h4 className="font-medium text-gray-900 dark:text-gray-100">Usage Limits</h4>
             <p className="text-gray-600 dark:text-gray-400">Monthly limit: {monthlyLimit} upscales</p>
             <p className="text-gray-600 dark:text-gray-400">Remaining: {Math.max(0, monthlyLimit - currentMonthUpscales)} upscales</p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">

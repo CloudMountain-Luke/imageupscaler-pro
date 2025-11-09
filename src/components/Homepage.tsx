@@ -34,9 +34,9 @@ export function Homepage({ onGetStarted, onLogin }: HomepageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-orange-50 to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       {/* Header */}
-      <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50">
+      <header className="bg-white/80 dark:bg-slate-950/90 backdrop-blur-md border-b border-gray-200/50 dark:border-slate-800/50 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
             <div className="flex items-center space-x-2">
@@ -49,7 +49,12 @@ export function Homepage({ onGetStarted, onLogin }: HomepageProps) {
             
             <button
               onClick={onLogin}
-              className="flex items-center space-x-2 text-white px-4 py-2 rounded-lg font-medium border-2 border-[#9ddcff] hover:border-[#a1deff] hover:shadow-lg hover:shadow-[#a1deff]/50 hover:scale-105 transition-all duration-300 login-button-animated-gradient"
+              className="flex items-center space-x-2 text-white px-5 py-2.5 rounded-lg font-medium border transition-all duration-300 hover:scale-105"
+              style={{
+                background: 'linear-gradient(to right, var(--primary), color-mix(in oklab, var(--primary) 70%, var(--secondary) 30%))',
+                borderColor: 'color-mix(in oklab, var(--primary) 80%, transparent 20%)',
+                boxShadow: '0 4px 14px color-mix(in oklab, var(--primary) 30%, transparent 70%)'
+              }}
             >
               <LogIn className="w-4 h-4" strokeWidth={2.5} />
               <span>Sign In</span>
@@ -63,7 +68,7 @@ export function Homepage({ onGetStarted, onLogin }: HomepageProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-8">
-              ImageUpscale Pro
+              Upscale Forge
             </h1>
             
             <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
@@ -72,17 +77,17 @@ export function Homepage({ onGetStarted, onLogin }: HomepageProps) {
             </p>
             
             <div className="flex flex-wrap justify-center gap-4 mb-12">
-              <div className="flex items-center space-x-2 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-200/50">
-                <Sparkles className="w-5 h-5 text-blue-600" />
-                <span className="text-gray-700 dark:text-gray-300">AI-Powered Enhancement</span>
+              <div className="flex items-center space-x-2 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-200/50 dark:border-slate-700/50">
+                <Sparkles className="w-5 h-5" style={{ color: 'var(--primary)' }} />
+                <span className="text-gray-700 dark:text-slate-300">AI-Powered Enhancement</span>
               </div>
-              <div className="flex items-center space-x-2 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-200/50">
-                <Clock className="w-5 h-5 text-green-600" />
-                <span className="text-gray-700 dark:text-gray-300">15-60 Second Processing</span>
+              <div className="flex items-center space-x-2 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-200/50 dark:border-slate-700/50">
+                <Clock className="w-5 h-5" style={{ color: 'var(--accent)' }} />
+                <span className="text-gray-700 dark:text-slate-300">15-60 Second Processing</span>
               </div>
-              <div className="flex items-center space-x-2 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-200/50">
-                <Shield className="w-5 h-5 text-purple-600" />
-                <span className="text-gray-700 dark:text-gray-300">Professional Quality</span>
+              <div className="flex items-center space-x-2 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-200/50 dark:border-slate-700/50">
+                <Shield className="w-5 h-5" style={{ color: 'var(--secondary)' }} />
+                <span className="text-gray-700 dark:text-slate-300">Professional Quality</span>
               </div>
             </div>
             
@@ -102,10 +107,10 @@ export function Homepage({ onGetStarted, onLogin }: HomepageProps) {
       </div>
 
       {/* Features Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 mt-[-30px]">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            Why Choose ImageUpscale Pro?
+            Why Choose Upscale Forge?
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Professional-grade AI upscaling at competitive prices
@@ -113,28 +118,46 @@ export function Homepage({ onGetStarted, onLogin }: HomepageProps) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          <div className="text-center p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl border border-gray-200/50">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="text-center p-6 bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-xl border border-gray-200/50 dark:border-slate-700/50">
+            <div 
+              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+              style={{
+                background: 'linear-gradient(to bottom right, var(--primary), color-mix(in oklab, var(--primary) 70%, var(--secondary) 30%))',
+                boxShadow: '0 8px 20px color-mix(in oklab, var(--primary) 25%, transparent 75%)'
+              }}
+            >
               <TrendingUp className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Up to 8x Scaling</h3>
-            <p className="text-gray-600 dark:text-gray-300">Scale your images 2x, 4x, or 8x while preserving quality and detail</p>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">Up to 32x Scaling</h3>
+            <p className="text-gray-600 dark:text-slate-400">Scale your images 2x, 4x, 8x, 10x, 16x, or 32x, while preserving quality and detail</p>
           </div>
 
-          <div className="text-center p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl border border-gray-200/50">
-            <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="text-center p-6 bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-xl border border-gray-200/50 dark:border-slate-700/50">
+            <div 
+              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+              style={{
+                background: 'linear-gradient(to bottom right, var(--primary), var(--secondary))',
+                boxShadow: '0 8px 20px color-mix(in oklab, var(--primary) 25%, transparent 75%)'
+              }}
+            >
               <Sparkles className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">AI-Powered Quality</h3>
-            <p className="text-gray-600 dark:text-gray-300">Advanced Real-ESRGAN models optimized for photos, art, and anime</p>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">AI-Powered Quality</h3>
+            <p className="text-gray-600 dark:text-slate-400">Advanced AI models optimized for photos, art, illustrations, anime, cartoons and text</p>
           </div>
 
-          <div className="text-center p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl border border-gray-200/50">
-            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="text-center p-6 bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-xl border border-gray-200/50 dark:border-slate-700/50">
+            <div 
+              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+              style={{
+                background: 'linear-gradient(to bottom right, var(--accent), color-mix(in oklab, var(--accent) 80%, var(--primary) 20%))',
+                boxShadow: '0 8px 20px color-mix(in oklab, var(--accent) 25%, transparent 75%)'
+              }}
+            >
               <Clock className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Lightning Fast</h3>
-            <p className="text-gray-600 dark:text-gray-300">Get professional results in 15-60 seconds with our optimized processing</p>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">Lightning Fast</h3>
+            <p className="text-gray-600 dark:text-slate-400">Get professional results in 15-60 seconds with our optimized processing</p>
           </div>
         </div>
       </div>
@@ -152,10 +175,10 @@ export function Homepage({ onGetStarted, onLogin }: HomepageProps) {
 
         <div className="space-y-6">
           {faqs.map((faq, index) => (
-            <div key={index} className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl border border-gray-200/50 overflow-hidden">
+            <div key={index} className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-xl border border-gray-200/50 dark:border-slate-700/50 overflow-hidden">
               <button
                 onClick={() => toggleFaq(index)}
-                className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50/50 dark:hover:bg-gray-700/50 transition-colors"
+                className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50/50 dark:hover:bg-slate-700/50 transition-colors"
               >
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {faq.question}
@@ -178,29 +201,7 @@ export function Homepage({ onGetStarted, onLogin }: HomepageProps) {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border-t border-gray-200/50 dark:border-gray-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center">
-            <div className="flex items-center justify-center mb-4">
-              <img 
-                src="/CMG Logo_2023_Landscape_300px-42.png" 
-                alt="CMG Logo" 
-                className="w-[150px] h-auto mr-3"
-              />
-              <span className="text-xl font-bold text-white">
-                ImageUpscale Pro
-              </span>
-            </div>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Professional AI-powered image upscaling for creators and businesses
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              © 2025 CMG. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+      {/* Footer is provided by the shared Footer component */}
     </div>
   );
 }

@@ -198,14 +198,15 @@ export class ImageProcessor {
   }
 
   private async upscaleWithAI(preprocessedResult: any, settings: any): Promise<any> {
-    // This would call the AI API service
-    const { aiApiService } = await import('./aiApiService');
+    const { edgeFunctionService } = await import('./edgeFunctionService');
     
-    return await aiApiService.upscaleImage({
+    return await edgeFunctionService.upscaleImage({
       image: preprocessedResult.processedFile,
       scale: settings.scale,
       quality: settings.quality,
       outputFormat: settings.outputFormat,
+      maxDetail: settings.maxDetail,
+      plan: settings.plan,
     });
   }
 

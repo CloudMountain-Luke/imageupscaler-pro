@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Check, Star, Zap, Crown, ArrowRight, Upload, Sparkles, Users, Shield, Clock, TrendingUp, LogIn, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react'; // Import ArrowLeft
+import { Check, Star, Zap, Crown, ArrowRight, Upload, Sparkles, Users, Shield, Clock, TrendingUp, LogIn, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface PricingPlansProps {
   onGetStarted: (plan: string) => void;
-  onBack: () => void; // New prop for back functionality
 }
 
-export function PricingPlans({ onGetStarted, onBack }: PricingPlansProps) {
+export function PricingPlans({ onGetStarted }: PricingPlansProps) {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
   const plans = [
@@ -19,7 +18,7 @@ export function PricingPlans({ onGetStarted, onBack }: PricingPlansProps) {
       upscales: 100,
       features: [
         '100 AI upscales per month',
-        '2x, 4x, 8x scaling options',
+        '2x and 4x (up to 8x)',
         'Photo & Art quality presets',
         'JPEG, PNG, WebP support',
         'Basic customer support',
@@ -33,18 +32,14 @@ export function PricingPlans({ onGetStarted, onBack }: PricingPlansProps) {
       id: 'pro',
       name: 'Pro',
       description: 'Ideal for professionals and content creators',
-      monthlyPrice: 24.99,
-      yearlyPrice: 249.99,
+      monthlyPrice: 19.99,
+      yearlyPrice: 199.99,
       upscales: 500,
       features: [
         '500 AI upscales per month',
-        '2x, 4x, 8x scaling options',
+        '2x, 4x, 8x, 10x scaling options',
         'All quality presets (Photo, Art, Anime, Text)',
-        'All format support + WebP conversion',
-        'Priority customer support',
-        'Batch processing',
-        'API access',
-        'Advanced download options'
+        'JPEG, PNG, WebP support'
       ],
       icon: Zap,
       color: 'from-orange-500 to-red-500',
@@ -54,23 +49,34 @@ export function PricingPlans({ onGetStarted, onBack }: PricingPlansProps) {
       id: 'enterprise',
       name: 'Enterprise',
       description: 'For teams and high-volume processing needs',
-      monthlyPrice: 49.99,
-      yearlyPrice: 499.99,
-      upscales: 2000,
+      monthlyPrice: 39.99,
+      yearlyPrice: 399.99,
+      upscales: 1250,
       features: [
-        '2000 AI upscales per month',
-        'All scaling and quality options',
-        'Custom quality presets',
-        'All formats + custom output',
-        'Dedicated account manager',
-        'Unlimited batch processing',
-        'Full API access with webhooks',
-        'Custom integrations',
-        'Team management',
-        'Usage analytics'
+        '1,250 AI upscales per month',
+        '2x, 4x, 8x, 10x, 16x scaling options',
+        'All quality presets (Photo, Art, Anime, Text)',
+        'JPEG, PNG, WebP support'
       ],
       icon: Crown,
       color: 'from-purple-500 to-pink-500',
+      popular: false
+    },
+    {
+      id: 'mega',
+      name: 'Mega',
+      description: 'For power users needing massive monthly capacity',
+      monthlyPrice: 79.99,
+      yearlyPrice: 799.99,
+      upscales: 2750,
+      features: [
+        '2,750 AI upscales per month',
+        '2x, 4x, 8x, 10x, 16x, 32x scaling options',
+        'All quality presets (Photo, Art, Anime, Text)',
+        'JPEG, PNG, WebP support'
+      ],
+      icon: TrendingUp,
+      color: 'from-green-500 to-emerald-600',
       popular: false
     }
   ];
@@ -88,16 +94,6 @@ export function PricingPlans({ onGetStarted, onBack }: PricingPlansProps) {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <div className="text-center mb-16">
-        {/* Back Button */}
-        <div className="flex justify-start mb-8">
-          <button
-            onClick={onBack}
-            className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Back</span>
-          </button>
-        </div>
 
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
           Choose Your Plan
@@ -135,7 +131,7 @@ export function PricingPlans({ onGetStarted, onBack }: PricingPlansProps) {
       </div>
 
       {/* Pricing Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {plans.map((plan) => {
           const Icon = plan.icon;
           const price = getPrice(plan);
@@ -152,7 +148,7 @@ export function PricingPlans({ onGetStarted, onBack }: PricingPlansProps) {
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-1 rounded-full text-sm font-medium flex items-center space-x-1">
+                  <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-5 py-1 rounded-full text-sm font-medium flex items-center space-x-1 whitespace-nowrap">
                     <Star className="w-4 h-4" />
                     <span>Most Popular</span>
                   </div>
