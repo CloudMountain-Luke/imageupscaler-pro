@@ -1,0 +1,334 @@
+.theme-lab {
+  --radius: 18px;
+  display: block;
+  color: var(--text);
+  background: linear-gradient(145deg, color-mix(in oklab, var(--surface) 85%, #000 15%), color-mix(in oklab, var(--surface) 70%, var(--primary) 30%));
+  border: 1px solid color-mix(in oklab, var(--border) 60%, var(--primary) 40%);
+  border-radius: calc(var(--radius) + 8px);
+  box-shadow: var(--shadow-1);
+  padding: 28px 28px 32px;
+  max-width: 960px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.theme-lab .wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.theme-lab .panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-1);
+}
+
+.theme-lab .panel.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px 24px;
+  position: relative;
+  border-radius: calc(var(--radius) + 6px);
+}
+
+.theme-lab .panel.toolbar::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(circle at top right, color-mix(in oklab, var(--primary) 40%, transparent 60%) 0%, transparent 60%);
+  opacity: 0.4;
+}
+
+.theme-lab .close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid color-mix(in oklab, var(--border) 55%, var(--primary) 45%);
+  background: color-mix(in oklab, var(--elev) 82%, var(--primary) 18%);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.theme-lab .close:hover {
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 10px 30px color-mix(in oklab, var(--primary) 40%, #000 60%);
+  border-color: color-mix(in oklab, var(--primary) 70%, var(--border) 30%);
+}
+
+.theme-lab .close svg {
+  pointer-events: none;
+}
+
+.theme-lab .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.theme-lab .brand .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--accent) 35%, #0000 65%);
+}
+
+.theme-lab .brand .muted {
+  font-weight: 500;
+}
+
+.theme-lab .muted {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.theme-lab .controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.theme-lab .actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.theme-lab .actions .btn {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.theme-lab button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+  filter: none;
+  pointer-events: none;
+}
+
+.theme-lab .seg {
+  display: flex;
+  background: var(--elev);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px;
+  box-shadow: var(--shadow-1);
+}
+
+.theme-lab .seg button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.theme-lab .seg button:hover {
+  transform: translateY(-1px);
+}
+
+.theme-lab .seg button[aria-pressed="true"] {
+  background: linear-gradient(135deg, color-mix(in oklab, var(--primary) 85%, var(--secondary) 15%), color-mix(in oklab, var(--primary) 55%, var(--accent) 45%));
+  color: var(--on-primary);
+  box-shadow: var(--focus-ring), 0 16px 32px color-mix(in oklab, var(--primary) 45%, #000 55%);
+}
+
+.theme-lab .slider {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, color-mix(in oklab, var(--elev) 90%, var(--primary) 10%), color-mix(in oklab, var(--elev) 75%, var(--secondary) 25%));
+  border: 1px solid color-mix(in oklab, var(--border) 60%, var(--primary) 40%);
+  border-radius: 12px;
+  box-shadow: 0 20px 45px color-mix(in oklab, var(--primary) 30%, #000 70%);
+}
+
+.theme-lab .slider label {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.theme-lab .slider input[type='range'] {
+  width: 280px;
+  accent-color: var(--primary);
+  background: linear-gradient(90deg, color-mix(in oklab, var(--primary) 70%, var(--secondary) 30%), color-mix(in oklab, var(--secondary) 40%, var(--accent) 60%));
+  height: 6px;
+  border-radius: 999px;
+}
+
+.theme-lab .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.theme-lab .card {
+  background: var(--elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow-1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.theme-lab .card h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.theme-lab .ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.theme-lab .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  transition: transform 0.2s ease, box-shadow 0.3s ease, filter 0.3s ease;
+}
+
+.theme-lab .btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+.theme-lab .btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.theme-lab .btn-primary {
+  background: linear-gradient(135deg, color-mix(in oklab, var(--primary) 85%, var(--secondary) 15%), color-mix(in oklab, var(--primary) 65%, var(--accent) 35%));
+  color: var(--on-primary);
+  box-shadow: 0 25px 55px color-mix(in oklab, var(--primary) 45%, #000 55%);
+  border-color: color-mix(in oklab, var(--primary) 65%, transparent 35%);
+}
+
+.theme-lab .btn-secondary {
+  background: linear-gradient(135deg, color-mix(in oklab, var(--secondary) 80%, var(--primary) 20%), color-mix(in oklab, var(--secondary) 60%, var(--accent) 40%));
+  color: var(--on-primary);
+  box-shadow: 0 22px 48px color-mix(in oklab, var(--secondary) 45%, #000 55%);
+  border-color: color-mix(in oklab, var(--secondary) 60%, transparent 40%);
+}
+
+.theme-lab .btn-ghost {
+  background: color-mix(in oklab, var(--surface) 90%, var(--elev) 10%);
+  border-color: color-mix(in oklab, var(--border) 65%, var(--primary) 35%);
+  color: color-mix(in oklab, var(--text) 85%, var(--primary) 15%);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--primary) 35%, transparent 65%);
+}
+
+.theme-lab .input {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: box-shadow 0.2s ease;
+}
+
+.theme-lab .input:focus {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.theme-lab .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: linear-gradient(135deg, color-mix(in oklab, var(--accent) 80%, var(--secondary) 20%), color-mix(in oklab, var(--accent) 60%, var(--surface) 40%));
+  color: var(--on-primary);
+  border-radius: 999px;
+  box-shadow: 0 12px 30px color-mix(in oklab, var(--accent) 45%, #000 55%);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.theme-lab .swatches {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.theme-lab .sw {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  box-shadow: 0 0 0 1px var(--border), 0 0 10px color-mix(in oklab, var(--surface) 50%, var(--primary) 50%);
+}
+
+.theme-lab .sw.p {
+  background: var(--primary);
+}
+
+.theme-lab .sw.s {
+  background: var(--secondary);
+}
+
+.theme-lab .sw.a {
+  background: var(--accent);
+}
+
+@media (max-width: 640px) {
+  .theme-lab {
+    padding: 20px;
+  }
+
+  .theme-lab .slider {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .theme-lab .slider input[type='range'] {
+    width: 100%;
+  }
+
+  .theme-lab .actions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+}

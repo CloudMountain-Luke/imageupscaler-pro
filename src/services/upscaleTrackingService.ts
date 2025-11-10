@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import type { PostgrestError } from '@supabase/supabase-js';
 
 export type UserProfile = {
@@ -51,6 +51,9 @@ interface SystemAlert {
 export class UpscaleTrackingService {
   // Helper method to ensure user is authenticated
   private static async getAuthenticatedUser() {
+    if (!isSupabaseConfigured) {
+      throw new Error('Supabase not configured');
+    }
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error || !user) {
       throw new Error('User not authenticated');
@@ -59,6 +62,20 @@ export class UpscaleTrackingService {
   }
 
   static async getUserProfile(userId: string): Promise<UserProfile> {
+    if (!isSupabaseConfigured) {
+      console.warn('[UpscaleTrackingService] Supabase not configured; returning default profile.');
+      return {
+        id: userId,
+        email: null,
+        display_name: null,
+        credits_remaining: 250,
+        subscription_tier_id: null,
+        current_month_upscales: 0,
+        monthly_upscales_limit: 250,
+        subscription_tiers: null,
+      };
+    }
+
     // 1) Use maybeSingle() to avoid 406 when no rows
     const { data, error } = await supabase
       .from('user_profiles')
@@ -93,6 +110,10 @@ export class UpscaleTrackingService {
 
   // Creates a default profile and returns it. Safe to call repeatedly.
   static async ensureDefaultProfile(userId: string): Promise<UserProfile> {
+    if (!isSupabaseConfigured) {
+      throw new Error('Supabase not configured');
+    }
+    
     // Ensure user is authenticated before proceeding
     const authenticatedUser = await UpscaleTrackingService.getAuthenticatedUser();
     
@@ -144,6 +165,20 @@ export class UpscaleTrackingService {
 
   static async getUserUsageStats(userId: string) {
     try {
+      if (!isSupabaseConfigured) {
+        console.warn('[UpscaleTrackingService] Supabase not configured; returning default usage stats.');
+        return {
+          usedThisMonth: 0,
+          monthlyLimit: 100,
+          current_month_upscales: 0,
+          monthly_upscales_limit: 100,
+          total_upscales: 0,
+          usage_percentage: 0,
+          days_until_reset: 30,
+          estimated_monthly_cost: 0,
+        };
+      }
+
       // Ensure profile exists and is returned
       const profile = await UpscaleTrackingService.getUserProfile(userId);
 
@@ -185,6 +220,11 @@ export class UpscaleTrackingService {
 
   static async incrementUpscaleCounts(userId: string): Promise<boolean> {
     try {
+      if (!isSupabaseConfigured) {
+        console.warn('[UpscaleTrackingService] Supabase not configured; skipping incrementUpscaleCounts.');
+        return true;
+      }
+
       const { data, error } = await supabase
         .rpc('increment_upscale_counts', { user_id_param: userId }); // Call a Supabase RPC function
 
@@ -201,6 +241,16 @@ export class UpscaleTrackingService {
 
   static async checkApiCredits() {
     try {
+      if (!isSupabaseConfigured) {
+        console.warn('[UpscaleTrackingService] Supabase not configured; returning default API credits.');
+        return {
+          current_balance: 100,
+          threshold_warning: 50,
+          threshold_critical: 10,
+          severity: 'low' as const,
+        };
+      }
+
       const { data, error } = await supabase
         .from('api_credit_monitoring')
         .select('current_balance, threshold_warning, threshold_critical')
@@ -248,6 +298,11 @@ export class UpscaleTrackingService {
 
   static async createUpscaleTransaction(transaction: UpscaleTransaction): Promise<string | null> {
     try {
+      if (!isSupabaseConfigured) {
+        console.warn('[UpscaleTrackingService] Supabase not configured; skipping createUpscaleTransaction.');
+        return null;
+      }
+
       const { data, error } = await supabase
         .from('upscale_transactions')
         .insert({
@@ -278,6 +333,11 @@ export class UpscaleTrackingService {
 
   static async updateUpscaleTransaction(transactionId: string, updates: Partial<UpscaleTransaction>): Promise<boolean> {
     try {
+      if (!isSupabaseConfigured) {
+        console.warn('[UpscaleTrackingService] Supabase not configured; skipping updateUpscaleTransaction.');
+        return true;
+      }
+
       const { error } = await supabase
         .from('upscale_transactions')
         .update(updates)
@@ -297,6 +357,11 @@ export class UpscaleTrackingService {
 
   static async logApiUsage(usage: ApiUsageLog): Promise<boolean> {
     try {
+      if (!isSupabaseConfigured) {
+        console.warn('[UpscaleTrackingService] Supabase not configured; skipping logApiUsage.');
+        return true;
+      }
+
       const { error } = await supabase
         .from('api_usage_logs')
         .insert({
@@ -325,6 +390,11 @@ export class UpscaleTrackingService {
 
   static async updateApiCredits(newBalance: number): Promise<boolean> {
     try {
+      if (!isSupabaseConfigured) {
+        console.warn('[UpscaleTrackingService] Supabase not configured; skipping updateApiCredits.');
+        return true;
+      }
+
       const { error } = await supabase
         .from('api_credit_monitoring')
         .update({ 
@@ -347,6 +417,11 @@ export class UpscaleTrackingService {
 
   static async createAlert(alert: SystemAlert): Promise<boolean> {
     try {
+      if (!isSupabaseConfigured) {
+        console.warn('[UpscaleTrackingService] Supabase not configured; skipping createAlert.');
+        return true;
+      }
+
       const { error } = await supabase
         .from('system_alerts')
         .insert({
@@ -371,6 +446,11 @@ export class UpscaleTrackingService {
 
   static async addToQueue(userId: string, transactionId: string, priority: number = 1): Promise<boolean> {
     try {
+      if (!isSupabaseConfigured) {
+        console.warn('[UpscaleTrackingService] Supabase not configured; skipping addToQueue.');
+        return true;
+      }
+
       const { error } = await supabase
         .from('upscale_queue')
         .insert({
@@ -394,6 +474,11 @@ export class UpscaleTrackingService {
 
   static async getQueuedItems(limit: number = 10) {
     try {
+      if (!isSupabaseConfigured) {
+        console.warn('[UpscaleTrackingService] Supabase not configured; skipping getQueuedItems.');
+        return [];
+      }
+
       const { data, error } = await supabase
         .from('upscale_queue')
         .select(`
@@ -424,6 +509,11 @@ export class UpscaleTrackingService {
 
   static async getUserTransactionHistory(userId: string, limit: number = 10) {
     try {
+      if (!isSupabaseConfigured) {
+        console.warn('[UpscaleTrackingService] Supabase not configured; skipping getUserTransactionHistory.');
+        return [];
+      }
+
       const { data, error } = await supabase
         .from('upscale_transactions')
         .select('*')
@@ -466,6 +556,14 @@ export class UpscaleTrackingService {
     remainingUpscales?: number;
   }> {
     try {
+      if (!isSupabaseConfigured) {
+        console.warn('[UpscaleTrackingService] Supabase not configured; allowing upscale with default limits.');
+        return {
+          canUpscale: true,
+          remainingUpscales: 250,
+        };
+      }
+
       // Ensure user is authenticated before proceeding
       await UpscaleTrackingService.getAuthenticatedUser();
 

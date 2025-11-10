@@ -4,6 +4,7 @@ import App from './App';
 import './index.css';
 import { AuthProvider } from './contexts/AuthContext';
 import { ImageProcessingProvider } from './contexts/ImageProcessingContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import { logAsyncErrors } from './dev/logAsyncErrors';
 
@@ -16,9 +17,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
       <AuthProvider>
-        <ImageProcessingProvider>
-          <App />
-        </ImageProcessingProvider>
+        <ThemeProvider>
+          <ImageProcessingProvider>
+            <App />
+          </ImageProcessingProvider>
+        </ThemeProvider>
       </AuthProvider>
     </ErrorBoundary>
   </React.StrictMode>

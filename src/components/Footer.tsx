@@ -7,7 +7,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border-t border-gray-200/50 dark:border-gray-700/50 mt-auto py-8">
+    <footer className="bg-[#121B2A] backdrop-blur-sm border-t border-gray-700/50 mt-auto py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center justify-center text-center"> {/* Centered content */}
           <div className="flex items-center justify-center mb-4"> {/* Centered logo and title */}
@@ -17,7 +17,7 @@ export function Footer() {
               className="w-[150px] h-auto mr-3" // Adjusted width and margin for centering
             />
             <span className="text-xl font-bold text-white">
-              ImageUpscale Pro
+              Upscale Forge
             </span>
           </div>
           <p className="text-gray-600 dark:text-gray-300 mb-4">

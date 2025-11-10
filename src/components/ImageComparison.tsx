@@ -2,9 +2,28 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useImageProcessing } from '../contexts/ImageProcessingContext';
 import { Download, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
+interface ProcessingItem {
+  id: number;
+  file: File;
+  settings: {
+    scale: number;
+    quality: string;
+    outputFormat: string;
+  };
+  status: 'pending' | 'processing' | 'completed' | 'error';
+  progress: number;
+  currentStep?: string;
+  originalImage: string;
+  upscaledImage?: string;
+  originalWidth?: number;
+  originalHeight?: number;
+  upscaledWidth?: number;
+  upscaledHeight?: number;
+}
+
 export function ImageComparison() {
   const { processedImages } = useImageProcessing();
-  const [selectedImage, setSelectedImage] = useState<any>(null);
+  const [selectedImage, setSelectedImage] = useState<ProcessingItem | null>(null);
   const [sliderPosition, setSliderPosition] = useState(50);
   const [zoom, setZoom] = useState(100);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -115,8 +134,13 @@ export function ImageComparison() {
 
           {/* Download Button */}
           <button
-            onClick={() => handleDownload(selectedImage.upscaledImage, `upscaled_${selectedImage.file.name}`)}
-            className="flex items-center space-x-2 text-white px-4 py-2 rounded-lg transition-all duration-200" style={{background: 'linear-gradient(to right, #FF8C67, #98D738)'}}
+            onClick={() => selectedImage.upscaledImage && handleDownload(selectedImage.upscaledImage, `upscaled_${selectedImage.file.name}`)}
+            disabled={!selectedImage.upscaledImage}
+            className="flex items-center space-x-2 px-4 py-2 rounded-md shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              background: `linear-gradient(to right, var(--primary), color-mix(in oklab, var(--primary) 70%, var(--secondary) 30%))`,
+              color: 'var(--on-primary)'
+            }}
           >
             <Download className="w-4 h-4" />
             <span>Download</span>
@@ -127,14 +151,14 @@ export function ImageComparison() {
       {/* Comparison Container */}
       <div
         ref={containerRef}
-        className="relative overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 cursor-col-resize"
-        style={{ height: '500px' }}
+        className="relative overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 cursor-col-resize select-none"
+        style={{ height: '500px', userSelect: 'none', WebkitUserSelect: 'none' }}
         onMouseDown={handleMouseDown}
         onMouseLeave={handleMouseUp}
       >
         {/* Original Image */}
         <div 
-          className="absolute inset-0"
+          className="absolute inset-0 pointer-events-none"
           style={{
             clipPath: `inset(0 ${100 - sliderPosition}% 0 0)`,
           }}
@@ -142,18 +166,18 @@ export function ImageComparison() {
           <img
             src={selectedImage.originalImage}
             alt="Original"
-            className="w-full h-full object-contain"
-            style={{ transform: `scale(${zoom / 100})` }}
+            className="w-full h-full object-contain pointer-events-none select-none"
+            style={{ transform: `scale(${zoom / 100})`, userSelect: 'none' }}
             draggable={false}
           />
-          <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-lg text-sm font-medium">
+          <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-lg text-sm font-medium pointer-events-none">
             Original
           </div>
         </div>
 
         {/* Upscaled Image */}
         <div 
-          className="absolute inset-0"
+          className="absolute inset-0 pointer-events-none"
           style={{
             clipPath: `inset(0 0 0 ${sliderPosition}%)`,
           }}
@@ -161,23 +185,33 @@ export function ImageComparison() {
           <img
             src={selectedImage.upscaledImage}
             alt="Upscaled"
-            className="w-full h-full object-contain"
-            style={{ transform: `scale(${zoom / 100})` }}
+            className="w-full h-full object-contain pointer-events-none select-none"
+            style={{ transform: `scale(${zoom / 100})`, userSelect: 'none' }}
             draggable={false}
           />
-          <div className="absolute top-4 right-4 text-white px-3 py-1 rounded-lg text-sm font-medium" style={{background: 'linear-gradient(to right, #0082CA, #98D738)'}}>
+          <div 
+            className="absolute top-4 right-4 text-white px-3 py-1 rounded-md text-sm font-medium shadow-md pointer-events-none"
+            style={{
+              background: `linear-gradient(to right, color-mix(in oklab, var(--primary) 85%, transparent 15%), color-mix(in oklab, var(--secondary) 85%, transparent 15%))`
+            }}
+          >
             {selectedImage.settings.scale}x Upscaled
           </div>
         </div>
 
         {/* Slider Line */}
         <div
-          className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg pointer-events-none"
+          className="absolute top-0 bottom-0 w-1 bg-white shadow-lg pointer-events-none"
           style={{ left: `${sliderPosition}%` }}
         >
           {/* Slider Handle */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full shadow-lg border-2 border-gray-300 pointer-events-auto cursor-col-resize">
-            <div className="w-full h-full bg-gradient-to-r from-blue-600 to-orange-500 rounded-full scale-75"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-xl border-2 border-gray-300 pointer-events-auto cursor-col-resize">
+            <div 
+              className="w-full h-full rounded-full scale-75"
+              style={{
+                background: `linear-gradient(to right, var(--primary), var(--secondary))`
+              }}
+            ></div>
           </div>
         </div>
       </div>
@@ -190,7 +224,7 @@ export function ImageComparison() {
           <p className="text-gray-600 dark:text-gray-300">File Size: {(selectedImage.file.size / 1024 / 1024).toFixed(2)} MB</p>
         </div>
         
-        <div className="bg-gradient-to-br from-blue-50 to-green-50 dark:bg-gray-700 rounded-lg p-3">
+        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
           <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Upscaled Image</h4>
           <p className="text-gray-600 dark:text-gray-300">Size: {selectedImage.upscaledWidth} × {selectedImage.upscaledHeight}px</p>
           <p className="text-gray-600 dark:text-gray-300">Enhancement: {selectedImage.settings.quality} preset</p>
