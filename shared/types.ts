@@ -1,6 +1,6 @@
 export type PlanTier = 'basic' | 'pro' | 'enterprise' | 'mega';
 export type Quality = 'photo' | 'art' | 'text' | 'anime';
-export type Scale = 2 | 4 | 8 | 10 | 12 | 16 | 32;
+export type Scale = 2 | 4 | 8 | 10 | 12 | 16 | 20 | 24 | 28 | 32 | 64;
 
 export interface UpscaleSettings {
   scale: Scale;

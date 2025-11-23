@@ -17,8 +17,8 @@ export const IMAGE_TYPES: Record<string, ImageTypeInfo> = {
     description: 'Natural photos, portraits, real-world images',
     icon: '📸',
     model: 'photo-real-esrgan',
-    supportedScales: [2, 4, 8, 10, 12, 16, 20, 24, 28, 32],
-    exampleImage: '/images/photo-bg.jpg'
+    supportedScales: [2, 4, 8, 10, 12, 16, 20, 24, 28, 32, 64],
+    exampleImage: '/images/photo-sm.webp'
   },
   'art': {
     id: 'art',
@@ -26,8 +26,8 @@ export const IMAGE_TYPES: Record<string, ImageTypeInfo> = {
     description: 'Digital art, paintings, illustrations',
     icon: '🎨',
     model: 'art-swinir',
-    supportedScales: [2, 4, 8, 10, 12, 16, 20, 24, 28, 32],
-    exampleImage: '/images/art-bg.jpg'
+    supportedScales: [2, 4, 8, 10, 12, 16, 20, 24, 28, 32, 64],
+    exampleImage: '/images/art-illustrations_sm.webp'
   },
   'anime': {
     id: 'anime',
@@ -35,8 +35,8 @@ export const IMAGE_TYPES: Record<string, ImageTypeInfo> = {
     description: 'Anime, cartoons, animated content',
     icon: '🎌',
     model: 'anime-real-esrgan',
-    supportedScales: [2, 4, 8, 10, 12, 16, 20, 24, 28, 32],
-    exampleImage: '/images/anime-bg.jpg'
+    supportedScales: [2, 4, 8, 10, 12, 16, 20, 24, 28, 32, 64],
+    exampleImage: '/images/anime-sm.webp'
   },
   'text': {
     id: 'text',
@@ -44,8 +44,8 @@ export const IMAGE_TYPES: Record<string, ImageTypeInfo> = {
     description: 'Documents, text, screenshots',
     icon: '📄',
     model: 'art-swinir',
-    supportedScales: [2, 4, 8, 10, 12, 16, 20, 24, 28, 32],
-    exampleImage: '/images/text-bg.jpg'
+    supportedScales: [2, 4, 8, 10, 12, 16, 20, 24, 28, 32, 64],
+    exampleImage: '/images/text-sm.webp'
   },
   'extreme': {
     id: 'extreme',
@@ -53,13 +53,13 @@ export const IMAGE_TYPES: Record<string, ImageTypeInfo> = {
     description: 'Maximum detail preservation (16x+)',
     icon: '⚡',
     model: 'controlnet-tile',
-    supportedScales: [16, 20, 24, 28, 32]
+    supportedScales: [16, 20, 24, 28, 32, 64]
   }
 };
 
 export function getAvailableScalesForImageType(imageType: string, plan: PlanTier): number[] {
   const imageTypeInfo = IMAGE_TYPES[imageType];
-  if (!imageTypeInfo) return [2, 4, 8, 10, 12, 16, 20, 24, 28, 32];
+  if (!imageTypeInfo) return [2, 4, 8, 10, 12, 16, 20, 24, 28, 32, 64];
   
   // Return full unified scale range for all image types
   // Plan restrictions are handled at processing time, not UI level
