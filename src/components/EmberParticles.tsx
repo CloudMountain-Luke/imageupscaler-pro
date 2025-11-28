@@ -19,18 +19,19 @@ interface EmberParticlesProps {
 /**
  * Floating ember/spark particles effect
  * Creates rising glowing particles for a "forge" aesthetic
+ * Optimized: reduced default count for performance
  */
 export function EmberParticles({ 
-  count = 30,
+  count = 15, // Reduced from 30
   className = '',
-  intensity = 'medium',
+  intensity = 'low', // Default to low for performance
   color = 'orange'
 }: EmberParticlesProps) {
   // Adjust count based on intensity
   const particleCount = {
     low: Math.floor(count * 0.5),
     medium: count,
-    high: Math.floor(count * 1.5)
+    high: Math.floor(count * 1.2) // Reduced multiplier
   }[intensity];
   
   // Generate random particles
@@ -94,22 +95,21 @@ export function EmberParticles({
         );
       })}
       
-      {/* Larger, slower floating orbs */}
-      {Array.from({ length: Math.floor(particleCount / 5) }, (_, i) => (
+      {/* Larger, slower floating orbs - reduced count */}
+      {Array.from({ length: Math.max(1, Math.floor(particleCount / 8)) }, (_, i) => (
         <div
           key={`orb-${i}`}
           className="absolute rounded-full animate-ember-float"
           style={{
             left: `${10 + Math.random() * 80}%`,
             bottom: `${Math.random() * 50}%`,
-            width: `${8 + Math.random() * 12}px`,
-            height: `${8 + Math.random() * 12}px`,
+            width: `${8 + Math.random() * 10}px`,
+            height: `${8 + Math.random() * 10}px`,
             background: `radial-gradient(circle, ${colorConfig.primary} 0%, transparent 60%)`,
-            boxShadow: `0 0 30px ${colorConfig.glow}`,
-            opacity: 0.2 + Math.random() * 0.3,
+            boxShadow: `0 0 20px ${colorConfig.glow}`,
+            opacity: 0.2 + Math.random() * 0.2,
             animationDelay: `${Math.random() * 5}s`,
-            animationDuration: `${8 + Math.random() * 8}s`,
-            filter: 'blur(1px)'
+            animationDuration: `${10 + Math.random() * 6}s`,
           }}
         />
       ))}

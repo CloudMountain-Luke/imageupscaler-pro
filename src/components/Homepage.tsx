@@ -1,12 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, Suspense, lazy } from 'react';
 import { ArrowRight, Sparkles, Shield, TrendingUp, LogIn, ChevronDown, ChevronUp, Info, Palette, Zap, Image, FileText, Wand2, Download, Upload, Camera, Paintbrush, Film, Type, Check } from 'lucide-react';
-import { PricingPlans } from './PricingPlans';
+
+// Lazy load heavy components
+const PricingPlans = lazy(() => import('./PricingPlans').then(m => ({ default: m.PricingPlans })));
 import { ThemeProvider, useThemeLab } from '../contexts/ThemeContext';
 import { ThemeControls } from './ThemeControls';
-import { HexagonGrid } from './HexagonGrid';
+import { HexagonGridCSS } from './HexagonGrid';
 import { BeforeAfterSlider } from './BeforeAfterSlider';
 import { FloatingGallery, defaultGalleryImages } from './FloatingGallery';
-import { EmberParticles, ScanLines } from './EmberParticles';
+import { EmberParticles } from './EmberParticles';
 import { FadeInOnScroll } from './ParallaxSection';
 import { RotatingImageCard } from './RotatingImageCard';
 
@@ -263,43 +265,18 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
       className="min-h-screen relative overflow-x-hidden"
       style={{ background: 'var(--surface)' }}
     >
-      {/* Background Effects Layer */}
+      {/* Background Effects Layer - Simplified for performance */}
       <div className="fixed inset-0 pointer-events-none">
-        {/* Hexagon Grid Pattern */}
-        <HexagonGrid opacity={0.08} cellSize={60} animated />
-        
-        {/* Line Grid with Perspective */}
-        <div 
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `
-              linear-gradient(to bottom, transparent 0%, color-mix(in oklab, var(--primary) 3%, transparent 97%) 50%, transparent 100%),
-              linear-gradient(color-mix(in oklab, var(--primary) 4%, transparent 96%) 1px, transparent 1px),
-              linear-gradient(90deg, color-mix(in oklab, var(--primary) 4%, transparent 96%) 1px, transparent 1px)
-            `,
-            backgroundSize: '100% 100%, 80px 80px, 80px 80px',
-            opacity: 0.4,
-          }}
-        />
+        {/* CSS-only Hexagon Grid (no SVG filters) */}
+        <HexagonGridCSS opacity={0.06} />
         
         {/* Ambient Glow from Bottom */}
         <div 
           className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[200%] h-[70%]"
           style={{
-            background: `radial-gradient(ellipse at center bottom, color-mix(in oklab, var(--primary) 12%, transparent 88%) 0%, transparent 60%)`,
+            background: `radial-gradient(ellipse at center bottom, color-mix(in oklab, var(--primary) 10%, transparent 90%) 0%, transparent 60%)`,
           }}
         />
-        
-        {/* Secondary Glow from Top Right */}
-        <div 
-          className="absolute top-0 right-0 w-[80%] h-[50%]"
-          style={{
-            background: `radial-gradient(ellipse at top right, color-mix(in oklab, var(--accent) 6%, transparent 94%) 0%, transparent 50%)`,
-          }}
-        />
-        
-        {/* Scan Lines Overlay */}
-        <ScanLines opacity={0.02} spacing={3} />
       </div>
 
       {/* Header */}
@@ -370,8 +347,8 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
         {/* Floating Gallery Background */}
         <FloatingGallery images={defaultGalleryImages} className="opacity-60" />
         
-        {/* Ember Particles in Hero */}
-        <EmberParticles count={35} intensity="medium" color="mixed" />
+        {/* Ember Particles in Hero - reduced count */}
+        <EmberParticles count={12} intensity="low" color="mixed" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 pt-4 pb-12 relative z-10" style={{ marginTop: '-30px' }}>
           <div className="text-center">
@@ -510,7 +487,6 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
           SECTION 3: WHY UPSCALE FORGE (USP CARDS)
           ============================================ */}
       <section className="relative py-24">
-        <HexagonGrid opacity={0.05} cellSize={80} className="absolute inset-0" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <FadeInOnScroll>
@@ -718,7 +694,6 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
           SECTION 5: AI PRESETS SHOWCASE
           ============================================ */}
       <section id="presets" className="relative py-24">
-        <HexagonGrid opacity={0.04} cellSize={70} className="absolute inset-0" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <FadeInOnScroll>
@@ -744,9 +719,9 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                 desc: 'Portraits, landscapes, products', 
                 images: [
                   '/images/dooze-test-123.jpg', // Your dog Dooze
-                  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&q=90', // Portrait
-                  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=90', // Mountain landscape
-                  'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=90', // Product (watch)
+                  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&q=70', // Portrait
+                  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=70', // Mountain landscape
+                  'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=70', // Product (watch)
                 ],
                 id: 'photo'
               },
@@ -757,8 +732,8 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                 images: [
                   '/images/art-illustrations_sm.webp', // Starry Night
                   '/images/Fete_de_nuit_small.jpg', // Garden party painting
-                  'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=600&q=90', // Renaissance painting
-                  'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&q=90', // Abstract painting
+                  'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&q=70', // Renaissance painting
+                  'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&q=70', // Abstract painting
                 ],
                 id: 'art'
               },
@@ -768,9 +743,9 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                 desc: 'Anime, cartoons, comics', 
                 images: [
                   '/images/anime-sm.webp', // Anime artwork
-                  'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&q=90', // Colorful illustration
-                  'https://images.unsplash.com/photo-1618336753974-aae8e04506aa?w=600&q=90', // Digital art style
-                  'https://images.unsplash.com/photo-1569701813229-33284b643e3c?w=600&q=90', // Artistic illustration
+                  'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400&q=70', // Colorful illustration
+                  'https://images.unsplash.com/photo-1618336753974-aae8e04506aa?w=400&q=70', // Digital art style
+                  'https://images.unsplash.com/photo-1569701813229-33284b643e3c?w=400&q=70', // Artistic illustration
                 ],
                 id: 'anime'
               },
@@ -780,9 +755,9 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                 desc: 'Documents, screenshots, logos', 
                 images: [
                   '/images/text-sm.webp', // Documents
-                  'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&q=90', // Charts/data
-                  'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=600&q=90', // Office docs
-                  'https://images.unsplash.com/photo-1568667256549-094345857637?w=600&q=90', // Books/text
+                  'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&q=70', // Charts/data
+                  'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=400&q=70', // Office docs
+                  'https://images.unsplash.com/photo-1568667256549-094345857637?w=400&q=70', // Books/text
                 ],
                 id: 'text'
               },
@@ -876,10 +851,19 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
       <div className="section-divider" />
 
       {/* ============================================
-          SECTION 6: PRICING
+          SECTION 6: PRICING (Lazy Loaded)
           ============================================ */}
       <section className="relative py-8">
-        <PricingPlans onGetStarted={onGetStarted} />
+        <Suspense fallback={
+          <div className="flex items-center justify-center py-24">
+            <div className="animate-pulse text-center">
+              <div className="h-8 w-48 bg-gray-700/50 rounded mx-auto mb-4"></div>
+              <div className="h-4 w-64 bg-gray-700/30 rounded mx-auto"></div>
+            </div>
+          </div>
+        }>
+          <PricingPlans onGetStarted={onGetStarted} />
+        </Suspense>
       </section>
 
       {/* Section Divider */}
