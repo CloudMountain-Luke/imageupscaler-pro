@@ -46,16 +46,17 @@ const ANIME_SMALL_MODEL: ReplicateModelInfo = {
 };
 
 const CONTROLNET_TILE_MODEL: ReplicateModelInfo = {
-  slug: 'cjwbw/controlnet-tile-resize:ba56d5417f3f2cfb8647dd0a1059159f061d7abf6c88c88cba41c4d1aba2fe66',
+  slug: 'fermatresearch/high-resolution-controlnet-tile:8e6a54d7b2848c48dc741a109d3fb0ea2a7f554eb4becd39a25cc532536ea975',
   input: {
-    model: 'ControlNetTile',
     prompt: 'high quality detailed upscale with preserved structure',
-    negative_prompt: 'blurry, artifacts, distortions',
-    tile_size: 512,
+    creativity: 0.4,
+    negative_prompt: 'blurry, artifacts, distortions, low quality, worst quality',
+    lora_details_strength: -0.25,
+    lora_sharpness_strength: 0.75,
   },
-  supportsOutscale: true,
-  nativeScales: [2, 4],
-  maxOutscale: 4,
+  supportsOutscale: false,
+  nativeScales: [2, 4, 8],
+  maxOutscale: undefined,
 };
 
 function withPhotoModel(scale: number, faceEnhance: boolean): ReplicateModelInfo {
@@ -66,6 +67,11 @@ function withPhotoModel(scale: number, faceEnhance: boolean): ReplicateModelInfo
 }
 
 function resolveModelForSegment(category: Quality, scale: number): ReplicateModelInfo {
+  // For scales above 8x, use ControlNet Tile model which handles high scales better
+  if (scale > 8) {
+    return { ...CONTROLNET_TILE_MODEL };
+  }
+
   switch (category) {
     case 'photo':
       // Photo ESRGAN handles 2x/4x natively and supports outscale for intermediate factors
@@ -183,11 +189,16 @@ export function createOrchestrationSteps(
   const chain = buildScaleChain(targetScale);
   const steps: OrchestrationStep[] = [];
 
+  // Note: ControlNet Tile models don't support scale parameters - they're for guided enhancement
+  // Use Real-ESRGAN and other models that support scale/outscale for all orchestration steps
+  // This allows precise scale control for all scales from 2x to 32x
+
   for (const segment of chain) {
     if (segment <= 1) {
       continue;
     }
 
+    // Use normal model selection (Real-ESRGAN, SwinIR, etc. - all support scale/outscale)
     const model = selectModelFor(category, segment, options);
 
     if (model.nativeScales.includes(segment)) {

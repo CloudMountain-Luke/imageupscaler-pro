@@ -271,6 +271,19 @@ export class ImageProcessor {
         return 'image/png';
       case 'webp':
         return 'image/webp';
+      case 'gif':
+        return 'image/gif';
+      case 'bmp':
+      case 'dib':
+        return 'image/bmp';
+      case 'tiff':
+      case 'tif':
+        return 'image/tiff';
+      case 'avif':
+        return 'image/avif';
+      case 'heic':
+      case 'heif':
+        return 'image/heic';
       default:
         return 'image/png';
     }

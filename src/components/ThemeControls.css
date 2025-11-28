@@ -173,12 +173,75 @@
   color: var(--text);
 }
 
-.theme-lab .slider input[type='range'] {
+.theme-lab .slider-container {
+  position: relative;
   width: 280px;
+}
+
+.theme-lab .slider input[type='range'] {
+  width: 100%;
   accent-color: var(--primary);
   background: linear-gradient(90deg, color-mix(in oklab, var(--primary) 70%, var(--secondary) 30%), color-mix(in oklab, var(--secondary) 40%, var(--accent) 60%));
   height: 6px;
   border-radius: 999px;
+}
+
+.theme-lab .slider input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  box-shadow: 0 0 0 2px var(--surface), 0 4px 12px color-mix(in oklab, var(--primary) 50%, #000 50%);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.theme-lab .slider input[type='range']::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px var(--surface), 0 6px 16px color-mix(in oklab, var(--primary) 60%, #000 40%);
+}
+
+.theme-lab .slider input[type='range']::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  border: 2px solid var(--surface);
+  box-shadow: 0 4px 12px color-mix(in oklab, var(--primary) 50%, #000 50%);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.theme-lab .slider input[type='range']::-moz-range-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 6px 16px color-mix(in oklab, var(--primary) 60%, #000 40%);
+}
+
+.theme-lab .slider datalist {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.theme-lab .slider datalist option {
+  position: relative;
+  font-size: 10px;
+  color: var(--muted);
+  padding: 0 2px;
+}
+
+.theme-lab .slider datalist option::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 6px;
+  background: var(--border);
+  opacity: 0.6;
 }
 
 .theme-lab .grid {
@@ -322,6 +385,10 @@
     align-items: stretch;
   }
 
+  .theme-lab .slider-container {
+    width: 100%;
+  }
+  
   .theme-lab .slider input[type='range'] {
     width: 100%;
   }

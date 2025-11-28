@@ -23,3 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Large sample images (keep out of git)
+public/images/*.jpg
+public/images/*.png
+!public/images/*_sm.jpg
+!public/upscale-forge-logo.png
+!public/upscale-forge-logo-placeholder.svg

@@ -118,16 +118,54 @@ export async function stitchTilesInBrowser(
 
   console.log(`[ClientStitcher] Original dimensions (from tiles): ${originalWidth}×${originalHeight}`);
 
-  // Calculate final dimensions by scaling the original image size
+  // 🔥 CRITICAL: Detect actual tile scale by loading first tile
+  // The tiles may have been upscaled beyond target (e.g., 16x when target is 8x for chaining)
+  console.log(`[ClientStitcher] Detecting actual tile scale from first tile...`);
+  
+  // Find the URL for the first tile
+  let firstTileUrl: string | null = null;
+  const firstTile = tiles[0];
+  for (let stage = 10; stage >= 1; stage--) {
+    let stageUrl: string | null = null;
+    if (stage === 1) {
+      stageUrl = firstTile.stage1_url;
+    } else if (stage === 2) {
+      stageUrl = firstTile.stage2_url;
+    } else {
+      stageUrl = (firstTile as any)[`stage${stage}_url`];
+    }
+    if (stageUrl) {
+      firstTileUrl = stageUrl;
+      break;
+    }
+  }
+  
+  if (!firstTileUrl) {
+    throw new Error('[ClientStitcher] First tile missing output URL');
+  }
+  
+  // Load first tile to detect its actual dimensions
+  const firstTileImg = await loadImage(firstTileUrl);
+  const actualTileScale = Math.round(firstTileImg.width / firstTile.width);
+  
+  console.log(`[ClientStitcher] First tile: original ${firstTile.width}×${firstTile.height}, upscaled ${firstTileImg.width}×${firstTileImg.height}`);
+  console.log(`[ClientStitcher] Detected actual tile scale: ${actualTileScale}× (target was ${targetScale}×)`);
+  
+  // Calculate intermediate stitched dimensions (before final downscale)
+  const intermediateWidth = originalWidth * actualTileScale;
+  const intermediateHeight = originalHeight * actualTileScale;
+  
+  // Calculate final dimensions (what we want to deliver)
   const finalWidth = originalWidth * targetScale;
   const finalHeight = originalHeight * targetScale;
   
-  console.log(`[ClientStitcher] Final canvas size: ${finalWidth}×${finalHeight} (${targetScale}× scale)`);
+  console.log(`[ClientStitcher] Intermediate canvas: ${intermediateWidth}×${intermediateHeight} (${actualTileScale}× scale)`);
+  console.log(`[ClientStitcher] Final target: ${finalWidth}×${finalHeight} (${targetScale}× scale)`);
 
-  // Create canvas
+  // Create intermediate canvas at actual tile scale
   const canvas = document.createElement('canvas');
-  canvas.width = finalWidth;
-  canvas.height = finalHeight;
+  canvas.width = intermediateWidth;
+  canvas.height = intermediateHeight;
   const ctx = canvas.getContext('2d');
   
   if (!ctx) {
@@ -136,7 +174,7 @@ export async function stitchTilesInBrowser(
 
   // Fill with white background
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(0, 0, finalWidth, finalHeight);
+  ctx.fillRect(0, 0, intermediateWidth, intermediateHeight);
 
   // Download and composite tiles one by one
   for (let i = 0; i < tiles.length; i++) {
@@ -182,14 +220,14 @@ export async function stitchTilesInBrowser(
       // Load tile image
       const img = await loadImage(tileUrl);
       
-      // Calculate position (scaled from original tile coordinates)
-      const x = tile.x * targetScale;
-      const y = tile.y * targetScale;
+      // Calculate position using ACTUAL tile scale (not target scale)
+      const x = tile.x * actualTileScale;
+      const y = tile.y * actualTileScale;
       
       console.log(`[ClientStitcher] Drawing tile ${tile.tile_id} at (${x}, ${y}), size: ${img.width}×${img.height}`);
       
       // Apply feathered blending if tile has overlap with neighbors
-      const overlap = grid.overlap * targetScale; // Scale overlap to match upscaled dimensions
+      const overlap = grid.overlap * actualTileScale; // Scale overlap to match upscaled dimensions
       const tileX = Math.floor(tile.tile_id % grid.tilesX);
       const tileY = Math.floor(tile.tile_id / grid.tilesX);
       
@@ -288,21 +326,18 @@ export async function stitchTilesInBrowser(
 
   console.log(`[ClientStitcher] ✅ Stitch complete! Blob size: ${(blob.size / 1024 / 1024).toFixed(2)} MB`);
 
-  // Check if we need to downscale to exact dimensions
-  // This handles cases where chaining strategies overshoot the target scale
-  const exactTargetWidth = Math.round(originalWidth * targetScale);
-  const exactTargetHeight = Math.round(originalHeight * targetScale);
-  
-  if (finalWidth !== exactTargetWidth || finalHeight !== exactTargetHeight) {
-    console.log(`[ClientStitcher] Output ${finalWidth}×${finalHeight} doesn't match exact target ${exactTargetWidth}×${exactTargetHeight}`);
-    console.log(`[ClientStitcher] Applying downscaling to achieve exact scale factor...`);
-    return await downscaleToExactSize(blob, exactTargetWidth, exactTargetHeight, onProgress);
+  // Check if we need to downscale from intermediate size to final target
+  // This handles cases where chaining strategies overshoot the target scale (e.g., 16x → 8x)
+  if (actualTileScale !== targetScale) {
+    console.log(`[ClientStitcher] Intermediate output ${intermediateWidth}×${intermediateHeight} (${actualTileScale}×) needs downscaling to ${finalWidth}×${finalHeight} (${targetScale}×)`);
+    console.log(`[ClientStitcher] Applying high-quality downscaling...`);
+    return await downscaleToExactSize(blob, finalWidth, finalHeight, onProgress);
   }
 
   return {
     blob,
-    width: finalWidth,
-    height: finalHeight
+    width: intermediateWidth,
+    height: intermediateHeight
   };
 }
 

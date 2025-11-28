@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import type { Scale } from '../types/upscale';
+import { useThemeLab } from '../contexts/ThemeContext';
 
 interface ScaleWheelProps {
   scales: number[];
@@ -14,11 +15,36 @@ export const ScaleWheel: React.FC<ScaleWheelProps> = ({
   onScaleChange,
   disabled = false
 }) => {
+  const { tone } = useThemeLab();
   const [isDragging, setIsDragging] = useState(false);
   const [rotation, setRotation] = useState(0);
   const wheelRef = useRef<HTMLDivElement>(null);
   const startAngleRef = useRef(0);
   const startRotationRef = useRef(0);
+  
+  // Calculate adaptive knob background that matches surface color
+  // Create a subtle gradient from surface to slightly darker/lighter for depth
+  const knobBackground = useMemo(() => {
+    // Use var(--surface) as base, create gradient with subtle variation
+    // For dark backgrounds: gradient from surface to slightly darker
+    // For light backgrounds: gradient from surface to slightly lighter
+    if (tone < 50) {
+      // Dark backgrounds: gradient from surface to darker
+      return 'linear-gradient(to bottom right, var(--surface), color-mix(in oklab, var(--surface) 70%, black 30%))';
+    } else {
+      // Light backgrounds: gradient from surface to slightly darker
+      return 'linear-gradient(to bottom right, var(--surface), color-mix(in oklab, var(--surface) 85%, black 15%))';
+    }
+  }, [tone]);
+
+  // Calculate adaptive text color for unselected numbers
+  const unselectedNumberColor = useMemo(() => {
+    if (tone <= 50) {
+      return 'hsl(0, 0%, 96%)'; // White for dark backgrounds
+    } else {
+      return 'hsl(0, 0%, 35%)'; // Darker grey for light backgrounds
+    }
+  }, [tone]);
 
   // Calculate rotation for selected scale
   const getRotationForScale = useCallback((scale: number) => {
@@ -33,6 +59,19 @@ export const ScaleWheel: React.FC<ScaleWheelProps> = ({
     const index = Math.round((normalizedRot / 360) * scales.length) % scales.length;
     return scales[index];
   }, [scales]);
+
+  // Validate that selectedScale is in the scales array
+  useEffect(() => {
+    if (!scales.includes(selectedScale)) {
+      console.warn(`[ScaleWheel] Selected scale ${selectedScale} not in available scales:`, scales);
+      // Auto-correct to nearest valid scale
+      const nearestScale = scales.reduce((prev, curr) => 
+        Math.abs(curr - selectedScale) < Math.abs(prev - selectedScale) ? curr : prev
+      );
+      console.log(`[ScaleWheel] Auto-correcting to nearest scale: ${nearestScale}`);
+      onScaleChange(nearestScale as Scale);
+    }
+  }, [selectedScale, scales, onScaleChange]);
 
   // Update rotation when selected scale changes externally
   useEffect(() => {
@@ -185,8 +224,12 @@ export const ScaleWheel: React.FC<ScaleWheelProps> = ({
                   left: `${x}%`,
                   top: `${y}%`,
                   transform: 'translate(-50%, -50%)',
-                  color: isSelected ? 'var(--primary)' : 'color-mix(in oklab, var(--text) 60%, transparent 40%)',
-                  filter: isSelected ? 'drop-shadow(0 0 10px color-mix(in oklab, var(--primary) 50%, transparent 50%))' : 'none'
+                  color: isSelected 
+                    ? 'var(--primary)'  // Keep neon color for selected
+                    : `color-mix(in oklab, ${unselectedNumberColor} 50%, transparent 50%)`, // Adaptive greyed out for unselected
+                  filter: isSelected 
+                    ? 'drop-shadow(0 0 10px color-mix(in oklab, var(--primary) 50%, transparent 50%))' 
+                    : 'none'
                 }}
               >
                 {scale}
@@ -212,8 +255,11 @@ export const ScaleWheel: React.FC<ScaleWheelProps> = ({
         >
           {/* Knob Body - Enhanced with gradients and glow */}
           <div 
-            className="w-full h-full rounded-full bg-gradient-to-br from-gray-800 to-black border-2 shadow-inner relative overflow-hidden"
-            style={{ borderColor: 'color-mix(in oklab, var(--primary) 40%, var(--border) 60%)' }}
+            className="w-full h-full rounded-full border-2 shadow-inner relative overflow-hidden"
+            style={{ 
+              borderColor: 'color-mix(in oklab, var(--primary) 40%, var(--border) 60%)',
+              background: knobBackground
+            }}
           >
             {/* Inner glow effect */}
             <div 

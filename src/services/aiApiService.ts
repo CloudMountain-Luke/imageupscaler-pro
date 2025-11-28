@@ -357,9 +357,11 @@ export class AIApiService {
     plan: PlanTier = 'basic'
   ): Promise<string> {
     // Enforce plan-based limits (server-side gate)
+    // Limits match homepage pricing tiers:
+    // Basic: up to 8x, Pro: up to 10x, Enterprise: up to 16x, Mega: up to 32x
     const maxScaleByPlan: Record<PlanTier, Scale> = {
       basic: 8,
-      pro: 12,
+      pro: 10,
       enterprise: 16,
       mega: 32,
     };
@@ -367,8 +369,19 @@ export class AIApiService {
     const maxAllowed = maxScaleByPlan[normalizedPlan] ?? 8;
     // Anime is capped at 8x regardless of plan
     const effectiveMax = category === 'anime' ? Math.min(8, maxAllowed) : maxAllowed;
+    
+    console.log('[AIApiService] Plan check:', {
+      receivedPlan: plan,
+      normalizedPlan,
+      maxAllowed,
+      effectiveMax,
+      targetScale,
+      category,
+      willUseControlNet: targetScale > 8
+    });
+    
     if (targetScale > effectiveMax) {
-      throw new Error('Your current plan does not support this upscale factor.');
+      throw new Error(`Your current plan (${normalizedPlan}) does not support this upscale factor. Maximum allowed: ${effectiveMax}x`);
     }
     const originalDimensions = await this.getImageDimensions(image);
     const rawExpectedWidth = Math.round(originalDimensions.width * targetScale);

@@ -1,7 +1,10 @@
 // src/types/upscale.ts
-export type Scale = 2 | 4 | 8 | 10 | 12 | 16 | 32;
+// Max scale: 24x (28x/32x/64x removed for reliability)
+export type Scale = 2 | 4 | 8 | 10 | 12 | 16 | 20 | 24;
 export type Quality = 'photo' | 'art' | 'text' | 'anime';
-export type PlanTier = 'basic' | 'pro' | 'enterprise' | 'mega';
+// New tier structure: free, starter, pro, power, unlimited
+// Legacy tiers (basic, enterprise, mega) still supported for backwards compatibility
+export type PlanTier = 'free' | 'starter' | 'basic' | 'pro' | 'power' | 'enterprise' | 'unlimited' | 'mega';
 
 export interface UpscaleSettings {
   scale: Scale;

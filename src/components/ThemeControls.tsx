@@ -1,7 +1,7 @@
-import React, { useMemo, useId } from 'react';
+import React, { useId } from 'react';
 import { X } from 'lucide-react';
 import './ThemeControls.css';
-import { tonePresets, useThemeLab } from '../contexts/ThemeContext';
+import { colorSchemes, useThemeLab } from '../contexts/ThemeContext';
 
 interface ThemeControlsProps {
   onClose?: () => void;
@@ -16,30 +16,31 @@ export const ThemeControls: React.FC<ThemeControlsProps> = ({ onClose }) => {
     restoreTone,
     resetTone,
     initialTone,
-    tokens,
+    colorScheme,
+    setColorScheme,
     closeLab,
   } = useThemeLab();
   const sliderId = useId();
-
-  const containerStyle = useMemo<React.CSSProperties>(() => {
-    const style: React.CSSProperties = {};
-    Object.entries(tokens).forEach(([token, value]) => {
-      (style as any)[`--${token}`] = value;
-    });
-    return style;
-  }, [tokens]);
 
   const isSaveDisabled = tone === savedTone;
   const isRestoreDisabled = tone === savedTone;
   const isResetDisabled = tone === initialTone;
   const savedToneLabel = savedTone === initialTone ? 'default' : `${savedTone}%`;
 
-  const handleSnap = (value: number) => {
-    setTone(value);
+  // Valid tone values: 0%, 12%, 25%, 38%, 50%, 63%, 75%, 88%, 100%
+  const validToneValues = [0, 12, 25, 38, 50, 63, 75, 88, 100];
+
+  // Snap to nearest valid tone value
+  const snapToValidTone = (value: number): number => {
+    return validToneValues.reduce((prev, curr) => 
+      Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
+    );
   };
 
   const handleSliderChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setTone(parseInt(event.target.value, 10));
+    const rawValue = parseFloat(event.target.value);
+    const snappedValue = snapToValidTone(rawValue);
+    setTone(snappedValue);
   };
 
   const handleClose = () => {
@@ -51,7 +52,7 @@ export const ThemeControls: React.FC<ThemeControlsProps> = ({ onClose }) => {
   };
 
   return (
-    <div id="theme-controls" className="theme-lab" style={containerStyle}>
+    <div id="theme-controls" className="theme-lab">
       <div className="wrap">
         <div className="panel toolbar">
           <div className="brand">
@@ -69,31 +70,46 @@ export const ThemeControls: React.FC<ThemeControlsProps> = ({ onClose }) => {
           </button>
 
           <div className="controls">
-            <div className="seg" role="group" aria-label="Snap tones">
-              {tonePresets.map((preset) => (
+            <div className="seg" role="group" aria-label="Color schemes">
+              {colorSchemes.map((scheme) => (
                 <button
                   type="button"
-                  key={preset.value}
-                  onClick={() => handleSnap(preset.value)}
-                  aria-pressed={tone === preset.value}
+                  key={scheme.value}
+                  onClick={() => setColorScheme(scheme.value)}
+                  aria-pressed={colorScheme === scheme.value}
+                  title={scheme.description}
                 >
-                  {preset.label}
+                  {scheme.label}
                 </button>
               ))}
             </div>
 
             <div className="slider">
               <label htmlFor={sliderId}>Tone</label>
-              <input
-                id={sliderId}
-                type="range"
-                min={10}
-                max={90}
-                step={1}
-                value={tone}
-                onChange={handleSliderChange}
-              />
-              <span className="muted" style={{ minWidth: 40, textAlign: 'right' }}>
+              <div className="slider-container">
+                <input
+                  id={sliderId}
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={tone}
+                  onChange={handleSliderChange}
+                  list={`${sliderId}-markers`}
+                />
+                <datalist id={`${sliderId}-markers`}>
+                  <option value="0" label="0%"></option>
+                  <option value="12" label="12%"></option>
+                  <option value="25" label="25%"></option>
+                  <option value="38" label="38%"></option>
+                  <option value="50" label="50%"></option>
+                  <option value="63" label="63%"></option>
+                  <option value="75" label="75%"></option>
+                  <option value="88" label="88%"></option>
+                  <option value="100" label="100%"></option>
+                </datalist>
+              </div>
+              <span className="muted" style={{ minWidth: 50, textAlign: 'right' }}>
                 {tone}%
               </span>
             </div>

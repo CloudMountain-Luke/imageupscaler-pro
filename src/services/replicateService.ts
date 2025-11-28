@@ -200,7 +200,7 @@ export class ReplicateService {
   }
 
   public getSupportedFormats(): string[] {
-    return ['image/jpeg', 'image/png', 'image/webp'];
+    return ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/tiff', 'image/avif', 'image/heic', 'image/heif'];
   }
 }
 

@@ -1,20 +1,23 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import ImageTypeSelector from './ImageTypeSelector';
 import ScaleWheel from './ScaleWheel';
-import { getAvailableScalesForImageType } from '../services/modelSelectionService';
+import { getAvailableScalesForImageType, getMaxScaleForPlan } from '../services/modelSelectionService';
 import { useThemeLab } from '../contexts/ThemeContext';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, TrendingUp, Lock } from 'lucide-react';
 import { IMAGE_TYPES } from '../services/modelSelectionService';
 import { estimateTokenCost, formatTokenCost } from '../utils/tokenEstimation';
 import { detectBrowser, getBrowserWarning, isScaleSafeForBrowser } from '../utils/browserDetection';
-import type { Scale } from '../../shared/types';
+import { getMaxAllowedScale } from '../utils/browserLimits';
+import { getScaleOptions, calculateMaxSafeScale, formatTimeEstimate } from '../utils/scaleTemplates';
+import type { ScaleOption } from '../utils/scaleTemplates';
+import type { Scale, Quality, PlanTier } from '../types/upscale';
 
 interface ToolbarProps {
   upscaleSettings: {
-    scale: number;
-    quality: string;
+    scale: Scale;
+    quality: Quality;
     outputFormat: string;
-    qualityMode?: 'speed' | 'quality'; // NEW
+    qualityMode?: 'speed' | 'quality';
   };
   onSettingsChange: (settings: any) => void;
   userProfile: any;
@@ -23,6 +26,8 @@ interface ToolbarProps {
   onUpscale: () => void;
   latestUploadedFile: any;
   isApiConfigured: boolean;
+  imageWidth?: number | null;
+  imageHeight?: number | null;
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({
@@ -33,7 +38,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   currentProcessing,
   onUpscale,
   latestUploadedFile,
-  isApiConfigured
+  isApiConfigured,
+  imageWidth,
+  imageHeight
 }) => {
   const { tone } = useThemeLab();
   
@@ -137,8 +144,54 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       upscaleSettings.quality, 
       plan as PlanTier
     );
-    return { plan, allowedForImageType };
-  }, [upscaleSettings.quality, userProfile, realUserProfile]);
+    
+    // Further filter scales based on image dimensions and browser limits
+    let filteredScales = allowedForImageType;
+    if (imageWidth && imageHeight) {
+      const maxScale = getMaxAllowedScale(imageWidth, imageHeight);
+      filteredScales = allowedForImageType.filter(scale => scale <= maxScale);
+      
+      if (filteredScales.length < allowedForImageType.length) {
+        console.log(`[Toolbar] Filtered scales from ${allowedForImageType.length} to ${filteredScales.length} based on image size ${imageWidth}×${imageHeight} (max: ${maxScale}x)`);
+      }
+      
+      // Auto-correct selected scale if it was filtered out
+      if (filteredScales.length > 0 && !filteredScales.includes(upscaleSettings.scale)) {
+        const nearestScale = filteredScales.reduce((prev, curr) => 
+          Math.abs(curr - upscaleSettings.scale) < Math.abs(prev - upscaleSettings.scale) ? curr : prev
+        );
+        console.log(`[Toolbar] Auto-correcting scale from ${upscaleSettings.scale}x to ${nearestScale}x (filtered out by image size)`);
+        // Schedule update for next render to avoid state update during render
+        setTimeout(() => {
+          onSettingsChange({ ...upscaleSettings, scale: nearestScale });
+        }, 0);
+      }
+    }
+    
+    // Get scale options from template system
+    let scaleOptions: ScaleOption[] = [];
+    let maxSafeScale = 32;
+    
+    if (imageWidth && imageHeight) {
+      scaleOptions = getScaleOptions(imageWidth, imageHeight);
+      maxSafeScale = calculateMaxSafeScale(imageWidth, imageHeight);
+    }
+    
+    return { plan, allowedForImageType: filteredScales, scaleOptions, maxSafeScale };
+  }, [upscaleSettings.quality, userProfile, realUserProfile, imageWidth, imageHeight]);
+
+  // Calculate remaining upscales for token counter display
+  const upscalesInfo = useMemo(() => {
+    const profile = realUserProfile || userProfile;
+    const limit = profile?.monthly_upscales_limit || profile?.subscription_tiers?.monthly_upscales || 100;
+    const used = profile?.current_month_upscales || 0;
+    const remaining = Math.max(0, limit - used);
+    const percentUsed = limit > 0 ? (used / limit) * 100 : 0;
+    const isLow = remaining <= Math.ceil(limit * 0.2); // Low when 20% or less remaining
+    const maxScale = getMaxScaleForPlan(planInfo.plan as PlanTier);
+    
+    return { limit, used, remaining, percentUsed, isLow, maxScale };
+  }, [realUserProfile, userProfile, planInfo.plan]);
 
   const outputFormats = [
     { value: 'original', label: 'Original' },
@@ -207,12 +260,24 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     const isArt = upscaleSettings.quality === 'art' || upscaleSettings.quality === 'text';
     const isHighScale = upscaleSettings.scale >= 20;
     
+    // Check if current scale requires downscaling based on template
+    const currentScaleOption = planInfo.scaleOptions.find((opt: ScaleOption) => opt.scale === upscaleSettings.scale);
+    
+    if (currentScaleOption?.requiresDownscale && currentScaleOption.downscaledWidth && currentScaleOption.downscaledHeight) {
+      return `For ${upscaleSettings.scale}x, your image will be resized to ${currentScaleOption.downscaledWidth}×${currentScaleOption.downscaledHeight} first → final ${currentScaleOption.finalWidth.toLocaleString()}×${currentScaleOption.finalHeight.toLocaleString()}px. Est. time: ${formatTimeEstimate(currentScaleOption.estimatedTimeMin)}`;
+    }
+    
     if (isArt && isHighScale) {
       return `Art & Illustrations at ${upscaleSettings.scale}x uses multiple SwinIR passes for maximum artistic quality. This may require more tokens, especially for larger images.`;
     }
     
+    // Show time estimate for high scales
+    if (currentScaleOption && upscaleSettings.scale >= 16) {
+      return `Estimated processing time: ${formatTimeEstimate(currentScaleOption.estimatedTimeMin)} (${currentScaleOption.tileCount} tiles)`;
+    }
+    
     return null;
-  }, [upscaleSettings.quality, upscaleSettings.scale]);
+  }, [upscaleSettings.quality, upscaleSettings.scale, planInfo.scaleOptions]);
 
   // Calculate stage count for cost estimation
   const getStageCount = (scale: number): number => {
@@ -427,6 +492,58 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               {!currentProcessing && latestUploadedFile && (
                 <div className="text-xs" style={{ color: mutedTextColor }}>
                   {tokenCostDisplay}
+                </div>
+              )}
+              
+              {/* Remaining Upscales Counter */}
+              <div className="flex items-center space-x-2 mt-2">
+                <div className="flex items-center space-x-1">
+                  <div 
+                    className="w-16 h-1.5 rounded-full overflow-hidden"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+                  >
+                    <div 
+                      className="h-full rounded-full transition-all duration-300"
+                      style={{ 
+                        width: `${100 - upscalesInfo.percentUsed}%`,
+                        background: upscalesInfo.isLow 
+                          ? 'linear-gradient(to right, #ef4444, #f97316)' 
+                          : 'linear-gradient(to right, var(--primary), var(--secondary))'
+                      }}
+                    />
+                  </div>
+                  <span className="text-xs" style={{ color: upscalesInfo.isLow ? '#f97316' : mutedTextColor }}>
+                    {upscalesInfo.remaining} left
+                  </span>
+                </div>
+                {upscalesInfo.isLow && (
+                  <button
+                    onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-billing'))}
+                    className="text-xs px-2 py-0.5 rounded-full transition-colors"
+                    style={{ 
+                      background: 'linear-gradient(to right, var(--primary), var(--secondary))',
+                      color: 'white'
+                    }}
+                  >
+                    Upgrade
+                  </button>
+                )}
+              </div>
+              
+              {/* Scale Limit Indicator */}
+              {upscalesInfo.maxScale < 24 && (
+                <div className="flex items-center space-x-1 mt-1">
+                  <Lock className="w-3 h-3" style={{ color: mutedTextColor }} />
+                  <span className="text-xs" style={{ color: mutedTextColor }}>
+                    Max {upscalesInfo.maxScale}x
+                  </span>
+                  <button
+                    onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-billing'))}
+                    className="text-xs underline transition-colors hover:opacity-80"
+                    style={{ color: 'var(--primary)' }}
+                  >
+                    Unlock 24x
+                  </button>
                 </div>
               )}
           </div>

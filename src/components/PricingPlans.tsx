@@ -1,198 +1,358 @@
-import React, { useState } from 'react';
-import { Check, Star, Zap, Crown, ArrowRight, Upload, Sparkles, Users, Shield, Clock, TrendingUp, LogIn, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Check, Star, Zap, Crown, ArrowRight, Upload, Gift, Lock, TrendingUp } from 'lucide-react';
+import { useThemeLab } from '../contexts/ThemeContext';
 
 interface PricingPlansProps {
   onGetStarted: (plan: string) => void;
 }
 
+interface PlanFeature {
+  text: string;
+  included: boolean;
+  highlight?: boolean;
+}
+
+interface Plan {
+  id: string;
+  name: string;
+  description: string;
+  monthlyPrice: number;
+  yearlyPrice: number;
+  upscales: number;
+  maxScale: string;
+  features: PlanFeature[];
+  icon: React.ElementType;
+  popular: boolean;
+  isFree?: boolean;
+  upgradeHook?: string;
+}
+
 export function PricingPlans({ onGetStarted }: PricingPlansProps) {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const { tone } = useThemeLab();
 
-  const plans = [
+  // Calculate text colors based on tone
+  const textColor = useMemo(() => {
+    return tone <= 50 ? 'hsl(0, 0%, 96%)' : 'hsl(0, 0%, 12%)';
+  }, [tone]);
+
+  const mutedTextColor = useMemo(() => {
+    return tone <= 50 ? 'hsl(0, 0%, 70%)' : 'hsl(0, 0%, 40%)';
+  }, [tone]);
+
+  const plans: Plan[] = [
     {
-      id: 'basic',
-      name: 'Basic',
-      description: 'Perfect for personal projects and occasional use',
-      monthlyPrice: 7.99,
-      yearlyPrice: 79.99,
-      upscales: 100,
+      id: 'free',
+      name: 'Free',
+      description: 'Try AI upscaling risk-free',
+      monthlyPrice: 0,
+      yearlyPrice: 0,
+      upscales: 5,
+      maxScale: '4x',
       features: [
-        '100 AI upscales per month',
-        '2x and 4x (up to 8x)',
-        'Photo & Art quality presets',
-        'JPEG, PNG, WebP support',
-        'Basic customer support',
-        'Download in original format'
+        { text: '5 AI upscales (lifetime)', included: true },
+        { text: 'Up to 4x scaling', included: true },
+        { text: 'Photo & Art presets', included: true },
+        { text: 'JPEG, PNG, WebP support', included: true },
+        { text: 'Anime & Text presets', included: false },
+      ],
+      icon: Gift,
+      popular: false,
+      isFree: true,
+      upgradeHook: 'Unlock higher scales + more presets',
+    },
+    {
+      id: 'starter',
+      name: 'Starter',
+      description: 'Great for personal projects',
+      monthlyPrice: 4.99,
+      yearlyPrice: 49.99,
+      upscales: 75,
+      maxScale: '8x',
+      features: [
+        { text: '75 upscales per month', included: true },
+        { text: 'Up to 8x scaling', included: true, highlight: true },
+        { text: 'Photo & Art presets', included: true },
+        { text: 'JPEG, PNG, WebP support', included: true },
+        { text: 'Email support', included: true },
+        { text: 'Anime & Text presets', included: false },
       ],
       icon: Upload,
-      color: 'from-blue-500 to-cyan-500',
-      popular: false
+      popular: false,
+      upgradeHook: 'Unlock ALL presets + 16x scaling',
     },
     {
       id: 'pro',
       name: 'Pro',
-      description: 'Ideal for professionals and content creators',
-      monthlyPrice: 19.99,
-      yearlyPrice: 199.99,
-      upscales: 500,
+      description: 'For professionals & creators',
+      monthlyPrice: 12.99,
+      yearlyPrice: 129.99,
+      upscales: 300,
+      maxScale: '16x',
       features: [
-        '500 AI upscales per month',
-        '2x, 4x, 8x, 10x scaling options',
-        'All quality presets (Photo, Art, Anime, Text)',
-        'JPEG, PNG, WebP support'
+        { text: '300 upscales per month', included: true },
+        { text: 'Up to 16x scaling', included: true, highlight: true },
+        { text: 'ALL presets (Photo, Art, Anime, Text)', included: true, highlight: true },
+        { text: 'JPEG, PNG, WebP support', included: true },
+        { text: 'Priority support', included: true },
+        { text: '24x scaling', included: false },
       ],
       icon: Zap,
-      color: 'from-orange-500 to-red-500',
-      popular: true
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      description: 'For teams and high-volume processing needs',
-      monthlyPrice: 39.99,
-      yearlyPrice: 399.99,
-      upscales: 1250,
-      features: [
-        '1,250 AI upscales per month',
-        '2x, 4x, 8x, 10x, 16x scaling options',
-        'All quality presets (Photo, Art, Anime, Text)',
-        'JPEG, PNG, WebP support'
-      ],
-      icon: Crown,
-      color: 'from-purple-500 to-pink-500',
-      popular: false
+      popular: true,
+      upgradeHook: 'Unlock 24x scaling + more upscales',
     },
     {
       id: 'mega',
       name: 'Mega',
-      description: 'For power users needing massive monthly capacity',
-      monthlyPrice: 79.99,
-      yearlyPrice: 799.99,
-      upscales: 2750,
+      description: 'Maximum power & capacity',
+      monthlyPrice: 39.99,
+      yearlyPrice: 399.99,
+      upscales: 1500,
+      maxScale: '24x',
       features: [
-        '2,750 AI upscales per month',
-        '2x, 4x, 8x, 10x, 16x, 32x scaling options',
-        'All quality presets (Photo, Art, Anime, Text)',
-        'JPEG, PNG, WebP support'
+        { text: '1,500 upscales per month', included: true, highlight: true },
+        { text: 'Up to 24x scaling (max)', included: true, highlight: true },
+        { text: 'ALL presets (Photo, Art, Anime, Text)', included: true },
+        { text: 'JPEG, PNG, WebP support', included: true },
+        { text: 'Priority support', included: true },
       ],
-      icon: TrendingUp,
-      color: 'from-green-500 to-emerald-600',
-      popular: false
-    }
+      icon: Crown,
+      popular: false,
+    },
   ];
 
-  const getPrice = (plan: typeof plans[0]) => {
+  const getPrice = (plan: Plan) => {
     return billingCycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice;
   };
 
-  const getSavings = (plan: typeof plans[0]) => {
+  const getSavings = (plan: Plan) => {
+    if (plan.monthlyPrice === 0) return 0;
     const monthlyTotal = plan.monthlyPrice * 12;
     const savings = monthlyTotal - plan.yearlyPrice;
     return Math.round((savings / monthlyTotal) * 100);
   };
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <div className="text-center mb-16">
+  // Gradient colors for each plan
+  const planGradients = {
+    free: 'from-gray-500 to-gray-600',
+    starter: 'from-blue-500 to-cyan-500',
+    pro: 'from-orange-500 to-red-500',
+    mega: 'from-purple-500 to-pink-500',
+  };
 
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative">
+      <div className="text-center mb-12">
+        <h2 
+          className="text-3xl md:text-4xl font-bold mb-4"
+          style={{ color: textColor }}
+        >
           Choose Your Plan
         </h2>
-        <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
-          Competitive pricing with no hidden fees
+        <p 
+          className="text-xl mb-8"
+          style={{ color: mutedTextColor }}
+        >
+          Simple pricing, powerful results
         </p>
 
         {/* Billing Toggle */}
-        <div className="flex items-center justify-center space-x-4 mb-12">
-          <span className={`text-sm font-medium ${billingCycle === 'monthly' ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500'}`}>
+        <div className="flex items-center justify-center space-x-4 mb-8">
+          <span 
+            className="text-sm font-medium"
+            style={{ color: billingCycle === 'monthly' ? textColor : mutedTextColor }}
+          >
             Monthly
           </span>
           <button
             onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              billingCycle === 'yearly' ? 'bg-gradient-to-r from-blue-600 to-green-600' : 'bg-gray-200'
-            }`}
+            className="relative inline-flex h-7 w-14 items-center rounded-full transition-all duration-300"
+            style={{
+              background: billingCycle === 'yearly' 
+                ? 'linear-gradient(to right, var(--primary), var(--secondary))' 
+                : 'rgba(255, 255, 255, 0.2)',
+              boxShadow: billingCycle === 'yearly' 
+                ? '0 0 20px color-mix(in oklab, var(--primary) 40%, transparent 60%)' 
+                : 'none',
+            }}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                billingCycle === 'yearly' ? 'translate-x-6' : 'translate-x-1'
-              }`}
+              className="inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300"
+              style={{ transform: billingCycle === 'yearly' ? 'translateX(32px)' : 'translateX(4px)' }}
             />
           </button>
-          <span className={`text-sm font-medium ${billingCycle === 'yearly' ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500'}`}>
+          <span 
+            className="text-sm font-medium"
+            style={{ color: billingCycle === 'yearly' ? textColor : mutedTextColor }}
+          >
             Yearly
           </span>
           {billingCycle === 'yearly' && (
-            <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
-              Save up to 17%
+            <span 
+              className="px-3 py-1 rounded-full text-xs font-semibold"
+              style={{
+                background: 'linear-gradient(to right, var(--primary), var(--secondary))',
+                color: 'white',
+              }}
+            >
+              Save 17%
             </span>
           )}
         </div>
       </div>
 
       {/* Pricing Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {plans.map((plan) => {
           const Icon = plan.icon;
           const price = getPrice(plan);
           const savings = getSavings(plan);
+          const gradient = planGradients[plan.id as keyof typeof planGradients];
           
           return (
             <div
               key={plan.id}
-              className={`relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border-2 p-8 flex flex-col ${
-                plan.popular 
-                  ? 'border-orange-500 shadow-xl scale-105' 
-                  : 'border-gray-200/50 dark:border-gray-700/50'
+              className={`relative rounded-2xl p-6 flex flex-col glass-card transition-all duration-300 hover:scale-[1.02] ${
+                plan.popular ? 'ring-2 ring-orange-500 scale-[1.02]' : ''
               }`}
+              style={{
+                borderColor: plan.popular 
+                  ? 'var(--primary)' 
+                  : 'color-mix(in oklab, var(--border) 50%, transparent 50%)',
+                boxShadow: plan.popular 
+                  ? '0 0 40px color-mix(in oklab, var(--primary) 30%, transparent 70%)' 
+                  : undefined,
+              }}
             >
               {plan.popular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-5 py-1 rounded-full text-sm font-medium flex items-center space-x-1 whitespace-nowrap">
-                    <Star className="w-4 h-4" />
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <div 
+                    className="text-white px-4 py-1 rounded-full text-xs font-semibold flex items-center space-x-1"
+                    style={{
+                      background: 'linear-gradient(to right, var(--primary), var(--secondary))',
+                      boxShadow: '0 4px 15px color-mix(in oklab, var(--primary) 40%, transparent 60%)',
+                    }}
+                  >
+                    <Star className="w-3 h-3" />
                     <span>Most Popular</span>
                   </div>
                 </div>
               )}
 
-              <div className="text-center mb-8">
-                <div className={`w-16 h-16 bg-gradient-to-br ${plan.color} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                  <Icon className="w-8 h-8 text-white" />
+              <div className="text-center mb-6">
+                <div 
+                  className={`w-14 h-14 bg-gradient-to-br ${gradient} rounded-full flex items-center justify-center mx-auto mb-3`}
+                  style={{
+                    boxShadow: `0 8px 25px color-mix(in oklab, var(--primary) 30%, transparent 70%)`,
+                  }}
+                >
+                  <Icon className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{plan.name}</h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-4">{plan.description}</p>
-                
-                <div className="mb-4">
-                  <span className="text-4xl font-bold text-gray-900 dark:text-gray-100">${price}</span>
-                  <span className="text-gray-600 dark:text-gray-300">/{billingCycle === 'monthly' ? 'month' : 'year'}</span>
-                  {billingCycle === 'yearly' && (
-                    <div className="text-sm text-green-600 font-medium">Save {savings}%</div>
-                  )}
+                <h3 className="text-xl font-bold mb-1" style={{ color: textColor }}>
+                  {plan.name}
+                </h3>
+                <p className="text-sm" style={{ color: mutedTextColor }}>
+                  {plan.description}
+                </p>
+              </div>
+              
+              {/* Price */}
+              <div className="text-center mb-4">
+                {plan.isFree ? (
+                  <span className="text-3xl font-bold" style={{ color: textColor }}>Free</span>
+                ) : (
+                  <>
+                    <span className="text-3xl font-bold" style={{ color: textColor }}>${price}</span>
+                    <span className="text-sm" style={{ color: mutedTextColor }}>
+                      /{billingCycle === 'monthly' ? 'mo' : 'yr'}
+                    </span>
+                    {billingCycle === 'yearly' && savings > 0 && (
+                      <div className="text-xs font-medium mt-1" style={{ color: 'var(--primary)' }}>
+                        Save {savings}%
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+              
+              {/* Upscales & Scale */}
+              <div 
+                className="text-center py-3 rounded-lg mb-4"
+                style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+              >
+                <div className="text-lg font-semibold" style={{ color: textColor }}>
+                  {plan.isFree 
+                    ? `${plan.upscales} upscales` 
+                    : `${plan.upscales.toLocaleString()}/mo`
+                  }
                 </div>
-                
-                <div className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">
-                  {plan.upscales.toLocaleString()} upscales/month
+                <div className="text-xs" style={{ color: mutedTextColor }}>
+                  Up to {plan.maxScale} scaling
                 </div>
               </div>
 
-              <ul className="space-y-3 mb-8 flex-grow">
+              {/* Features */}
+              <ul className="space-y-2 mb-6 flex-grow">
                 {plan.features.map((feature, index) => (
-                  <li key={index} className="flex items-start space-x-3">
-                    <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700 dark:text-gray-300 text-sm">{feature}</span>
+                  <li key={index} className="flex items-start space-x-2">
+                    {feature.included ? (
+                      <Check 
+                        className="w-4 h-4 mt-0.5 flex-shrink-0" 
+                        style={{ color: feature.highlight ? 'var(--primary)' : '#22c55e' }} 
+                      />
+                    ) : (
+                      <Lock 
+                        className="w-4 h-4 mt-0.5 flex-shrink-0" 
+                        style={{ color: mutedTextColor, opacity: 0.5 }} 
+                      />
+                    )}
+                    <span 
+                      className="text-sm"
+                      style={{ 
+                        color: feature.included 
+                          ? (feature.highlight ? textColor : mutedTextColor)
+                          : mutedTextColor,
+                        opacity: feature.included ? 1 : 0.5,
+                        textDecoration: feature.included ? 'none' : 'line-through',
+                      }}
+                    >
+                      {feature.text}
+                    </span>
                   </li>
                 ))}
               </ul>
 
+              {/* Upgrade Hook */}
+              {plan.upgradeHook && (
+                <div 
+                  className="text-xs text-center mb-4 py-2 px-3 rounded-lg"
+                  style={{ 
+                    background: 'color-mix(in oklab, var(--primary) 10%, transparent 90%)',
+                    color: 'var(--primary)',
+                  }}
+                >
+                  <TrendingUp className="w-3 h-3 inline mr-1" />
+                  {plan.upgradeHook}
+                </div>
+              )}
+
+              {/* CTA Button */}
               <button
                 onClick={() => onGetStarted(plan.id)}
-                className={`w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
-                  plan.popular
-                    ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg'
-                    : `bg-gradient-to-r ${plan.color} hover:shadow-lg text-white`
+                className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-300 flex items-center justify-center space-x-2 ${
+                  plan.popular ? 'neon-glow-subtle' : ''
                 }`}
+                style={{
+                  background: plan.popular 
+                    ? 'linear-gradient(to right, var(--primary), var(--secondary))'
+                    : `linear-gradient(to right, ${gradient.replace('from-', '').replace(' to-', ', ').replace('-500', '').replace('-600', '')})`,
+                  color: 'white',
+                  boxShadow: plan.popular 
+                    ? '0 8px 25px color-mix(in oklab, var(--primary) 40%, transparent 60%)'
+                    : undefined,
+                }}
               >
-                <span>Choose {plan.name}</span>
+                <span>{plan.isFree ? 'Start Free' : `Choose ${plan.name}`}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>

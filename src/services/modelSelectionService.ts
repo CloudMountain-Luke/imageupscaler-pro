@@ -10,6 +10,7 @@ export interface ImageTypeInfo {
   exampleImage?: string; // Background image for the card
 }
 
+// MAX SCALE: 24x (28x/32x/64x removed - require 3-stage processing which is unreliable)
 export const IMAGE_TYPES: Record<string, ImageTypeInfo> = {
   'photo': {
     id: 'photo',
@@ -17,7 +18,7 @@ export const IMAGE_TYPES: Record<string, ImageTypeInfo> = {
     description: 'Natural photos, portraits, real-world images',
     icon: '📸',
     model: 'photo-real-esrgan',
-    supportedScales: [2, 4, 8, 10, 12, 16, 20, 24, 28, 32, 64],
+    supportedScales: [2, 4, 8, 10, 12, 16, 20, 24],
     exampleImage: '/images/photo-sm.webp'
   },
   'art': {
@@ -26,7 +27,7 @@ export const IMAGE_TYPES: Record<string, ImageTypeInfo> = {
     description: 'Digital art, paintings, illustrations',
     icon: '🎨',
     model: 'art-swinir',
-    supportedScales: [2, 4, 8, 10, 12, 16, 20, 24, 28, 32, 64],
+    supportedScales: [2, 4, 8, 10, 12, 16, 20, 24],
     exampleImage: '/images/art-illustrations_sm.webp'
   },
   'anime': {
@@ -35,7 +36,7 @@ export const IMAGE_TYPES: Record<string, ImageTypeInfo> = {
     description: 'Anime, cartoons, animated content',
     icon: '🎌',
     model: 'anime-real-esrgan',
-    supportedScales: [2, 4, 8, 10, 12, 16, 20, 24, 28, 32, 64],
+    supportedScales: [2, 4, 8, 10, 12, 16, 20, 24],
     exampleImage: '/images/anime-sm.webp'
   },
   'text': {
@@ -44,7 +45,7 @@ export const IMAGE_TYPES: Record<string, ImageTypeInfo> = {
     description: 'Documents, text, screenshots',
     icon: '📄',
     model: 'art-swinir',
-    supportedScales: [2, 4, 8, 10, 12, 16, 20, 24, 28, 32, 64],
+    supportedScales: [2, 4, 8, 10, 12, 16, 20, 24],
     exampleImage: '/images/text-sm.webp'
   },
   'extreme': {
@@ -53,17 +54,65 @@ export const IMAGE_TYPES: Record<string, ImageTypeInfo> = {
     description: 'Maximum detail preservation (16x+)',
     icon: '⚡',
     model: 'controlnet-tile',
-    supportedScales: [16, 20, 24, 28, 32, 64]
+    supportedScales: [16, 20, 24]
   }
 };
 
+// Plan-based scale limits
+const PLAN_SCALE_LIMITS: Record<PlanTier, number> = {
+  free: 4,        // Free: 2x, 4x only
+  starter: 8,     // Starter: up to 8x
+  basic: 8,       // Legacy basic = starter
+  pro: 16,        // Pro: up to 16x
+  power: 24,      // Power: up to 24x (legacy)
+  enterprise: 24, // Legacy enterprise
+  unlimited: 24,  // Legacy unlimited
+  mega: 24,       // Mega: up to 24x (max)
+};
+
+// Plans that have access to Anime & Text presets (Pro and above)
+const PLANS_WITH_ALL_PRESETS: PlanTier[] = ['pro', 'power', 'enterprise', 'unlimited', 'mega'];
+
+// Check if a plan has access to a specific image type
+export function canAccessImageType(imageType: string, plan: PlanTier): boolean {
+  // Photo and Art are available to all plans
+  if (imageType === 'photo' || imageType === 'art') {
+    return true;
+  }
+  
+  // Anime and Text require Pro or higher
+  if (imageType === 'anime' || imageType === 'text') {
+    return PLANS_WITH_ALL_PRESETS.includes(plan);
+  }
+  
+  // Extreme requires Pro or higher
+  if (imageType === 'extreme') {
+    return PLANS_WITH_ALL_PRESETS.includes(plan);
+  }
+  
+  return true;
+}
+
+// Get available image types for a plan
+export function getAvailableImageTypes(plan: PlanTier): ImageTypeInfo[] {
+  return Object.values(IMAGE_TYPES).filter(type => canAccessImageType(type.id, plan));
+}
+
 export function getAvailableScalesForImageType(imageType: string, plan: PlanTier): number[] {
   const imageTypeInfo = IMAGE_TYPES[imageType];
-  if (!imageTypeInfo) return [2, 4, 8, 10, 12, 16, 20, 24, 28, 32, 64];
+  // Max scale is 24x for all image types
+  if (!imageTypeInfo) return [2, 4, 8, 10, 12, 16, 20, 24];
   
-  // Return full unified scale range for all image types
-  // Plan restrictions are handled at processing time, not UI level
-  return imageTypeInfo.supportedScales;
+  // Get plan limit
+  const planLimit = PLAN_SCALE_LIMITS[plan] || 24;
+  
+  // Filter scales based on plan limit
+  return imageTypeInfo.supportedScales.filter(scale => scale <= planLimit);
+}
+
+// Get the max scale for a plan (for UI display)
+export function getMaxScaleForPlan(plan: PlanTier): number {
+  return PLAN_SCALE_LIMITS[plan] || 24;
 }
 
 export function getImageTypeInfo(imageType: string): ImageTypeInfo | undefined {

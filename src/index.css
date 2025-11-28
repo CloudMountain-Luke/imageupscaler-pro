@@ -3,20 +3,26 @@
 @tailwind utilities;
 
 :root {
-  /* These will be overridden by ThemeContext based on tone slider */
-  --primary: hsl(240, 85%, 65%);
-  --secondary: hsl(260, 80%, 70%);
-  --accent: hsl(170, 75%, 55%);
-  --surface: hsl(222, 34%, 16%);
-  --elev: hsl(222, 40%, 26%);
-  --border: hsl(222, 32%, 36%);
-  --text: hsl(210, 32%, 96%);
-  --muted: hsla(220, 24%, 76%, 0.9);
-  --on-primary: hsl(216, 48%, 14%);
-  --focus-ring: 0 0 0 3px hsla(240, 85%, 65%, 0.55);
-  --shadow-1: 0 32px 70px rgba(8, 14, 26, 0.65);
-  --shadow-2: 0 45px 95px rgba(88, 93, 255, 0.35);
+  /* Flame scheme dark mode (tone: 0%) - Default */
+  --primary: hsl(50, 85%, 48%);
+  --secondary: hsl(330, 80%, 52%);
+  --accent: hsl(30, 75%, 45%);
+  --surface: hsl(0, 0%, 0%); /* Pure black for 0% tone */
+  --elev: hsla(220, 30%, 12%, 0.9);
+  --border: hsla(220, 20%, 20%, 0.6);
+  --text: hsl(210, 10%, 96%);
+  --muted: hsla(220, 12%, 72%, 0.7);
+  --on-primary: hsl(0, 0%, 12%);
+  --focus-ring: 0 0 0 3px hsla(50, 85%, 48%, 0.4);
+  --shadow-1: 0 32px 70px rgba(8, 14, 26, 0.75);
+  --shadow-2: 0 25px 60px hsla(50, 85%, 48%, 0.3);
   --radius: 18px;
+  
+  /* Logo-specific colors (fixed across all schemes) */
+  --flame-yellow: hsl(50, 100%, 60%);
+  --flame-magenta: hsl(330, 100%, 60%);
+  --forge-orange: hsl(24, 100%, 55%);
+  --cyber-cyan: hsl(195, 100%, 65%);
 }
 
 .tone-slider {
@@ -28,7 +34,7 @@
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.45);
   outline: none;
   cursor: pointer;
-  transition: filter 0.2s ease;
+  transition: filter 0.2s ease, background 0.3s ease;
 }
 
 .tone-slider:hover {
@@ -48,6 +54,7 @@
   background: var(--surface);
   border: 3px solid color-mix(in oklab, var(--primary) 70%, var(--accent) 30%);
   box-shadow: 0 12px 28px color-mix(in oklab, var(--primary) 45%, rgba(0, 0, 0, 0.65) 55%);
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .tone-slider::-moz-range-thumb {
@@ -57,6 +64,7 @@
   background: var(--surface);
   border: 3px solid color-mix(in oklab, var(--primary) 70%, var(--accent) 30%);
   box-shadow: 0 12px 28px color-mix(in oklab, var(--primary) 45%, rgba(0, 0, 0, 0.65) 55%);
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .ziggurat-button {
@@ -66,109 +74,173 @@
   justify-content: center;
   min-width: 160px;
   padding: 16px 32px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, 
-    color-mix(in oklab, var(--primary) 85%, var(--secondary) 15%), 
-    color-mix(in oklab, var(--primary) 70%, var(--accent) 30%));
-  border: none;
-  color: var(--on-primary);
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--surface) 95%, var(--elev) 5%);
+  border: 2px solid color-mix(in oklab, var(--primary) 60%, var(--border) 40%);
+  color: var(--primary);
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  box-shadow: var(--shadow-1), var(--shadow-2);
-  transition: transform 0.2s ease, box-shadow 0.3s ease, filter 0.3s ease;
+  box-shadow: 
+    0 2px 8px color-mix(in oklab, var(--primary) 15%, transparent 85%),
+    0 1px 2px color-mix(in oklab, var(--border) 30%, transparent 70%),
+    inset 0 1px 0 color-mix(in oklab, rgba(255, 255, 255, 0.1), transparent);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+/* When image is loaded - use tone slider gradient and glow */
+.ziggurat-button.has-image {
+  background: linear-gradient(135deg, 
+    color-mix(in oklab, var(--primary) 80%, var(--secondary) 20%), 
+    color-mix(in oklab, var(--secondary) 55%, var(--accent) 45%));
+  border: 2px solid color-mix(in oklab, var(--primary) 70%, var(--accent) 30%);
+  color: var(--on-primary);
+  text-shadow: 
+    0 0 4px rgba(0, 0, 0, 0.40),
+    0 0 8px rgba(0, 0, 0, 0.30),
+    0 0 16px rgba(0, 0, 0, 0.20),
+    0 0 24px rgba(0, 0, 0, 0.15),
+    0 0 32px rgba(0, 0, 0, 0.12);
+  box-shadow: 
+    0 8px 32px color-mix(in oklab, var(--primary) 45%, rgba(0, 0, 0, 0.55) 55%),
+    0 4px 16px color-mix(in oklab, var(--primary) 35%, rgba(0, 0, 0, 0.65) 65%),
+    0 0 0 1px color-mix(in oklab, var(--primary) 20%, transparent 80%),
+    inset 0 1px 0 color-mix(in oklab, rgba(255, 255, 255, 0.25), transparent);
+  filter: brightness(1.05);
 }
 
 .ziggurat-button::before {
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 10px;
-  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
-  opacity: 0.6;
+  border-radius: 12px;
+  background: linear-gradient(135deg, 
+    color-mix(in oklab, var(--primary) 8%, transparent 92%) 0%,
+    color-mix(in oklab, var(--primary) 12%, transparent 88%) 50%,
+    color-mix(in oklab, var(--primary) 6%, transparent 94%) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
   pointer-events: none;
+}
+
+/* Enhanced glow effect when image is loaded */
+.ziggurat-button.has-image::before {
+  background: radial-gradient(circle at center, 
+    color-mix(in oklab, rgba(255, 255, 255, 0.3), transparent) 0%,
+    color-mix(in oklab, rgba(255, 255, 255, 0.15), transparent) 40%,
+    transparent 70%);
+  opacity: 1;
 }
 
 .ziggurat-button::after {
   content: '';
   position: absolute;
-  inset: 0;
-  border-radius: 10px;
-  background-image: repeating-linear-gradient(
-    0deg,
-    rgba(255, 255, 255, 0.15) 0%,
-    rgba(255, 255, 255, 0.15) 15%,
-    rgba(255, 255, 255, 0.05) 15%,
-    rgba(255, 255, 255, 0.05) 30%,
-    transparent 30%,
-    transparent 45%
-  );
-  background-size: 100% 180%;
-  background-repeat: repeat-y;
-  background-position-y: 100%;
+  inset: -4px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, 
+    color-mix(in oklab, var(--primary) 40%, transparent 60%),
+    color-mix(in oklab, var(--accent) 35%, transparent 65%));
   opacity: 0;
+  transition: opacity 0.3s ease;
   pointer-events: none;
+  z-index: -1;
+  filter: blur(16px);
 }
 
-.ziggurat-button:not(:disabled)::after {
-  opacity: 0.9;
-  animation: zigguratRise 2.8s linear infinite;
+/* Glow effect when image is loaded */
+.ziggurat-button.has-image::after {
+  opacity: 0.8;
+  filter: blur(20px);
 }
 
 .ziggurat-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px color-mix(in oklab, var(--primary) 40%, rgba(0, 0, 0, 0.5) 60%),
-              0 16px 60px color-mix(in oklab, var(--primary) 30%, rgba(0, 0, 0, 0.5) 70%);
+  border-color: color-mix(in oklab, var(--primary) 80%, var(--border) 20%);
+  box-shadow: 
+    0 8px 24px color-mix(in oklab, var(--primary) 25%, transparent 75%),
+    0 4px 8px color-mix(in oklab, var(--primary) 15%, transparent 85%),
+    inset 0 1px 0 color-mix(in oklab, rgba(255, 255, 255, 0.15), transparent);
+  color: var(--primary);
 }
 
-.ziggurat-button:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring), var(--shadow-1);
+.ziggurat-button.has-image:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, var(--primary) 85%, var(--accent) 15%);
+  box-shadow: 
+    0 12px 40px color-mix(in oklab, var(--primary) 50%, rgba(0, 0, 0, 0.5) 50%),
+    0 6px 20px color-mix(in oklab, var(--primary) 40%, rgba(0, 0, 0, 0.6) 60%),
+    0 0 0 1px color-mix(in oklab, var(--primary) 30%, transparent 70%),
+    inset 0 1px 0 color-mix(in oklab, rgba(255, 255, 255, 0.3), transparent);
+  filter: brightness(1.1);
+}
+
+.ziggurat-button.has-image:hover::after {
+  opacity: 1;
+  filter: blur(24px);
+}
+
+.ziggurat-button:hover::before {
+  opacity: 1;
+}
+
+.ziggurat-button:hover::after {
+  opacity: 0.6;
 }
 
 .ziggurat-button:active {
   transform: translateY(0);
-  filter: brightness(0.95);
+  box-shadow: 
+    0 2px 8px color-mix(in oklab, var(--primary) 20%, transparent 80%),
+    0 1px 2px color-mix(in oklab, var(--border) 30%, transparent 70%);
+}
+
+.ziggurat-button.has-image:active {
+  transform: translateY(0);
+  filter: brightness(1.0);
+  box-shadow: 
+    0 4px 16px color-mix(in oklab, var(--primary) 40%, rgba(0, 0, 0, 0.6) 60%),
+    0 2px 8px color-mix(in oklab, var(--primary) 30%, rgba(0, 0, 0, 0.7) 70%);
+}
+
+.ziggurat-button:focus-visible {
+  outline: none;
+  box-shadow: 
+    0 0 0 3px color-mix(in oklab, var(--primary) 20%, transparent 80%),
+    0 4px 12px color-mix(in oklab, var(--primary) 20%, transparent 80%);
+}
+
+.ziggurat-button.has-image:focus-visible {
+  box-shadow: 
+    0 0 0 3px color-mix(in oklab, var(--primary) 30%, transparent 70%),
+    0 8px 24px color-mix(in oklab, var(--primary) 40%, rgba(0, 0, 0, 0.5) 60%);
 }
 
 .ziggurat-button:disabled {
   cursor: not-allowed;
-  background: color-mix(in oklab, var(--surface) 85%, var(--elev) 15%);
+  background: color-mix(in oklab, var(--surface) 90%, var(--elev) 10%);
+  border-color: color-mix(in oklab, var(--border) 50%, transparent 50%);
   color: var(--muted);
   box-shadow: none;
-  filter: saturate(0.5);
-  opacity: 0.6;
+  opacity: 0.5;
+  transform: none;
+  filter: none;
 }
 
-.ziggurat-button:disabled::before {
-  opacity: 0.08;
-}
-
+.ziggurat-button:disabled::before,
 .ziggurat-button:disabled::after {
-  animation: none;
   opacity: 0;
 }
 
-@keyframes zigguratRise {
-  0% {
-    background-position-y: 0%;
-  }
-  100% {
-    background-position-y: 100%;
-  }
-}
-
 .toolbar-shell {
-  background: color-mix(in oklab, var(--surface) 92%, transparent 8%);
+  background: color-mix(in oklab, var(--surface) 85%, transparent 15%);
   backdrop-filter: blur(24px);
-  border-bottom: 1px solid color-mix(in oklab, var(--border) 50%, transparent 50%);
-  box-shadow: var(--shadow-1);
 }
 
 .muted-label {
-  color: color-mix(in oklab, var(--muted) 85%, transparent 15%);
+  color: var(--text);
 }
 
 body {
@@ -201,4 +273,508 @@ body {
 .bg-castle-stone {
   background: var(--surface);
   background-size: cover;
+}
+
+/* Cyberpunk Glass Card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 30px color-mix(in oklab, var(--primary) 15%, transparent 85%);
+}
+
+/* Neon Glow Effects */
+.neon-glow-subtle {
+  box-shadow: 0 0 20px color-mix(in oklab, var(--primary) 30%, transparent 70%);
+}
+
+.neon-glow-subtle:hover {
+  box-shadow: 
+    0 0 30px color-mix(in oklab, var(--primary) 50%, transparent 50%),
+    0 0 60px color-mix(in oklab, var(--primary) 25%, transparent 75%);
+}
+
+/* ============================================
+   HOMEPAGE EFFECTS - Retro-Futuristic Forge
+   ============================================ */
+
+/* Floating Animation for Gallery Images */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-15px) rotate(1deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(-0.5deg);
+  }
+  75% {
+    transform: translateY(-20px) rotate(0.5deg);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Ken Burns Effect for Images */
+@keyframes ken-burns {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.1) translate(-2%, -1%);
+  }
+  100% {
+    transform: scale(1) translate(0, 0);
+  }
+}
+
+.animate-ken-burns {
+  animation: ken-burns 20s ease-in-out infinite;
+}
+
+/* Ember/Spark Rising Animation */
+@keyframes ember-rise {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(20px) scale(0.5);
+    opacity: 0;
+  }
+}
+
+.animate-ember-rise {
+  animation: ember-rise 8s ease-out infinite;
+}
+
+/* Floating Ember Orbs */
+@keyframes ember-float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translateY(-30px) translateX(10px);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-50px) translateX(-5px);
+    opacity: 0.4;
+  }
+  75% {
+    transform: translateY(-20px) translateX(15px);
+    opacity: 0.5;
+  }
+}
+
+.animate-ember-float {
+  animation: ember-float 12s ease-in-out infinite;
+}
+
+/* Scan Line Sweep Animation */
+@keyframes scan-sweep {
+  0% {
+    top: -2px;
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+.animate-scan-sweep {
+  animation: scan-sweep 3s ease-in-out infinite;
+}
+
+/* Scan Line for Hexagon Reveal */
+@keyframes scan-line {
+  0% {
+    top: 0;
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+.animate-scan-line {
+  animation: scan-line 1.5s ease-out forwards;
+}
+
+/* Hexagon Pulse Animation */
+@keyframes hex-pulse {
+  0%, 100% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+.animate-hex-pulse {
+  animation: hex-pulse 4s ease-in-out infinite;
+}
+
+/* Glow Text Effect */
+.glow-text {
+  text-shadow: 
+    0 0 10px color-mix(in oklab, var(--primary) 50%, transparent 50%),
+    0 0 20px color-mix(in oklab, var(--primary) 30%, transparent 70%),
+    0 0 40px color-mix(in oklab, var(--primary) 20%, transparent 80%);
+}
+
+.glow-text-strong {
+  text-shadow: 
+    0 0 10px var(--primary),
+    0 0 20px color-mix(in oklab, var(--primary) 70%, transparent 30%),
+    0 0 40px color-mix(in oklab, var(--primary) 50%, transparent 50%),
+    0 0 80px color-mix(in oklab, var(--primary) 30%, transparent 70%);
+}
+
+/* Glow Border Effect */
+.glow-border {
+  box-shadow: 
+    0 0 10px color-mix(in oklab, var(--primary) 30%, transparent 70%),
+    0 0 20px color-mix(in oklab, var(--primary) 20%, transparent 80%),
+    inset 0 0 10px color-mix(in oklab, var(--primary) 10%, transparent 90%);
+}
+
+/* Steel/Metal Card Effect */
+.steel-card {
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--elev) 90%, rgba(255,255,255,0.05) 10%) 0%,
+    var(--elev) 50%,
+    color-mix(in oklab, var(--elev) 90%, rgba(0,0,0,0.1) 10%) 100%
+  );
+  border: 1px solid color-mix(in oklab, var(--border) 70%, rgba(255,255,255,0.1) 30%);
+}
+
+/* Line Grid Perspective Background */
+.line-grid-perspective {
+  background-image: 
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      color-mix(in oklab, var(--primary) 2%, transparent 98%) 100%
+    ),
+    linear-gradient(
+      color-mix(in oklab, var(--primary) 5%, transparent 95%) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in oklab, var(--primary) 5%, transparent 95%) 1px,
+      transparent 1px
+    );
+  background-size: 100% 100%, 60px 60px, 60px 60px;
+  transform: perspective(500px) rotateX(60deg);
+  transform-origin: center top;
+}
+
+/* Hexagon Badge - Glass Effect with Bright Neon Stroke */
+/* For a regular hexagon: pointy-top orientation */
+/* Points: top, top-right, bottom-right, bottom, bottom-left, top-left */
+.hex-badge {
+  /* Regular hexagon - slightly taller than wide for correct visual appearance
+     Ratio: 96x101 or 47x52 */
+  clip-path: polygon(
+    50% 0%,           /* top center */
+    100% 25%,         /* top right */
+    100% 75%,         /* bottom right */
+    50% 100%,         /* bottom center */
+    0% 75%,           /* bottom left */
+    0% 25%            /* top left */
+  );
+  /* No default background - let inline styles control the color */
+  /* Aspect ratio: width / height = 96/101 */
+  aspect-ratio: 96 / 101;
+  position: relative;
+  /* Subtle inner glow for glass effect */
+  box-shadow: 
+    inset 0 1px 2px rgba(255, 255, 255, 0.3),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Disable pseudo-elements - glow effects are handled via inline boxShadow */
+.hex-badge::before,
+.hex-badge::after {
+  display: none;
+}
+
+/* Glass hexagon with neon stroke */
+.hex-glass {
+  clip-path: polygon(
+    50% 0%,
+    100% 25%,
+    100% 75%,
+    50% 100%,
+    0% 75%,
+    0% 25%
+  );
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.15),
+    rgba(255, 255, 255, 0.05)
+  );
+  backdrop-filter: blur(12px);
+  aspect-ratio: 96 / 101;
+  position: relative;
+  box-shadow: 
+    0 0 30px color-mix(in oklab, var(--primary) 50%, transparent 50%),
+    inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+.hex-glass::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  clip-path: polygon(
+    50% 0%,
+    100% 25%,
+    100% 75%,
+    50% 100%,
+    0% 75%,
+    0% 25%
+  );
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  z-index: -1;
+  filter: blur(6px);
+  opacity: 0.7;
+}
+
+/* Alternative flat-top style */
+.hex-badge-flat {
+  clip-path: polygon(
+    50% 0%,
+    100% 25%,
+    100% 75%,
+    50% 100%,
+    0% 75%,
+    0% 25%
+  );
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  aspect-ratio: 96 / 101;
+}
+
+/* Pulse Glow Animation */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px color-mix(in oklab, var(--primary) 30%, transparent 70%);
+  }
+  50% {
+    box-shadow: 0 0 40px color-mix(in oklab, var(--primary) 50%, transparent 50%);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Typewriter Animation for Stats */
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.animate-typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typewriter 1s steps(20) forwards;
+}
+
+/* Counter Animation */
+@keyframes count-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-count-up {
+  animation: count-up 0.5s ease-out forwards;
+}
+
+/* Fade In Up Animation */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+/* Stagger Animation Delays */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Homepage Hero Gradient */
+.hero-gradient {
+  background: 
+    radial-gradient(ellipse at 20% 80%, color-mix(in oklab, var(--primary) 15%, transparent 85%) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, color-mix(in oklab, var(--accent) 10%, transparent 90%) 0%, transparent 50%),
+    var(--surface);
+}
+
+/* Section Divider Gradient */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--primary) 30%, transparent 70%) 20%,
+    color-mix(in oklab, var(--primary) 50%, transparent 50%) 50%,
+    color-mix(in oklab, var(--primary) 30%, transparent 70%) 80%,
+    transparent 100%
+  );
+}
+
+/* ============================================
+   MOBILE RESPONSIVE ADJUSTMENTS
+   ============================================ */
+
+/* Reduce animation intensity on mobile for performance */
+@media (max-width: 768px) {
+  /* Disable parallax on mobile */
+  .parallax-bg,
+  .parallax-mid,
+  .parallax-fg {
+    transform: none !important;
+  }
+  
+  /* Reduce particle count effect (handled in JS, but backup) */
+  .animate-ember-rise {
+    animation-duration: 12s;
+  }
+  
+  /* Simplify Ken Burns on mobile */
+  .animate-ken-burns {
+    animation: none;
+    transform: scale(1.05);
+  }
+  
+  /* Reduce float animation */
+  .animate-float {
+    animation-duration: 8s;
+  }
+  
+  /* Smaller glow effects on mobile */
+  .glow-text {
+    text-shadow: 
+      0 0 5px color-mix(in oklab, var(--primary) 40%, transparent 60%),
+      0 0 10px color-mix(in oklab, var(--primary) 20%, transparent 80%);
+  }
+  
+  .glow-text-strong {
+    text-shadow: 
+      0 0 5px var(--primary),
+      0 0 15px color-mix(in oklab, var(--primary) 50%, transparent 50%);
+  }
+  
+  /* Reduce box shadow intensity */
+  .animate-pulse-glow {
+    animation: none;
+    box-shadow: 0 0 15px color-mix(in oklab, var(--primary) 30%, transparent 70%);
+  }
+  
+  /* Simplify glass cards */
+  .glass-card {
+    backdrop-filter: blur(8px);
+  }
+  
+  /* Reduce hex grid opacity on mobile */
+  .hex-grid-mobile-reduce {
+    opacity: 0.03 !important;
+  }
+}
+
+/* Small mobile adjustments */
+@media (max-width: 480px) {
+  /* Even simpler animations */
+  .animate-float {
+    animation: none;
+  }
+  
+  /* Reduce ember particles visibility */
+  .animate-ember-rise,
+  .animate-ember-float {
+    opacity: 0.3;
+  }
+  
+  /* Smaller hexagon badges */
+  .hex-badge {
+    transform: scale(0.9);
+  }
+}
+
+/* Prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-ken-burns,
+  .animate-ember-rise,
+  .animate-ember-float,
+  .animate-scan-sweep,
+  .animate-scan-line,
+  .animate-hex-pulse,
+  .animate-pulse-glow,
+  .animate-typewriter,
+  .animate-count-up,
+  .animate-fade-in-up {
+    animation: none !important;
+  }
+  
+  .glow-text,
+  .glow-text-strong {
+    text-shadow: none;
+  }
 }

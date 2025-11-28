@@ -104,7 +104,8 @@ export function ImageComparison() {
   }
 
   return (
-    <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50 dark:border-gray-700/50">
+    <div className="w-[90%] max-w-7xl mx-auto">
+      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50 dark:border-gray-700/50">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Before & After Comparison</h3>
         
@@ -230,6 +231,7 @@ export function ImageComparison() {
           <p className="text-gray-600 dark:text-gray-300">Enhancement: {selectedImage.settings.quality} preset</p>
         </div>
       </div>
+    </div>
     </div>
   );
 }

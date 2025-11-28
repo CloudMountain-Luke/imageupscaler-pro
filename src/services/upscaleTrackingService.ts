@@ -156,6 +156,73 @@ export class UpscaleTrackingService {
     return profile as UserProfile;
   }
 
+  /**
+   * Updates the subscription tier for the authenticated user
+   * @param tierName - The name of the subscription tier (e.g., 'basic', 'pro', 'enterprise', 'mega')
+   * @returns The updated user profile
+   */
+  static async updateSubscriptionTier(tierName: string): Promise<UserProfile> {
+    if (!isSupabaseConfigured) {
+      throw new Error('Supabase not configured');
+    }
+
+    // Ensure user is authenticated
+    const authenticatedUser = await UpscaleTrackingService.getAuthenticatedUser();
+
+    // Define tier limits
+    const tierLimits: Record<string, number> = {
+      basic: 100,
+      pro: 500,
+      enterprise: 1250,
+      mega: 2750
+    };
+
+    const targetLimit = tierLimits[tierName.toLowerCase()];
+    if (!targetLimit) {
+      throw new Error(`Invalid tier name: ${tierName}`);
+    }
+
+    // Try to find the subscription tier by name
+    const { data: tier, error: tierError } = await supabase
+      .from('subscription_tiers')
+      .select('id,name,monthly_upscales,monthly_price')
+      .eq('name', tierName.toLowerCase())
+      .maybeSingle();
+
+    // Prepare update payload
+    const updatePayload: any = {
+      monthly_upscales_limit: targetLimit
+    };
+
+    // If tier exists, update subscription_tier_id
+    if (tier && !tierError) {
+      updatePayload.subscription_tier_id = tier.id;
+      console.log(`[updateSubscriptionTier] Found tier in database, updating subscription_tier_id to: ${tier.id}`);
+    } else {
+      console.warn(`[updateSubscriptionTier] Tier '${tierName}' not found in database, updating monthly_upscales_limit directly to ${targetLimit}`);
+      if (tierError) {
+        console.error(`[updateSubscriptionTier] Error querying tiers:`, tierError);
+      }
+    }
+
+    // Update the user profile
+    const { error: updateError } = await supabase
+      .from('user_profiles')
+      .update(updatePayload)
+      .eq('id', authenticatedUser.id);
+
+    if (updateError) {
+      throw new Error(`Error updating subscription tier: ${updateError.message}`);
+    }
+
+    console.log(`[updateSubscriptionTier] Successfully updated user profile:`, updatePayload);
+
+    // Fetch and return the updated profile
+    const updatedProfile = await UpscaleTrackingService.getUserProfile(authenticatedUser.id);
+    console.log(`[updateSubscriptionTier] Updated profile:`, updatedProfile);
+    return updatedProfile;
+  }
+
   static currentMonthRange(): { start: string; end: string } {
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth(), 1);

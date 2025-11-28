@@ -53,8 +53,16 @@ interface TileData {
   stage2_url: string | null;
   stage1_prediction_id: string | null;
   stage2_prediction_id: string | null;
+  stage3_url?: string | null;
+  stage3_prediction_id?: string | null;
   status: string;
   error: string | null;
+  // Sub-tile fields for dynamic re-tiling between stages
+  parent_tile_id?: number;      // Reference to original tile (if this is a sub-tile)
+  sub_tile_index?: number;      // Position within parent (0, 1, 2, 3 for 2x2)
+  sub_tile_grid?: { cols: number; rows: number };  // How the parent was split
+  is_sub_tile?: boolean;        // True if this tile was created by re-tiling
+  [key: string]: unknown;
 }
 
 interface TilingGrid {
@@ -74,6 +82,8 @@ interface UpscaleJob {
   final_output_url: string | null;
   content_type: string;
   target_scale: number;
+  original_width: number | null;
+  original_height: number | null;
   current_stage: number;
   total_stages: number;
   prediction_id: string | null;
@@ -131,14 +141,23 @@ function selectModelFor(contentType: string, scale: number): { slug: string; inp
       return PHOTO_MODEL;
     case "art":
     case "text":
-      // Always use SwinIR 4x for Art in all stages
-      console.log(`[selectModelFor] Art/Text stage → Using SwinIR 4x`);
-      return {
-        slug: "jingyunliang/swinir:660d922d33153019e8c263a3bba265de882e7f4f70396546b6c9c8f9d47a021a",
-        input: { 
-          task: "Real-World Image Super-Resolution-Large"  // Always 4x
-        },
-      };
+      // Use SwinIR 4x for stage 1 only, Real-ESRGAN for all other stages (supports tiling)
+      if (scale === 4) {
+        console.log(`[selectModelFor] Art/Text at 4x → Using SwinIR 4x`);
+        return {
+          slug: "jingyunliang/swinir:660d922d33153019e8c263a3bba265de882e7f4f70396546b6c9c8f9d47a021a",
+          input: { 
+            task: "Real-World Image Super-Resolution-Large"  // 4x
+          },
+        };
+      } else {
+        // Use Real-ESRGAN for 2x and 3x (supports tiling for large intermediate images)
+        console.log(`[selectModelFor] Art/Text at ${scale}x → Using Real-ESRGAN (supports tiling)`);
+        return {
+          ...PHOTO_MODEL,
+          input: { ...PHOTO_MODEL.input, face_enhance: false },
+        };
+      }
     case "anime":
       return ANIME_MODEL;
     case "clarity":
@@ -194,8 +213,9 @@ async function continueChain(
   const isRealESRGAN = model.slug.includes('real-esrgan');
   if (isRealESRGAN && job.current_stage > 1) {
     // For stages after the first, use tiling to handle larger intermediate images
-    input.tile = 512;
-    input.tile_pad = 10;
+    // Reduced from 512 to 256 to prevent CUDA OOM errors on large intermediate images
+    input.tile = 256;
+    input.tile_pad = 16;
     console.log(`[upscale-webhook] Adding tile parameters for stage ${job.current_stage + 1} (intermediate image may be large)`);
   }
 
@@ -392,14 +412,20 @@ async function handleFailedPrediction(
  * Handle webhook for tiling jobs - update tile status and coordinate stage transitions
  */
 async function handleTileWebhook(webhook: ReplicateWebhook, job: UpscaleJob, supabase: any) {
-  console.log(`[Tile Webhook] 📥 Received webhook for prediction ${webhook.id}, job ${job.id}, status: ${webhook.status}`);
+  console.log(`[Tile Webhook] 📥 ========== NEW WEBHOOK ==========`);
+  console.log(`[Tile Webhook] 📥 Prediction: ${webhook.id}`);
+  console.log(`[Tile Webhook] 📥 Job: ${job.id}`);
+  console.log(`[Tile Webhook] 📥 Status: ${webhook.status}`);
+  console.log(`[Tile Webhook] 📥 Current job stage: ${job.current_stage}/${job.total_stages}`);
+  console.log(`[Tile Webhook] 📥 Job status: ${job.status}`);
   
   if (!job.tiles_data || !job.tile_grid) {
     console.error(`[Tile Webhook] ❌ Job ${job.id} missing tile data`);
     return;
   }
   
-  console.log(`[Tile Webhook] Searching for prediction ${webhook.id} in ${job.tiles_data.length} tiles...`);
+  console.log(`[Tile Webhook] 📊 Total tiles: ${job.tiles_data.length} (grid: ${job.tile_grid.tilesX}×${job.tile_grid.tilesY})`);
+  console.log(`[Tile Webhook] 🔍 Searching for prediction ${webhook.id} in ${job.tiles_data.length} tiles...`);
   
   // Find which tile this prediction belongs to (check all possible stages)
   let tileIndex = -1;
@@ -432,17 +458,18 @@ async function handleTileWebhook(webhook: ReplicateWebhook, job: UpscaleJob, sup
   }
   
   if (tileIndex === -1) {
+    console.error(`[Tile Webhook] ❌ ========== PREDICTION NOT FOUND ==========`);
     console.error(`[Tile Webhook] ❌ Prediction ${webhook.id} not found in job ${job.id} tiles`);
-    console.error(`[Tile Webhook] Available tile prediction IDs:`, job.tiles_data.map((t: TileData) => ({
-      tile_id: t.tile_id,
-      stage1: t.stage1_prediction_id,
-      stage2: t.stage2_prediction_id,
-      stage3: (t as any).stage3_prediction_id
-    })));
+    console.error(`[Tile Webhook] ❌ Available tile prediction IDs:`);
+    for (let i = 0; i < job.tiles_data.length; i++) {
+      const t = job.tiles_data[i];
+      console.error(`[Tile Webhook]   - Tile ${t.tile_id}: stage1=${t.stage1_prediction_id}, stage2=${t.stage2_prediction_id}, stage3=${(t as any).stage3_prediction_id}, status=${t.status}`);
+    }
+    console.error(`[Tile Webhook] ❌ ==========================================`);
     return;
   }
   
-  console.log(`[Tile Webhook] ✅ Found matching tile at index ${tileIndex}, tile_id: ${job.tiles_data[tileIndex].tile_id}`);
+  console.log(`[Tile Webhook] ✅ Found matching tile at index ${tileIndex}, tile_id: ${job.tiles_data[tileIndex].tile_id}, stage: ${detectedStage}`);
 
   
   const tile = job.tiles_data[tileIndex];
@@ -453,27 +480,35 @@ async function handleTileWebhook(webhook: ReplicateWebhook, job: UpscaleJob, sup
   
   // Handle tile failure
   if (webhook.status === "failed") {
-    tile.status = "failed";
-    tile.error = webhook.error;
-    
-    await supabase
-      .from("upscale_jobs")
-      .update({ tiles_data: job.tiles_data })
-      .eq("id", job.id);
+    // Use atomic RPC update to prevent race conditions
+    console.log(`[Tile Webhook] ⚠️ Tile ${tile.tile_id} failed, using atomic update...`);
+    await supabase.rpc('update_tile_data', {
+      p_job_id: job.id,
+      p_tile_id: tile.tile_id,
+      p_status: 'failed'
+    });
     
     console.error(`[Tile Webhook] Tile ${tile.tile_id} stage ${currentStage} failed: ${webhook.error}`);
     
-    // Check if too many tiles failed
-    const failedCount = job.tiles_data.filter((t: TileData) => t.status === "failed").length;
-    if (failedCount > job.tiles_data.length / 2) {
-      await supabase
-        .from("upscale_jobs")
-        .update({
-          status: "failed",
-          error_message: `Too many tiles failed: ${failedCount}/${job.tiles_data.length}`,
-          completed_at: new Date().toISOString()
-        })
-        .eq("id", job.id);
+    // Refetch to check failed count with fresh data
+    const { data: refreshedForFail } = await supabase
+      .from("upscale_jobs")
+      .select("tiles_data")
+      .eq("id", job.id)
+      .single();
+    
+    if (refreshedForFail) {
+      const failedCount = refreshedForFail.tiles_data.filter((t: TileData) => t.status === "failed").length;
+      if (failedCount > refreshedForFail.tiles_data.length / 2) {
+        await supabase
+          .from("upscale_jobs")
+          .update({
+            status: "failed",
+            error_message: `Too many tiles failed: ${failedCount}/${refreshedForFail.tiles_data.length}`,
+            completed_at: new Date().toISOString()
+          })
+          .eq("id", job.id);
+      }
     }
     
     return;
@@ -488,83 +523,202 @@ async function handleTileWebhook(webhook: ReplicateWebhook, job: UpscaleJob, sup
       return;
     }
     
-    // Update tile data dynamically for any stage
-    if (currentStage === 1) {
-      tile.stage1_url = outputUrl;
-      tile.status = "stage1_complete";
-    } else if (currentStage === 2) {
-      tile.stage2_url = outputUrl;
-      tile.status = "stage2_complete";
-    } else if (currentStage === 3) {
-      (tile as any).stage3_url = outputUrl;
-      tile.status = "stage3_complete";
-    } else {
-      // Stage 4+
-      (tile as any)[`stage${currentStage}_url`] = outputUrl;
-      tile.status = `stage${currentStage}_complete`;
-    }
+    // 🔥 ATOMIC: Update tile AND check if all tiles completed in ONE transaction
+    // This prevents race conditions where separate update/check calls see inconsistent data
+    const newStatus = `stage${currentStage}_complete`;
+    console.log(`[Tile Webhook] 🔄 Atomic update+check for tile ${tile.tile_id} -> ${newStatus}`);
     
-    await supabase
-      .from("upscale_jobs")
-      .update({ tiles_data: job.tiles_data })
-      .eq("id", job.id);
+    const { data: rpcResult, error: rpcError } = await supabase.rpc('complete_tile_and_check_stage', {
+      p_job_id: job.id,
+      p_tile_id: tile.tile_id,
+      p_status: newStatus,
+      p_stage_url: outputUrl,
+      p_stage: currentStage
+    });
     
-    console.log(`[Tile Webhook] 📊 Tile ${tile.tile_id} stage ${currentStage} complete`);
-    
-    // 🔥 CRITICAL: Refetch job to get latest tiles_data (avoid race conditions)
-    const { data: refreshedJob, error: refreshError } = await supabase
-      .from("upscale_jobs")
-      .select("*")
-      .eq("id", job.id)
-      .single();
-    
-    if (refreshError || !refreshedJob) {
-      console.error(`[Tile Webhook] ❌ Failed to refetch job ${job.id}:`, refreshError);
+    if (rpcError) {
+      console.error(`[Tile Webhook] ❌ Atomic RPC failed for tile ${tile.tile_id}:`, rpcError);
+      // Fallback to direct update if RPC fails
+      if (currentStage === 1) {
+        tile.stage1_url = outputUrl;
+      } else if (currentStage === 2) {
+        tile.stage2_url = outputUrl;
+      } else if (currentStage === 3) {
+        (tile as any).stage3_url = outputUrl;
+      }
+      tile.status = newStatus;
+      await supabase
+        .from("upscale_jobs")
+        .update({ tiles_data: job.tiles_data })
+        .eq("id", job.id);
       return;
     }
     
-    // Check if all tiles completed this stage (using FRESH data)
+    if (!rpcResult || rpcResult.length === 0) {
+      console.error(`[Tile Webhook] ❌ No result from atomic RPC`);
+      return;
+    }
+    
+    const result = rpcResult[0];
+    console.log(`[Tile Webhook] 📊 Tile ${tile.tile_id} stage ${currentStage} complete`);
+    console.log(`[Tile Webhook] 📊 All tiles complete: ${result.all_complete}`);
+    
+    // Build refreshedJob from RPC result
+    // Note: RPC returns job_* prefixed columns to avoid SQL ambiguity
+    const refreshedJob: UpscaleJob = {
+      ...job,
+      tiles_data: result.job_tiles_data,
+      total_stages: result.job_total_stages,
+      current_stage: result.job_current_stage,
+      chain_strategy: result.job_chain_strategy,
+      content_type: result.job_content_type,
+      using_tiling: result.job_using_tiling,
+      tile_grid: result.job_tile_grid
+    };
+    
+    // Log tile statuses for debugging
     const targetStatus = `stage${currentStage}_complete`;
-    const completedTiles = refreshedJob.tiles_data.filter((t: TileData) => {
-      // Count tiles that have completed this stage or beyond
-      const status = t.status;
-      if (status === targetStatus) return true;
-      
-      // Also count tiles that have moved to later stages
-      for (let s = currentStage + 1; s <= refreshedJob.total_stages; s++) {
-        if (status === `stage${s}_complete` || status === `stage${s}_processing`) return true;
+    const completedTiles = refreshedJob.tiles_data.filter((t: TileData) => t.status === targetStatus);
+    const failedTiles = refreshedJob.tiles_data.filter((t: TileData) => t.status === "failed");
+    const effectiveTotal = refreshedJob.tiles_data.length - failedTiles.length;
+    
+    console.log(`[Tile Webhook] 📊 ========== STAGE PROGRESS ==========`);
+    console.log(`[Tile Webhook] 📊 Target status: ${targetStatus}`);
+    console.log(`[Tile Webhook] 📊 Completed tiles: ${completedTiles.length}/${effectiveTotal} (${failedTiles.length} failed)`);
+    console.log(`[Tile Webhook] 📊 Progress: ${Math.round((completedTiles.length / effectiveTotal) * 100)}%`);
+    console.log(`[Tile Webhook] 📊 Tile statuses:`);
+    for (let i = 0; i < refreshedJob.tiles_data.length; i++) {
+      const t = refreshedJob.tiles_data[i];
+      console.log(`[Tile Webhook] 📊   - Tile ${t.tile_id}: ${t.status}`);
+    }
+    console.log(`[Tile Webhook] 📊 ====================================`);
+    
+    // Check if all tiles completed (from the atomic RPC result)
+    if (result.all_complete) {
+      const currentJobStage = detectedStage;
+      const isLastStage = currentJobStage >= refreshedJob.total_stages;
+      const strategy = refreshedJob.chain_strategy;
+      if (strategy?.stages?.[currentJobStage - 1]) {
+        strategy.stages[currentJobStage - 1].status = "completed";
+        console.log(`[Tile Webhook] 📈 Marked chain stage ${currentJobStage} as completed`);
       }
       
-      return false;
-    });
-    
-    console.log(`[Tile Webhook] 📊 Progress: ${completedTiles.length}/${refreshedJob.tiles_data.length} tiles at ${targetStatus}`);
-    
-    if (completedTiles.length === refreshedJob.tiles_data.length) {
-      // Determine current stage number
-      const currentStage = isStage1 ? 1 : 2;
-      const isLastStage = currentStage >= refreshedJob.total_stages;
-      
-      console.log(`[Tile Webhook] Stage ${currentStage}/${refreshedJob.total_stages} complete for all tiles`);
+      console.log(`[Tile Webhook] 🎯 ========== ALL TILES COMPLETE ==========`);
+      console.log(`[Tile Webhook] 🎯 Stage ${currentJobStage}/${refreshedJob.total_stages} complete for all tiles`);
+      console.log(`[Tile Webhook] 🎯 Is last stage: ${isLastStage}`);
+      console.log(`[Tile Webhook] 🎯 ============================================`);
       
       if (!isLastStage) {
-        // More stages remain - launch next stage
-        const nextStage = currentStage + 1;
-        console.log(`[Tile Webhook] Launching stage ${nextStage}...`);
-        await launchTileStage(refreshedJob, nextStage, supabase);
+        // More stages remain - check template for split requirement
+        const nextStage = currentJobStage + 1;
+        console.log(`[Tile Webhook] 🔍 Checking template for stage ${nextStage} split requirement...`);
+        
+        // Check if template specifies splitting for next stage
+        // The template's stageConfig has splitFromPrevious > 1 if splitting is needed
+        const templateConfig = refreshedJob.template_config;
+        const nextStageConfig = templateConfig?.stages?.[nextStage - 1];
+        let splitFromPrevious = nextStageConfig?.splitFromPrevious || 1;
+        
+        console.log(`[Tile Webhook] Template config:`, templateConfig);
+        console.log(`[Tile Webhook] Template config for stage ${nextStage}:`, nextStageConfig);
+        console.log(`[Tile Webhook] Split factor from template: ${splitFromPrevious}`);
+        
+        // FALLBACK: If template_config is missing, check actual tile sizes
+        if (!templateConfig || !nextStageConfig) {
+          console.log(`[Tile Webhook] ⚠️ Template config missing, checking tile sizes as fallback...`);
+          const tilesData = refreshedJob.tiles_data || [];
+          const GPU_MAX_PIXELS = 2000000;
+          let needsSplit = false;
+          
+          for (const tile of tilesData) {
+            // Get output URL from completed stage
+            const stageUrl = currentJobStage === 1 
+              ? tile.stage1_url 
+              : currentJobStage === 2 
+                ? tile.stage2_url 
+                : (tile as any)[`stage${currentJobStage}_url`];
+            
+            if (!stageUrl) continue;
+            
+            // Estimate size: tile dimensions * cumulative scale
+            const cumulativeScale = Math.pow(4, currentJobStage); // Assuming 4x per stage
+            const estimatedWidth = (tile.width || 0) * cumulativeScale;
+            const estimatedHeight = (tile.height || 0) * cumulativeScale;
+            const estimatedPixels = estimatedWidth * estimatedHeight;
+            
+            if (estimatedPixels > GPU_MAX_PIXELS) {
+              needsSplit = true;
+              break;
+            }
+          }
+          
+          if (needsSplit) {
+            splitFromPrevious = 4; // Default to 2x2 split
+            console.log(`[Tile Webhook] 🔄 Fallback: Tiles exceed GPU limit, using split factor 4`);
+          }
+        }
+        
+        if (splitFromPrevious > 1) {
+          // Template requires splitting - pause for client-side splitting
+          const tilesData = refreshedJob.tiles_data || [];
+          const expectedNewTiles = tilesData.length * splitFromPrevious;
+          
+          console.log(`[Tile Webhook] 🔄 Template requires ${splitFromPrevious}x split`);
+          console.log(`[Tile Webhook] Current tiles: ${tilesData.length} → Expected after split: ${expectedNewTiles}`);
+          console.log(`[Tile Webhook] Setting status to 'needs_split' for client-side tile splitting`);
+          
+          await supabase
+            .from("upscale_jobs")
+            .update({ 
+              status: "needs_split",
+              current_stage: currentJobStage, // Stay on current stage (completed)
+              chain_strategy: strategy,
+              split_info: {
+                completedStage: currentJobStage,
+                nextStage: nextStage,
+                splitFactor: splitFromPrevious,
+                currentTileCount: tilesData.length,
+                expectedTileCount: expectedNewTiles
+              },
+              last_webhook_at: new Date().toISOString()
+            })
+            .eq("id", refreshedJob.id);
+          
+          console.log(`[Tile Webhook] ✅ Job ${refreshedJob.id} paused for client-side splitting`);
+        } else {
+          // No split needed - proceed to next stage directly
+          console.log(`[Tile Webhook] ✅ No split needed (splitFromPrevious = 1), launching stage ${nextStage}...`);
+          
+          // Update current_stage in the database BEFORE launching
+          await supabase
+            .from("upscale_jobs")
+            .update({ 
+              current_stage: nextStage,
+              chain_strategy: strategy,
+              last_webhook_at: new Date().toISOString()
+            })
+            .eq("id", refreshedJob.id);
+          
+          console.log(`[Tile Webhook] 📈 Updated job current_stage to ${nextStage}`);
+          
+          // Now launch all tiles for the next stage
+          refreshedJob.current_stage = nextStage;
+          await launchTileStage(refreshedJob, nextStage, supabase);
+        }
       } else {
         // This is the final stage - mark as tiles_ready for client-side stitching
-        console.log(`[Tile Webhook] 🎯 All stages complete! Attempting status update: processing → tiles_ready...`);
+        console.log(`[Tile Webhook] 🎯 ALL STAGES COMPLETE! Attempting status update: processing → tiles_ready...`);
         
         // 🔥 IDEMPOTENT UPDATE: Only update if status is still "processing"
         const { data: updated, error: updateError } = await supabase
           .from("upscale_jobs")
           .update({
             status: "tiles_ready",
-            last_webhook_at: new Date().toISOString()
+            last_webhook_at: new Date().toISOString(),
+            chain_strategy: refreshedJob.chain_strategy
           })
           .eq("id", refreshedJob.id)
-          .eq("status", "processing")  // Only update if still processing (prevents duplicate updates)
+          .eq("status", "processing")
           .select();
         
         if (updateError) {
@@ -575,29 +729,378 @@ async function handleTileWebhook(webhook: ReplicateWebhook, job: UpscaleJob, sup
           console.log(`[Tile Webhook] ✅ Job ${refreshedJob.id} marked as tiles_ready! Rows updated: ${updated.length}`);
         }
       }
+    } else {
+      console.log(`[Tile Webhook] ⏳ Waiting for ${effectiveTotal - completedTiles.length} more tiles to complete stage ${currentStage}`);
     }
   }
+}
+
+/**
+ * Launch a single tile with retry logic for rate limits
+ */
+async function launchTileWithRetry(
+  replicateToken: string,
+  version: string,
+  input: Record<string, unknown>,
+  webhookUrl: string,
+  tileNum: number,
+  maxRetries: number = 5
+): Promise<{ success: boolean; predictionId?: string; error?: any }> {
+  let attempt = 0;
+  
+  while (attempt < maxRetries) {
+    try {
+      console.log(`[Launch Retry] Tile ${tileNum}: Attempt ${attempt + 1}/${maxRetries}`);
+      
+      const predictionRes = await fetch("https://api.replicate.com/v1/predictions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Token ${replicateToken}`,
+        },
+        body: JSON.stringify({
+          version,
+          input,
+          webhook: webhookUrl,
+          webhook_events_filter: ["completed"],
+        }),
+      });
+      
+      if (predictionRes.ok) {
+        const prediction = await predictionRes.json();
+        console.log(`[Launch Retry] ✅ Tile ${tileNum} launched: ${prediction.id}`);
+        return { success: true, predictionId: prediction.id };
+      }
+      
+      // Handle rate limiting (429)
+      if (predictionRes.status === 429) {
+        const errorBody = await predictionRes.json().catch(() => ({}));
+        const retryAfter = errorBody.retry_after || 5;
+        
+        console.log(`[Launch Retry] ⏳ Tile ${tileNum} rate limited (attempt ${attempt + 1}/${maxRetries}). Waiting ${retryAfter}s before retry...`);
+        
+        await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+        attempt++;
+        continue;
+      }
+      
+      // Other error
+      const errText = await predictionRes.text();
+      console.error(`[Launch Retry] ❌ Tile ${tileNum} failed (status ${predictionRes.status}):`, errText);
+      return { success: false, error: errText };
+      
+    } catch (error: any) {
+      console.error(`[Launch Retry] ❌ Tile ${tileNum} exception:`, error);
+      return { success: false, error: error.message || String(error) };
+    }
+  }
+  
+  console.error(`[Launch Retry] ❌ Tile ${tileNum} failed after ${maxRetries} retries`);
+  return { success: false, error: 'Max retries exceeded' };
+}
+
+// GPU memory limit for Replicate models (in pixels)
+// Max ~2,096,704 pixels (~1448x1448) - use 2M with safety margin
+const GPU_MAX_PIXELS = 2000000;
+
+/**
+ * Calculate how many splits are needed to keep tile under GPU limit
+ */
+function calculateSplitFactor(width: number, height: number): { cols: number; rows: number } {
+  const pixels = width * height;
+  if (pixels <= GPU_MAX_PIXELS) {
+    return { cols: 1, rows: 1 }; // No split needed
+  }
+  
+  // Calculate minimum splits needed, preferring square-ish splits
+  let cols = 1;
+  let rows = 1;
+  while ((width / cols) * (height / rows) > GPU_MAX_PIXELS) {
+    // Split the larger dimension first
+    if (width / cols >= height / rows) {
+      cols++;
+    } else {
+      rows++;
+    }
+  }
+  
+  return { cols, rows };
+}
+
+/**
+ * Re-tile large tiles before a stage to stay under GPU memory limits
+ * Downloads each tile, splits it into sub-tiles, uploads them, and updates tiles_data
+ */
+async function reTileForStage(
+  job: UpscaleJob,
+  stageNumber: number,
+  supabase: any
+): Promise<UpscaleJob> {
+  console.log(`[Re-tile] ========== CHECKING RE-TILE FOR STAGE ${stageNumber} ==========`);
+  
+  if (!job.tiles_data) {
+    console.log(`[Re-tile] No tiles_data, skipping`);
+    return job;
+  }
+  
+  const previousStage = stageNumber - 1;
+  const urlKey = previousStage === 1 ? 'stage1_url' : previousStage === 2 ? 'stage2_url' : `stage${previousStage}_url`;
+  
+  // Check which tiles need splitting
+  const tilesToSplit: { tile: TileData; splitFactor: { cols: number; rows: number } }[] = [];
+  
+  for (const tile of job.tiles_data) {
+    if (tile.status === 'failed') continue;
+    
+    const tileUrl = tile[urlKey] as string | null;
+    if (!tileUrl) continue;
+    
+    // Estimate tile dimensions after previous stage
+    // Stage 1 output = original tile * stage1_scale (typically 4x)
+    // Stage 2 output = stage1 output * stage2_scale (typically 4x)
+    const stageScales = job.chain_strategy?.stages?.map(s => s.scale) || [4, 4, 2];
+    let estimatedWidth = tile.width;
+    let estimatedHeight = tile.height;
+    
+    for (let s = 0; s < previousStage; s++) {
+      estimatedWidth *= stageScales[s] || 4;
+      estimatedHeight *= stageScales[s] || 4;
+    }
+    
+    console.log(`[Re-tile] Tile ${tile.tile_id}: estimated ${estimatedWidth}×${estimatedHeight} = ${estimatedWidth * estimatedHeight} pixels`);
+    
+    const splitFactor = calculateSplitFactor(estimatedWidth, estimatedHeight);
+    if (splitFactor.cols > 1 || splitFactor.rows > 1) {
+      console.log(`[Re-tile] 🔄 Tile ${tile.tile_id} needs ${splitFactor.cols}×${splitFactor.rows} split`);
+      tilesToSplit.push({ tile, splitFactor });
+    }
+  }
+  
+  if (tilesToSplit.length === 0) {
+    console.log(`[Re-tile] ✅ No tiles need splitting`);
+    return job;
+  }
+  
+  console.log(`[Re-tile] 🔄 ${tilesToSplit.length} tiles need splitting`);
+  
+  // Import image processing library
+  const { decode, Image } = await import("https://deno.land/x/imagescript@1.2.15/mod.ts");
+  
+  const newTilesData: TileData[] = [];
+  let nextTileId = Math.max(...job.tiles_data.map(t => t.tile_id)) + 1;
+  
+  for (const originalTile of job.tiles_data) {
+    const splitInfo = tilesToSplit.find(t => t.tile.tile_id === originalTile.tile_id);
+    
+    if (!splitInfo || originalTile.status === 'failed') {
+      // Keep original tile as-is
+      newTilesData.push(originalTile);
+      continue;
+    }
+    
+    const { tile, splitFactor } = splitInfo;
+    const tileUrl = tile[urlKey] as string;
+    
+    console.log(`[Re-tile] Downloading tile ${tile.tile_id} from ${tileUrl.substring(0, 60)}...`);
+    
+    try {
+      // Download the tile image
+      const response = await fetch(tileUrl);
+      if (!response.ok) {
+        console.error(`[Re-tile] Failed to download tile ${tile.tile_id}: ${response.status}`);
+        newTilesData.push(originalTile);
+        continue;
+      }
+      
+      const buffer = await response.arrayBuffer();
+      const tileImage = await decode(new Uint8Array(buffer));
+      const actualWidth = tileImage.width;
+      const actualHeight = tileImage.height;
+      
+      console.log(`[Re-tile] Tile ${tile.tile_id} actual size: ${actualWidth}×${actualHeight}`);
+      
+      // Recalculate split factor with actual dimensions
+      const actualSplitFactor = calculateSplitFactor(actualWidth, actualHeight);
+      const { cols, rows } = actualSplitFactor;
+      
+      if (cols === 1 && rows === 1) {
+        console.log(`[Re-tile] Tile ${tile.tile_id} doesn't need splitting after all`);
+        newTilesData.push(originalTile);
+        continue;
+      }
+      
+      console.log(`[Re-tile] Splitting tile ${tile.tile_id} into ${cols}×${rows} = ${cols * rows} sub-tiles`);
+      
+      const subTileWidth = Math.ceil(actualWidth / cols);
+      const subTileHeight = Math.ceil(actualHeight / rows);
+      
+      // Calculate overlap for sub-tiles (use 32px scaled by stage)
+      const overlap = 32;
+      
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const subTileIndex = row * cols + col;
+          const subTileId = nextTileId++;
+          
+          // Calculate sub-tile bounds with overlap
+          const x = Math.max(0, col * subTileWidth - (col > 0 ? overlap : 0));
+          const y = Math.max(0, row * subTileHeight - (row > 0 ? overlap : 0));
+          const w = Math.min(subTileWidth + (col > 0 ? overlap : 0) + (col < cols - 1 ? overlap : 0), actualWidth - x);
+          const h = Math.min(subTileHeight + (row > 0 ? overlap : 0) + (row < rows - 1 ? overlap : 0), actualHeight - y);
+          
+          console.log(`[Re-tile] Creating sub-tile ${subTileId} at (${x},${y}) size ${w}×${h}`);
+          
+          // Extract sub-tile
+          const subImage = tileImage.clone().crop(x, y, w, h);
+          const subBuffer = await subImage.encode();
+          
+          // Upload sub-tile
+          const fileName = `tile_${job.id}_subtile_${subTileId}_stage${previousStage}.png`;
+          const { error: uploadError } = await supabase.storage.from("images").upload(
+            `temp/${fileName}`,
+            subBuffer,
+            { contentType: "image/png", upsert: true }
+          );
+          
+          if (uploadError) {
+            console.error(`[Re-tile] Failed to upload sub-tile ${subTileId}:`, uploadError);
+            continue;
+          }
+          
+          const { data: urlData } = supabase.storage.from("images").getPublicUrl(`temp/${fileName}`);
+          const subTileUrl = urlData.publicUrl;
+          
+          // Create new tile entry
+          const newTile: TileData = {
+            tile_id: subTileId,
+            // Position relative to the ORIGINAL image (parent tile position + sub-tile offset within parent)
+            x: tile.x + Math.round(x / (actualWidth / tile.width)),
+            y: tile.y + Math.round(y / (actualHeight / tile.height)),
+            width: Math.round(w / (actualWidth / tile.width)),
+            height: Math.round(h / (actualHeight / tile.height)),
+            input_url: tile.input_url,
+            stage1_url: tile.stage1_url,
+            stage2_url: previousStage >= 2 ? subTileUrl : tile.stage2_url,
+            stage1_prediction_id: tile.stage1_prediction_id,
+            stage2_prediction_id: tile.stage2_prediction_id,
+            status: `stage${previousStage}_complete`,
+            error: null,
+            // Sub-tile metadata
+            parent_tile_id: tile.tile_id,
+            sub_tile_index: subTileIndex,
+            sub_tile_grid: { cols, rows },
+            is_sub_tile: true,
+            // Copy forward any stage URLs
+            [`stage${previousStage}_url`]: subTileUrl,
+          };
+          
+          newTilesData.push(newTile);
+          console.log(`[Re-tile] ✅ Sub-tile ${subTileId} created and uploaded`);
+        }
+      }
+      
+      console.log(`[Re-tile] ✅ Tile ${tile.tile_id} split into ${cols * rows} sub-tiles`);
+      
+    } catch (error) {
+      console.error(`[Re-tile] Error processing tile ${tile.tile_id}:`, error);
+      newTilesData.push(originalTile);
+    }
+  }
+  
+  console.log(`[Re-tile] ========== RE-TILE COMPLETE ==========`);
+  console.log(`[Re-tile] Original tiles: ${job.tiles_data.length}`);
+  console.log(`[Re-tile] New tiles: ${newTilesData.length}`);
+  
+  // Update job with new tiles_data
+  const updatedJob = {
+    ...job,
+    tiles_data: newTilesData,
+    tile_grid: {
+      ...job.tile_grid!,
+      totalTiles: newTilesData.length,
+    }
+  };
+  
+  // Save to database
+  await supabase
+    .from("upscale_jobs")
+    .update({
+      tiles_data: newTilesData,
+      tile_grid: updatedJob.tile_grid
+    })
+    .eq("id", job.id);
+  
+  return updatedJob;
 }
 
 /**
  * Launch all tiles for a specific stage
  */
 async function launchTileStage(job: UpscaleJob, stageNumber: number, supabase: any) {
-  console.log(`[Launch Stage] Starting stage ${stageNumber} for ${job.tiles_data?.length} tiles`);
+  console.log(`[Launch Stage] ========== LAUNCHING STAGE ${stageNumber} ==========`);
+  console.log(`[Launch Stage] Job: ${job.id}`);
+  console.log(`[Launch Stage] Total tiles: ${job.tiles_data?.length}`);
+  console.log(`[Launch Stage] Stage: ${stageNumber}/${job.total_stages}`);
   
-  if (!job.tiles_data || !job.chain_strategy) return;
+  const stageIndex = stageNumber - 1;
+  if (job.chain_strategy?.stages?.[stageIndex]) {
+    job.chain_strategy.stages[stageIndex].status = "processing";
+    job.chain_strategy.stages[stageIndex].prediction_id = job.using_tiling
+      ? `tiling:${stageNumber}`
+      : stageNumber === 1
+        ? job.prediction_id
+        : null;
+    console.log(`[Launch Stage] Marked chain stage ${stageNumber} as processing`);
+  }
+  
+  if (!job.tiles_data || !job.chain_strategy) {
+    console.error(`[Launch Stage] ❌ Missing tiles_data or chain_strategy`);
+    return;
+  }
   
   const stage = job.chain_strategy.stages[stageNumber - 1];
-  const model = selectModelFor(job.content_type, stage.scale);
+  let model = selectModelFor(job.content_type, stage.scale);
+  
+  // CRITICAL FIX: For art/text tiling jobs, stages 2+ must use Real-ESRGAN
+  // SwinIR cannot handle large intermediate images (4336x4336+) even with A100 80GB GPU
+  if (job.using_tiling && stageNumber > 1 && (job.content_type === 'art' || job.content_type === 'text')) {
+    console.log(`[Launch Stage] ⚠️ Stage ${stageNumber}: Forcing Real-ESRGAN for art/text tiling (SwinIR cannot handle large intermediate images)`);
+    model = {
+      slug: "nightmareai/real-esrgan:42fed1c4974146d4d2414e2be2c5277c7fcf05fcc3a73abf41610695738c1d7b",
+      input: { face_enhance: false }
+    };
+  }
+  
   const version = getModelVersion(model.slug);
   const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/upscale-webhook`;
   const replicateToken = Deno.env.get("REPLICATE_API_TOKEN");
   
+  console.log(`[Launch Stage] Model: ${model.slug}`);
+  console.log(`[Launch Stage] Scale: ${stage.scale}x`);
+  console.log(`[Launch Stage] Webhook URL: ${webhookUrl}`);
+  
+  let launchedCount = 0;
+  let skippedCount = 0;
+  let failedCount = 0;
+  const launchResults = [];
+  
   for (let i = 0; i < job.tiles_data.length; i++) {
     const tile = job.tiles_data[i];
     
-    // Skip failed tiles
-    if (tile.status === "failed") continue;
+    // Skip failed tiles only - all other tiles MUST be launched
+    // (We only call launchTileStage when ALL tiles have completed the previous stage)
+    if (tile.status === "failed") {
+      console.log(`[Launch Stage] ⏭️ Skipping tile ${tile.tile_id} (status: failed)`);
+      skippedCount++;
+      continue;
+    }
+    
+    // Verify tile has completed the previous stage (safety check)
+    const expectedPreviousStatus = stageNumber === 1 ? null : `stage${stageNumber - 1}_complete`;
+    if (stageNumber > 1 && tile.status !== expectedPreviousStatus) {
+      console.error(`[Launch Stage] ⚠️ Tile ${tile.tile_id} has unexpected status: ${tile.status} (expected: ${expectedPreviousStatus})`);
+      // Still launch it - the "all tiles complete" check should have verified this
+    }
     
     // Get input URL from previous stage (dynamically support any stage)
     let inputUrl: string | null = null;
@@ -613,7 +1116,9 @@ async function launchTileStage(job: UpscaleJob, stageNumber: number, supabase: a
     }
     
     if (!inputUrl) {
-      console.error(`[Launch Stage] Tile ${tile.tile_id} missing input for stage ${stageNumber}`);
+      console.error(`[Launch Stage] ❌ Tile ${tile.tile_id} missing input for stage ${stageNumber} (previous stage URL not found)`);
+      failedCount++;
+      launchResults.push({ tileNum: tile.tile_id, success: false, error: 'Missing input URL' });
       continue;
     }
     
@@ -621,61 +1126,129 @@ async function launchTileStage(job: UpscaleJob, stageNumber: number, supabase: a
       ...model.input,
       image: inputUrl,
     };
-    
+
     const isSwinIR = model.slug.includes('swinir') || model.slug.includes('jingyunliang');
     if (!isSwinIR) {
       input.scale = stage.scale;
     }
-    
-    console.log(`[Launch Stage] 🔍 Tile ${tile.tile_id} stage ${stageNumber}: Calling Replicate with model: ${model.slug.split('/')[1]}`);
-    console.log(`[Launch Stage] 🔍 Input parameters:`, JSON.stringify(input, null, 2));
-    
-    const predictionRes = await fetch("https://api.replicate.com/v1/predictions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Token ${replicateToken}`,
-      },
-      body: JSON.stringify({
-        version,
-        input,
-        webhook: webhookUrl,
-        webhook_events_filter: ["completed"],
-      }),
-    });
-    
-    if (!predictionRes.ok) {
-      console.error(`[Launch Stage] Failed to start stage ${stageNumber} for tile ${tile.tile_id}`);
-      continue;
+
+    const isRealESRGAN = model.slug.includes('real-esrgan');
+    if (isRealESRGAN && stageNumber > 1) {
+      // Reduced from 512 to 256 to prevent CUDA OOM errors on large intermediate images
+      input.tile = 256;
+      input.tile_pad = 16;
+      console.log(`[Launch Stage] Adding tile parameters (256x256) for tile ${tile.tile_id} stage ${stageNumber}`);
     }
     
-    const prediction = await predictionRes.json();
+    console.log(`[Launch Stage] 🚀 Launching tile ${tile.tile_id} stage ${stageNumber}...`);
+    console.log(`[Launch Stage]    - Input URL: ${inputUrl.substring(0, 80)}...`);
+    console.log(`[Launch Stage]    - Model: ${model.slug.split('/')[1]}`);
     
-    // Store prediction ID dynamically for any stage
-    if (stageNumber === 2) {
-      tile.stage2_prediction_id = prediction.id;
-      tile.status = "stage2_processing";
-    } else if (stageNumber === 3) {
-      (tile as any).stage3_prediction_id = prediction.id;
-      tile.status = "stage3_processing";
-    } else if (stageNumber > 3) {
-      (tile as any)[`stage${stageNumber}_prediction_id`] = prediction.id;
-      tile.status = `stage${stageNumber}_processing`;
+    // Launch with retry logic
+    const result = await launchTileWithRetry(
+      replicateToken!,
+      version,
+      input,
+      webhookUrl,
+      tile.tile_id,
+      5 // max 5 retries
+    );
+    
+    if (result.success && result.predictionId) {
+      // Use atomic RPC to set tile to processing status
+      // This prevents race conditions if multiple launches happen simultaneously
+      console.log(`[Launch Stage] 🔄 Atomic update: tile ${tile.tile_id} -> stage${stageNumber}_processing`);
+      
+      const { error: rpcError } = await supabase.rpc('set_tile_processing', {
+        p_job_id: job.id,
+        p_tile_id: tile.tile_id,
+        p_stage: stageNumber,
+        p_prediction_id: result.predictionId
+      });
+      
+      if (rpcError) {
+        console.warn(`[Launch Stage] ⚠️ RPC failed:`, rpcError);
+      }
+      
+      // 🔥 CRITICAL FIX: ALWAYS update local tile object so bulk update at end has correct data
+      // Previously this was only done in the RPC error fallback, causing prediction IDs to be lost
+      if (stageNumber === 1) {
+        tile.stage1_prediction_id = result.predictionId;
+        tile.status = "stage1_processing";
+      } else if (stageNumber === 2) {
+        tile.stage2_prediction_id = result.predictionId;
+        tile.status = "stage2_processing";
+      } else if (stageNumber === 3) {
+        (tile as any).stage3_prediction_id = result.predictionId;
+        tile.status = "stage3_processing";
+      } else if (stageNumber > 3) {
+        (tile as any)[`stage${stageNumber}_prediction_id`] = result.predictionId;
+        tile.status = `stage${stageNumber}_processing`;
+      }
+      
+      console.log(`[Launch Stage] ✅ Tile ${tile.tile_id} stage ${stageNumber} launched successfully`);
+      console.log(`[Launch Stage]    - Prediction ID: ${result.predictionId}`);
+      if (stageNumber === 3) {
+        console.log(`[Launch Stage] 🎯 Stage 3 tracking -> tile ${tile.tile_id} prediction ${result.predictionId}`);
+      }
+      launchedCount++;
+      launchResults.push({ tileNum: tile.tile_id, success: true, predictionId: result.predictionId });
+    } else {
+      console.error(`[Launch Stage] ❌ Tile ${tile.tile_id} failed to launch after retries:`, result.error);
+      failedCount++;
+      launchResults.push({ tileNum: tile.tile_id, success: false, error: result.error });
     }
     
-    console.log(`[Launch Stage] Tile ${tile.tile_id} stage ${stageNumber} launched: ${prediction.id}`);
+    // Add small delay between launches to avoid burst limit (except for last tile)
+    if (i < job.tiles_data.length - 1) {
+      await new Promise(resolve => setTimeout(resolve, 200)); // 200ms stagger
+    }
   }
+  
+  // Check results and report
+  const successfulTiles = launchResults.filter(r => r.success);
+  const failedTiles = launchResults.filter(r => !r.success);
+  
+  console.log(`[Launch Stage] ========== STAGE ${stageNumber} LAUNCH SUMMARY ==========`);
+  console.log(`[Launch Stage] ✅ Launched: ${launchedCount}`);
+  console.log(`[Launch Stage] ⏭️ Skipped: ${skippedCount}`);
+  console.log(`[Launch Stage] ❌ Failed: ${failedCount}`);
+  console.log(`[Launch Stage] 📊 Total: ${job.tiles_data.length}`);
+  console.log(`[Launch Stage] Success rate: ${successfulTiles.length}/${launchResults.length}`);
+  
+  if (failedTiles.length > 0) {
+    console.error(`[Launch Stage] ❌ Failed to launch ${failedTiles.length} tiles:`, failedTiles);
+    
+    // If more than half the tiles failed, mark job as failed
+    if (failedTiles.length > job.tiles_data.length / 2) {
+      await supabase
+        .from("upscale_jobs")
+        .update({
+          status: "failed",
+          error_message: `Failed to launch ${failedTiles.length}/${job.tiles_data.length} tiles for stage ${stageNumber} after retries`,
+          tiles_data: job.tiles_data,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", job.id);
+      
+      console.error(`[Launch Stage] ❌ Job ${job.id} marked as failed (too many tile launch failures)`);
+      console.log(`[Launch Stage] ================================================`);
+      return;
+    }
+  }
+  
+  console.log(`[Launch Stage] 🚀 All tiles launched successfully for stage ${stageNumber}!`);
+  console.log(`[Launch Stage] ================================================`);
   
   // Update job with new prediction IDs
   await supabase
     .from("upscale_jobs")
     .update({ 
       tiles_data: job.tiles_data,
-      current_stage: stageNumber
+      current_stage: stageNumber,
+      chain_strategy: job.chain_strategy
     })
     .eq("id", job.id);
-  
-  console.log(`[Launch Stage] All tiles launched for stage ${stageNumber}`);
 }
 
 /**
@@ -689,13 +1262,31 @@ async function stitchAndFinalize(job: UpscaleJob, supabase: any) {
     return;
   }
   
+  // Count sub-tiles vs original tiles
+  const subTiles = job.tiles_data.filter((t: TileData) => t.is_sub_tile);
+  const originalTiles = job.tiles_data.filter((t: TileData) => !t.is_sub_tile);
+  console.log(`[Stitch] Total tiles: ${job.tiles_data.length} (${originalTiles.length} original, ${subTiles.length} sub-tiles from re-tiling)`);
+  
   try {
     // Import Image for stitching
     const { decode, Image } = await import("https://deno.land/x/imagescript@1.2.15/mod.ts");
     
-    // Calculate final dimensions
-    const outputWidth = job.tile_grid.tileWidth * job.tile_grid.tilesX * job.target_scale;
-    const outputHeight = job.tile_grid.tileHeight * job.tile_grid.tilesY * job.target_scale;
+    // Calculate final dimensions from ORIGINAL tiles only (sub-tiles have relative positions)
+    // For sub-tiles, we need to use the original image dimensions
+    const computedOriginalWidth = job.tiles_data.reduce((max: number, tile: any) => {
+      // Skip sub-tiles for dimension calculation - they're contained within parent tiles
+      if (tile.is_sub_tile) return max;
+      return Math.max(max, (tile.x ?? 0) + (tile.width ?? 0));
+    }, 0);
+    const computedOriginalHeight = job.tiles_data.reduce((max: number, tile: any) => {
+      if (tile.is_sub_tile) return max;
+      return Math.max(max, (tile.y ?? 0) + (tile.height ?? 0));
+    }, 0);
+    const baseOriginalWidth = job.original_width ?? computedOriginalWidth;
+    const baseOriginalHeight = job.original_height ?? computedOriginalHeight;
+    console.log(`[Stitch] Original size reference: ${baseOriginalWidth}×${baseOriginalHeight} (computed ${computedOriginalWidth}×${computedOriginalHeight})`);
+    const outputWidth = Math.max(1, Math.round(baseOriginalWidth * job.target_scale));
+    const outputHeight = Math.max(1, Math.round(baseOriginalHeight * job.target_scale));
     
     console.log(`[Stitch] Final size: ${outputWidth}×${outputHeight}`);
     
@@ -724,7 +1315,8 @@ async function stitchAndFinalize(job: UpscaleJob, supabase: any) {
         continue;
       }
       
-      console.log(`[Stitch] Downloading tile ${tile.tile_id}...`);
+      const isSubTile = (tile as TileData).is_sub_tile;
+      console.log(`[Stitch] Downloading tile ${tile.tile_id}${isSubTile ? ` (sub-tile of ${(tile as TileData).parent_tile_id})` : ''}...`);
       
       const response = await fetch(tileUrl);
       const buffer = await response.arrayBuffer();
@@ -736,11 +1328,11 @@ async function stitchAndFinalize(job: UpscaleJob, supabase: any) {
         output.fill(0xFFFFFFFF);
       }
       
-      // Composite tile
+      // Composite tile - position is already in original image coordinates
       const x = tile.x * job.target_scale;
       const y = tile.y * job.target_scale;
       
-      console.log(`[Stitch] Compositing tile ${tile.tile_id} at (${x},${y})`);
+      console.log(`[Stitch] Compositing tile ${tile.tile_id} at (${x},${y})${isSubTile ? ' [sub-tile]' : ''}`);
       output.composite(tileImage, x, y);
     }
     
@@ -820,17 +1412,34 @@ async function processWebhookData(webhook: ReplicateWebhook, supabase: any) {
         .eq("status", "processing");
       
       if (!tilingError && tilingJobs) {
-        for (const tilingJob of tilingJobs) {
-          if (tilingJob.tiles_data) {
-            const tileIndex = tilingJob.tiles_data.findIndex(
-              (t: TileData) => t.stage1_prediction_id === webhook.id || t.stage2_prediction_id === webhook.id
-            );
-            
-            if (tileIndex !== -1) {
-              console.log(`[upscale-webhook] Found tile ${tileIndex} in job ${tilingJob.id}`);
+        outerLoop: for (const tilingJob of tilingJobs) {
+          if (!tilingJob.tiles_data) continue;
+          const totalStages = tilingJob.total_stages ?? 1;
+
+          for (let i = 0; i < tilingJob.tiles_data.length; i++) {
+            const tile = tilingJob.tiles_data[i] as TileData;
+            let matchedStage = 0;
+
+            if (tile.stage1_prediction_id === webhook.id) {
+              matchedStage = 1;
+            } else if (tile.stage2_prediction_id === webhook.id) {
+              matchedStage = 2;
+            } else {
+              for (let stage = 3; stage <= totalStages; stage++) {
+                const predictionKey = `stage${stage}_prediction_id`;
+                if ((tile as any)[predictionKey] === webhook.id) {
+                  matchedStage = stage;
+                  break;
+                }
+              }
+            }
+
+            if (matchedStage > 0) {
+              const tileId = typeof tile.tile_id === "number" ? tile.tile_id : i;
+              console.log(`[upscale-webhook] Found tile ${tileId} stage ${matchedStage} in job ${tilingJob.id}`);
               job = tilingJob;
               jobError = null;
-              break;
+              break outerLoop;
             }
           }
         }
@@ -912,6 +1521,21 @@ async function processWebhookData(webhook: ReplicateWebhook, supabase: any) {
 }
 
 serve(async (req: Request) => {
+  console.log("🔵🔵🔵 WEBHOOK VERSION: 2024-12-04-NO-AUTO-ADVANCE-v3 🔵🔵🔵");
+  
+  // Health check endpoint (GET request)
+  if (req.method === "GET") {
+    console.log(`[upscale-webhook] Health check received`);
+    return new Response(
+      JSON.stringify({ 
+        status: "healthy", 
+        timestamp: new Date().toISOString(),
+        version: "2024-11-25-ATOMIC-v1"
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
   // Webhooks don't need CORS preflight, but handle it anyway
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });

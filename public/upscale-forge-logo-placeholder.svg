@@ -1,0 +1,76 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dark circle background -->
+  <circle cx="100" cy="100" r="98" fill="hsla(220, 60%, 8%, 0.85)" stroke="hsl(30, 100%, 55%)" stroke-width="4"/>
+  
+  <!-- Flame gradient definition -->
+  <defs>
+    <linearGradient id="flameGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:hsl(50, 100%, 60%);stop-opacity:1" />
+      <stop offset="50%" style="stop-color:hsl(330, 100%, 60%);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:hsl(30, 100%, 55%);stop-opacity:1" />
+    </linearGradient>
+    
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Cloud/badge outline -->
+  <path d="M 100 45 
+           Q 90 45, 85 50
+           Q 75 50, 70 60
+           Q 65 65, 65 75
+           Q 60 80, 65 90
+           Q 65 100, 70 105
+           Q 70 115, 80 120
+           Q 85 125, 95 125
+           Q 100 130, 105 125
+           Q 115 125, 120 120
+           Q 130 115, 130 105
+           Q 135 100, 135 90
+           Q 140 80, 135 75
+           Q 135 65, 130 60
+           Q 125 50, 115 50
+           Q 110 45, 100 45 Z" 
+        fill="none" 
+        stroke="url(#flameGradient)" 
+        stroke-width="3"
+        filter="url(#glow)"/>
+  
+  <!-- Flame shape -->
+  <path d="M 100 50 
+           Q 95 60, 95 70
+           Q 92 75, 95 80
+           Q 93 85, 95 88
+           Q 95 95, 100 100
+           Q 105 95, 105 88
+           Q 107 85, 105 80
+           Q 108 75, 105 70
+           Q 105 60, 100 50 Z" 
+        fill="url(#flameGradient)"
+        filter="url(#glow)"/>
+  
+  <!-- Inner flame highlight -->
+  <ellipse cx="100" cy="75" rx="3" ry="8" fill="hsl(50, 100%, 80%)" opacity="0.8"/>
+  
+  <!-- Text "UF" (Upscale Forge initials) in pixelated style -->
+  <text x="100" y="155" 
+        font-family="monospace" 
+        font-size="24" 
+        font-weight="bold"
+        fill="hsl(195, 100%, 65%)"
+        text-anchor="middle"
+        style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5)">UPSCALE</text>
+  <text x="100" y="175" 
+        font-family="monospace" 
+        font-size="20" 
+        font-weight="bold"
+        fill="hsl(195, 100%, 65%)"
+        text-anchor="middle"
+        style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5)">FORGE</text>
+</svg>
+
