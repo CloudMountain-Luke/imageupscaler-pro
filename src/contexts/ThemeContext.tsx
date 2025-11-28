@@ -501,4 +501,5 @@ export const colorSchemes: Array<{ label: string; value: ColorScheme; descriptio
   { label: 'Forge', value: 'forge', description: 'Orange forge glow' },
   { label: 'Cyber', value: 'cyber', description: 'Cyan digital aesthetic' },
   { label: 'Space', value: 'space', description: 'Purple space aesthetic' },
+  { label: 'Brand', value: 'brand', description: 'Upscale Forge logo colors' },
 ];
