@@ -74,10 +74,10 @@ const COLOR_SCHEMES = {
     name: 'Space',
   },
   brand: {
-    // Based on Upscale Forge logo: cyan-blue flame, orange base, magenta tips
-    primaryH: 200, // Cyan-blue (main flame color)
-    secondaryH: 35, // Warm orange (base glow)
-    accentH: 320, // Magenta (flame tips)
+    // Warm harmonious palette inspired by Upscale Forge logo
+    primaryH: 28, // Warm orange (buttons, main UI elements)
+    secondaryH: 45, // Golden amber (gradient harmony, secondary highlights)
+    accentH: 200, // Cyan-blue (cool accent for contrast/highlights)
     name: 'Brand',
   },
 };
