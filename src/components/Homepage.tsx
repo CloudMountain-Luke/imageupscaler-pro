@@ -507,7 +507,7 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                 },
                 {
                   before: '/images/dooze-test-123.jpg',
-                  after: '/images/dooze-test-123.jpg',
+                  after: '/images/upscale-dooze_sm.webp',
                   scale: '16x',
                   type: 'Photos',
                   degradationType: 'blur',
