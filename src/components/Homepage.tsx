@@ -732,7 +732,7 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                   '/images/Fete_de_nuit_small_opt.webp', // Garden party painting
                   '/images/abstract-eye_opt.webp', // Abstract eye painting
                   '/images/art-illustrations_sm.webp', // Art illustrations
-                  '/images/woman-portrait_1-1.webp', // Portrait art style
+                  '/images/feed-my-little-sheep_1-1_sm.webp', // Pastoral sheep painting
                 ],
                 id: 'art'
               },
