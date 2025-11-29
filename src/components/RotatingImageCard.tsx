@@ -33,8 +33,7 @@ export function RotatingImageCard({
   const [isTransitioning, setIsTransitioning] = useState(false);
   
   const hasInitializedRef = useRef(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const cycleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Initialize with a random starting image (only once)
   useEffect(() => {
@@ -71,31 +70,39 @@ export function RotatingImageCard({
     }, 2200); // Slightly longer than CSS transition to ensure completion
   }, [images.length, topIndex, isTransitioning]);
   
-  // Sequential rotation: each card waits for its turn
+  // Sequential rotation: each card waits for its turn in a global cycle
   useEffect(() => {
     if (images.length <= 1) return;
     
-    // Total cycle time = interval per card × number of cards
-    // Add extra buffer between cards to prevent overlap
-    const bufferTime = 500; // 500ms buffer between cards
-    const cycleTime = (interval + bufferTime) * totalSlots;
+    // Each card gets 4 seconds for its transition
+    // Total cycle = 4 cards × 4 seconds = 16 seconds
+    // Card 0 changes at 0s, 16s, 32s...
+    // Card 1 changes at 4s, 20s, 36s...
+    // Card 2 changes at 8s, 24s, 40s...
+    // Card 3 changes at 12s, 28s, 44s...
     
-    // This card's turn starts at: slotIndex × (interval + buffer)
-    const myTurnDelay = slotIndex * (interval + bufferTime);
+    const cardInterval = interval; // 4000ms per card
+    const fullCycle = cardInterval * totalSlots; // 16000ms for full rotation
+    const myDelay = slotIndex * cardInterval; // When this card starts
     
-    // Clear any existing timers
-    if (timerRef.current) clearTimeout(timerRef.current);
-    if (cycleTimerRef.current) clearInterval(cycleTimerRef.current);
+    // Clear any existing interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
     
-    // Wait for initial turn, then repeat every cycle
-    timerRef.current = setTimeout(() => {
+    // Initial delay to stagger the cards
+    const initialTimeout = setTimeout(() => {
       doTransition();
-      cycleTimerRef.current = setInterval(doTransition, cycleTime);
-    }, myTurnDelay);
+      
+      // Then repeat every full cycle
+      intervalRef.current = setInterval(doTransition, fullCycle);
+    }, myDelay);
     
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-      if (cycleTimerRef.current) clearInterval(cycleTimerRef.current);
+      clearTimeout(initialTimeout);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     };
   }, [images.length, interval, slotIndex, totalSlots, doTransition]);
   

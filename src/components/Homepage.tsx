@@ -732,7 +732,7 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                   '/images/Fete_de_nuit_small_opt.webp', // Garden party painting
                   '/images/abstract-eye_opt.webp', // Abstract eye painting
                   '/images/art-illustrations_sm.webp', // Art illustrations
-                  '/images/starry-night_crop.webp', // Starry Night
+                  '/images/woman-portrait_1-1.webp', // Portrait art style
                 ],
                 id: 'art'
               },
@@ -767,8 +767,6 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                   <button
                     onClick={() => {
                       setActivePresetId(preset.id);
-                      // Smooth scroll to details section
-                      document.getElementById('preset-details')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }}
                     className="block relative rounded-xl overflow-hidden glass-card group cursor-pointer transition-all duration-300 hover:scale-105 w-full text-left"
                     style={{ 
