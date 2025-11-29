@@ -13,11 +13,18 @@ interface BeforeAfterSliderProps {
   autoPlay?: boolean;
   autoPlaySpeed?: number; // seconds for full sweep
   className?: string;
+  // For image rotation
+  images?: Array<{
+    before: string;
+    after: string;
+  }>;
+  imageRotationInterval?: number; // seconds between image changes
 }
 
 /**
  * Before/After image comparison slider
  * Auto-animates but stops when user interacts, allowing manual control
+ * Supports rotating through multiple image pairs
  */
 export function BeforeAfterSlider({
   beforeImage,
@@ -27,15 +34,44 @@ export function BeforeAfterSlider({
   stats,
   autoPlay = true,
   autoPlaySpeed = 4,
-  className = ''
+  className = '',
+  images,
+  imageRotationInterval = 9
 }: BeforeAfterSliderProps) {
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
   const [isAutoPlaying, setIsAutoPlaying] = useState(autoPlay);
   const [animationDirection, setAnimationDirection] = useState<'left' | 'right'>('left');
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
+  const imageRotationRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Get current images
+  const currentBefore = images && images.length > 0 ? images[currentImageIndex].before : beforeImage;
+  const currentAfter = images && images.length > 0 ? images[currentImageIndex].after : afterImage;
+
+  // Image rotation effect
+  useEffect(() => {
+    if (!images || images.length <= 1) return;
+
+    // Clear existing timer
+    if (imageRotationRef.current) {
+      clearInterval(imageRotationRef.current);
+    }
+
+    // Set up rotation timer
+    imageRotationRef.current = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    }, imageRotationInterval * 1000);
+
+    return () => {
+      if (imageRotationRef.current) {
+        clearInterval(imageRotationRef.current);
+      }
+    };
+  }, [images, imageRotationInterval]);
 
   // Auto-play animation
   useEffect(() => {
@@ -128,6 +164,11 @@ export function BeforeAfterSlider({
     setAnimationDirection('left');
   }, []);
 
+  // Pause auto-play button
+  const pauseAutoPlay = useCallback(() => {
+    setIsAutoPlaying(false);
+  }, []);
+
   return (
     <div className={`relative ${className}`}>
       <div
@@ -146,9 +187,9 @@ export function BeforeAfterSlider({
         {/* After Image (full, bottom layer) */}
         <div className="absolute inset-0">
           <img
-            src={afterImage}
+            src={currentAfter}
             alt={afterLabel}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-opacity duration-500"
             style={{
               filter: 'saturate(1.05) contrast(1.02)',
             }}
@@ -162,9 +203,9 @@ export function BeforeAfterSlider({
           style={{ width: `${sliderPosition}%` }}
         >
           <img
-            src={beforeImage}
+            src={currentBefore}
             alt={beforeLabel}
-            className="h-full object-cover"
+            className="h-full object-cover transition-opacity duration-500"
             style={{
               width: containerRef.current ? `${containerRef.current.offsetWidth}px` : '100vw',
               maxWidth: 'none',
@@ -272,7 +313,19 @@ export function BeforeAfterSlider({
         <p className="text-sm" style={{ color: 'var(--muted)' }}>
           {isAutoPlaying ? 'Auto-playing' : 'Drag to compare'}
         </p>
-        {!isAutoPlaying && (
+        {isAutoPlaying ? (
+          <button
+            onClick={pauseAutoPlay}
+            className="text-sm px-3 py-1 rounded-full transition-all duration-300 hover:scale-105"
+            style={{
+              background: 'color-mix(in oklab, var(--primary) 20%, transparent 80%)',
+              color: 'var(--primary)',
+              border: '1px solid var(--primary)',
+            }}
+          >
+            Pause animation
+          </button>
+        ) : (
           <button
             onClick={resumeAutoPlay}
             className="text-sm px-3 py-1 rounded-full transition-all duration-300 hover:scale-105"
@@ -291,7 +344,3 @@ export function BeforeAfterSlider({
 }
 
 export default BeforeAfterSlider;
-
-
-
-

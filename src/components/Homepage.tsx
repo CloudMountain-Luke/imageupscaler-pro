@@ -462,8 +462,8 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
           
           <FadeInOnScroll delay={0.2}>
             <BeforeAfterSlider
-              beforeImage="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=40"
-              afterImage="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=95"
+              beforeImage="/images/mountain-landscape_1-1_sm.webp"
+              afterImage="/images/mountain-landscape_16-9_sm.jpeg"
               beforeLabel="Original"
               afterLabel="Enhanced 24x"
               stats={{
@@ -474,6 +474,25 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
               autoPlay={true}
               autoPlaySpeed={7}
               className="max-w-4xl mx-auto"
+              images={[
+                {
+                  before: '/images/mountain-landscape_1-1_sm.webp',
+                  after: '/images/mountain-landscape_16-9_sm.jpeg',
+                },
+                {
+                  before: '/images/woman-portrait_1-1.webp',
+                  after: '/images/woman-portrait_1-1.webp',
+                },
+                {
+                  before: '/images/abstract-eye_opt.webp',
+                  after: '/images/abstract-eye_opt.webp',
+                },
+                {
+                  before: '/images/colorful-anime_1-1_sm.webp',
+                  after: '/images/colorful-anime_1-1_sm.webp',
+                },
+              ]}
+              imageRotationInterval={9}
             />
           </FadeInOnScroll>
         </div>
