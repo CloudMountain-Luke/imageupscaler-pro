@@ -188,7 +188,7 @@ export function CookieSettingsModal() {
                   <button
                     onClick={() => handleToggle(category.id)}
                     disabled={category.required || category.comingSoon}
-                    className={`relative w-10 h-5 rounded-full transition-all duration-200 shrink-0 ${
+                    className={`relative w-11 h-6 rounded-full transition-all duration-200 shrink-0 ${
                       category.required || category.comingSoon ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
                     }`}
                     style={{
@@ -198,11 +198,11 @@ export function CookieSettingsModal() {
                     }}
                   >
                     <span
-                      className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200"
+                      className="absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-all duration-200"
                       style={{
                         transform: category.required || (preferences[category.id] && !category.comingSoon)
-                          ? 'translateX(22px)' 
-                          : 'translateX(2px)',
+                          ? 'translateX(20px)' 
+                          : 'translateX(0)',
                       }}
                     />
                   </button>

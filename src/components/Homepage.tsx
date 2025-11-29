@@ -349,7 +349,7 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
         {/* Ember Particles in Hero - reduced count */}
         <EmberParticles count={12} intensity="low" color="mixed" />
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 pt-4 pb-12 relative z-10" style={{ marginTop: '-30px' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 pt-4 pb-12 relative z-10" style={{ marginTop: '-60px' }}>
           <div className="text-center">
             {/* Exclusivity Badge */}
             <FadeInOnScroll delay={0}>
