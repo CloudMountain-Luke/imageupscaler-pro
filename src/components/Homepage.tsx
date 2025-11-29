@@ -713,7 +713,7 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
             {[
               { 
-                name: 'Photo', 
+                name: 'Photos', 
                 icon: Image, 
                 desc: 'Portraits, landscapes, products', 
                 images: [
@@ -725,19 +725,19 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                 id: 'photo'
               },
               { 
-                name: 'Art', 
+                name: 'Art & Illustrations', 
                 icon: Sparkles, 
                 desc: 'Paintings, illustrations, designs', 
                 images: [
-                  '/images/starry-night_crop.webp', // Starry Night
                   '/images/Fete_de_nuit_small_opt.webp', // Garden party painting
                   '/images/abstract-eye_opt.webp', // Abstract eye painting
                   '/images/art-illustrations_sm.webp', // Art illustrations
+                  '/images/starry-night_crop.webp', // Starry Night
                 ],
                 id: 'art'
               },
               { 
-                name: 'Anime', 
+                name: 'Anime & Cartoons', 
                 icon: Wand2, 
                 desc: 'Anime, cartoons, comics', 
                 images: [
@@ -749,7 +749,7 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                 id: 'anime'
               },
               { 
-                name: 'Text', 
+                name: 'Text & Documents', 
                 icon: FileText, 
                 desc: 'Documents, screenshots, logos', 
                 images: [

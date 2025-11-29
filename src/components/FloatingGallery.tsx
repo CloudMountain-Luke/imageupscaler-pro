@@ -21,12 +21,13 @@ interface FloatingGalleryProps {
 }
 
 // Default gallery images - 6 images, 3 on each side
+// Positioned with 50px+ margin from edges
 export const defaultGalleryImages: GalleryImage[] = [
-  // Left side - 3 images
+  // Left side - 3 images (50px = ~3% on 1920px screen, using 4-5%)
   {
     src: '/images/aurora-mountains.webp',
     alt: 'Aurora mountains landscape',
-    position: { top: '8%', left: '3%' },
+    position: { top: '8%', left: '4%' },
     size: 'lg',
     depth: 1,
     delay: 0,
@@ -35,16 +36,16 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/ocean-waves-sunset.webp',
     alt: 'Ocean waves at sunset',
-    position: { top: '45%', left: '6%' },
+    position: { top: '45%', left: '5%' },
     size: 'md',
     depth: 2,
     delay: 300,
     rotation: 2,
   },
   {
-    src: '/images/starry-night_crop.webp',
-    alt: 'Starry Night painting',
-    position: { bottom: '8%', left: '2%' },
+    src: '/images/man-portrait_1-1_sm.webp',
+    alt: 'Man portrait',
+    position: { bottom: '8%', left: '4%' },
     size: 'sm',
     depth: 3,
     delay: 600,
@@ -54,7 +55,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/woman-portrait_1-1.webp',
     alt: 'Portrait with detail',
-    position: { top: '10%', right: '4%' },
+    position: { top: '10%', right: '5%' },
     size: 'md',
     depth: 2,
     delay: 150,
@@ -63,7 +64,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/abstract-eye_opt.webp',
     alt: 'Abstract eye painting',
-    position: { top: '48%', right: '2%' },
+    position: { top: '48%', right: '4%' },
     size: 'lg',
     depth: 1,
     delay: 450,
@@ -81,8 +82,9 @@ export const defaultGalleryImages: GalleryImage[] = [
 ];
 
 /**
- * Floating image gallery with parallax effect and subtle animations
+ * Floating image gallery with parallax effect
  * 6 images positioned 3 on each side of the hero content
+ * No Ken Burns or scale animations to prevent flashing
  */
 export function FloatingGallery({ 
   images = defaultGalleryImages,
@@ -123,14 +125,12 @@ export function FloatingGallery({
     <div 
       ref={containerRef}
       className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`}
+      style={{ padding: '0 50px' }} // 50px margin from edges
     >
       {images.map((image, index) => {
         // Calculate parallax offset based on depth
         const parallaxSpeed = image.depth * 0.06;
         const parallaxY = scrollY * parallaxSpeed;
-        
-        // Subtle floating animation offset
-        const floatOffset = Math.sin((Date.now() / 3000) + index) * 5;
         
         return (
           <div
@@ -139,45 +139,26 @@ export function FloatingGallery({
             style={{
               ...image.position,
               zIndex: 10 + image.depth,
-              transform: `
-                translateY(${-parallaxY}px) 
-                rotate(${image.rotation || 0}deg)
-              `,
+              transform: `translateY(${-parallaxY}px) rotate(${image.rotation || 0}deg)`,
               opacity: isLoaded ? 1 : 0,
-              transition: `opacity 0.8s ease-out ${image.delay}ms, transform 0.3s ease-out`,
-              boxShadow: `
-                0 25px 50px -12px rgba(0, 0, 0, 0.6),
-                0 0 40px rgba(0, 0, 0, 0.3)
-              `,
+              transition: `opacity 0.8s ease-out ${image.delay}ms`,
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 0, 0, 0.3)',
             }}
           >
-            {/* Dark overlay for better text contrast */}
-            <div 
-              className="absolute inset-0 z-10"
-              style={{
-                background: 'linear-gradient(135deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.4) 100%)',
-              }}
-            />
-            
-            {/* Image with subtle scale animation */}
+            {/* Image - fully opaque, no overlays, no Ken Burns */}
             <img
               src={image.src}
               alt={image.alt}
               className="w-full h-full object-cover"
-              style={{
-                transform: `scale(1.05)`,
-                transition: 'transform 8s ease-in-out',
-              }}
               loading="lazy"
               decoding="async"
             />
             
-            {/* Subtle glow border */}
+            {/* Subtle border glow */}
             <div 
               className="absolute inset-0 rounded-xl pointer-events-none"
               style={{
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
               }}
             />
           </div>
