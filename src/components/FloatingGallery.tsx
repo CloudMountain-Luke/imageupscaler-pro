@@ -24,14 +24,14 @@ interface FloatingGalleryProps {
 // Left: Woman (lg top), Ocean (sm middle), Anime (md bottom)
 // Right: Eye (md top), Man (sm middle), Aurora (lg bottom)
 // All images centered horizontally on the largest image in their column
-// Base padding: 90px from edges (reduced from 147px)
+// Base padding: 40px from edges on xl+, hidden below xl (1280px)
 // Centering offsets: lg=0, md=+24px, sm=+40px (based on lg=256, md=208, sm=176)
 export const defaultGalleryImages: GalleryImage[] = [
   // LEFT SIDE - lg, sm, md (top to bottom) - centered on lg
   {
     src: '/images/woman-portrait_1-1.webp',
     alt: 'Smiling woman portrait',
-    position: { top: '8%', left: '90px' }, // lg: no offset
+    position: { top: '8%', left: '40px' }, // lg: no offset
     size: 'lg',
     depth: 1,
     delay: 0,
@@ -40,7 +40,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/ocean-waves-sunset.webp',
     alt: 'Ocean waves at sunset',
-    position: { top: '40%', left: '130px' }, // sm: 90 + 40 = 130px
+    position: { top: '40%', left: '80px' }, // sm: 40 + 40 = 80px
     size: 'sm',
     depth: 3,
     delay: 200,
@@ -49,7 +49,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/colorful-anime_1-1_sm.webp',
     alt: 'Colorful anime artwork',
-    position: { bottom: '8%', left: '114px' }, // md: 90 + 24 = 114px
+    position: { bottom: '8%', left: '64px' }, // md: 40 + 24 = 64px
     size: 'md',
     depth: 2,
     delay: 400,
@@ -59,7 +59,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/abstract-eye_opt.webp',
     alt: 'Abstract eye painting',
-    position: { top: '8%', right: '114px' }, // md: 90 + 24 = 114px
+    position: { top: '8%', right: '64px' }, // md: 40 + 24 = 64px
     size: 'md',
     depth: 2,
     delay: 100,
@@ -68,7 +68,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/man-portrait_1-1_sm.webp',
     alt: 'Man portrait',
-    position: { top: 'calc(40% - 30px)', right: '130px' }, // sm: 90 + 40 = 130px, moved up 30px
+    position: { top: 'calc(40% - 30px)', right: '80px' }, // sm: 40 + 40 = 80px, moved up 30px
     size: 'sm',
     depth: 3,
     delay: 300,
@@ -77,7 +77,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/aurora-mountains.webp',
     alt: 'Aurora mountains landscape',
-    position: { bottom: '8%', right: '90px' }, // lg: no offset
+    position: { bottom: '8%', right: '40px' }, // lg: no offset
     size: 'lg',
     depth: 1,
     delay: 500,
@@ -128,7 +128,7 @@ export function FloatingGallery({
   return (
     <div 
       ref={containerRef}
-      className={`absolute inset-0 overflow-hidden pointer-events-none hidden lg:block ${className}`}
+      className={`absolute inset-0 overflow-hidden pointer-events-none hidden xl:block ${className}`}
     >
       {images.map((image, index) => {
         // Calculate parallax offset based on depth

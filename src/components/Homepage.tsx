@@ -350,7 +350,15 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
         <EmberParticles count={12} intensity="low" color="mixed" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 pt-4 pb-12 relative z-20" style={{ marginTop: '-60px' }}>
-          <div className="text-center">
+          <div className="text-center relative">
+            {/* Subtle backdrop for text readability on xl+ when images are visible */}
+            <div 
+              className="absolute inset-0 -mx-8 -my-4 rounded-3xl hidden xl:block"
+              style={{
+                background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 50%, transparent 80%)',
+                backdropFilter: 'blur(2px)',
+              }}
+            />
             {/* Exclusivity Badge */}
             <FadeInOnScroll delay={0}>
               <div 
