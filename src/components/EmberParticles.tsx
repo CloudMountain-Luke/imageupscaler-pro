@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 interface EmberParticle {
   id: number;
@@ -67,7 +67,7 @@ export function EmberParticles({
   
   return (
     <div 
-      className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`}
+      className={`absolute inset-0 overflow-hidden pointer-events-none z-[5] ${className}`}
       aria-hidden="true"
     >
       {particles.map((particle, index) => {

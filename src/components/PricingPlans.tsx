@@ -156,8 +156,8 @@ export function PricingPlans({ onGetStarted }: PricingPlansProps) {
           Simple pricing, powerful results
         </p>
 
-        {/* Billing Toggle */}
-        <div className="flex items-center justify-center space-x-4 mb-8">
+        {/* Billing Toggle - hidden on mobile, shown on md+ */}
+        <div className="hidden md:flex items-center justify-center space-x-4 mb-8">
           <span 
             className="text-sm font-medium"
             style={{ color: billingCycle === 'monthly' ? textColor : mutedTextColor }}
@@ -254,6 +254,36 @@ export function PricingPlans({ onGetStarted }: PricingPlansProps) {
                 <p className="text-sm" style={{ color: mutedTextColor }}>
                   {plan.description}
                 </p>
+              </div>
+              
+              {/* Mobile Billing Toggle - shown only on mobile */}
+              <div className="flex md:hidden items-center justify-center gap-2 mb-4 py-2 rounded-lg" style={{ background: 'rgba(255, 255, 255, 0.05)' }}>
+                <span 
+                  className="text-xs font-medium"
+                  style={{ color: billingCycle === 'monthly' ? textColor : mutedTextColor }}
+                >
+                  Monthly
+                </span>
+                <button
+                  onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
+                  className="relative inline-flex h-5 w-10 items-center rounded-full transition-all duration-300"
+                  style={{
+                    background: billingCycle === 'yearly' 
+                      ? 'linear-gradient(to right, var(--primary), var(--secondary))' 
+                      : 'rgba(255, 255, 255, 0.2)',
+                  }}
+                >
+                  <span
+                    className="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-300"
+                    style={{ transform: billingCycle === 'yearly' ? 'translateX(22px)' : 'translateX(3px)' }}
+                  />
+                </button>
+                <span 
+                  className="text-xs font-medium"
+                  style={{ color: billingCycle === 'yearly' ? textColor : mutedTextColor }}
+                >
+                  Yearly
+                </span>
               </div>
               
               {/* Price */}
