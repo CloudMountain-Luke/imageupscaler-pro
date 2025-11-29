@@ -5,7 +5,7 @@ interface ImagePair {
   after: string;
   scale: string; // e.g., "2x", "4x", "8x", "24x"
   type: string; // e.g., "Photos", "Art & Illustration", "Anime & Cartoons"
-  degradationType?: 'blur' | 'pixelated' | 'jpeg-artifacts' | 'noise';
+  degradationType?: 'blur' | 'pixelated-light' | 'pixelated-heavy' | 'jpeg-artifacts' | 'noise';
 }
 
 interface BeforeAfterSliderProps {
@@ -13,11 +13,6 @@ interface BeforeAfterSliderProps {
   afterImage: string;
   beforeLabel?: string;
   afterLabel?: string;
-  stats?: {
-    before: string;
-    after: string;
-    scale: string;
-  };
   autoPlay?: boolean;
   autoPlaySpeed?: number; // seconds for full sweep
   className?: string;
@@ -26,31 +21,18 @@ interface BeforeAfterSliderProps {
   imageRotationInterval?: number; // seconds between image changes
 }
 
-// Different degradation effects for the "before" image
-const getDegradationStyle = (type?: 'blur' | 'pixelated' | 'jpeg-artifacts' | 'noise') => {
-  switch (type) {
-    case 'blur':
-      return {
-        filter: 'blur(2.5px) saturate(0.7) brightness(0.85)',
-        overlayOpacity: 0.1,
-      };
-    case 'pixelated':
-      return {
-        filter: 'saturate(0.7) brightness(0.88) contrast(0.9)',
-        overlayOpacity: 0.3,
-      };
-    case 'jpeg-artifacts':
-      return {
-        filter: 'saturate(0.75) brightness(0.85) contrast(1.15)',
-        overlayOpacity: 0.25,
-      };
-    case 'noise':
-    default:
-      return {
-        filter: 'blur(1.5px) saturate(0.75) brightness(0.88)',
-        overlayOpacity: 0.2,
-      };
-  }
+// Calculate stats based on scale
+const getStatsForScale = (scale: string) => {
+  const scaleNum = parseInt(scale.replace('x', ''));
+  // Base resolution that gets upscaled
+  const baseRes = 480;
+  const afterRes = baseRes * scaleNum;
+  
+  return {
+    before: `${baseRes}px`,
+    after: `${afterRes.toLocaleString()}px`,
+    scale: scale,
+  };
 };
 
 /**
@@ -63,7 +45,6 @@ export function BeforeAfterSlider({
   afterImage,
   beforeLabel = 'Original',
   afterLabel = 'Enhanced',
-  stats,
   autoPlay = true,
   autoPlaySpeed = 4,
   className = '',
@@ -75,6 +56,7 @@ export function BeforeAfterSlider({
   const [isAutoPlaying, setIsAutoPlaying] = useState(autoPlay);
   const [animationDirection, setAnimationDirection] = useState<'left' | 'right'>('left');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [pixelatedImages, setPixelatedImages] = useState<Record<number, string>>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
@@ -86,18 +68,88 @@ export function BeforeAfterSlider({
   const currentScale = currentImage ? currentImage.scale : '24x';
   const currentType = currentImage ? currentImage.type : 'Photos';
   const currentDegradation = currentImage?.degradationType || 'noise';
-  const degradationStyle = getDegradationStyle(currentDegradation);
+  const currentStats = getStatsForScale(currentScale);
+
+  // Create pixelated version of image using canvas
+  useEffect(() => {
+    if (!images) return;
+
+    images.forEach((img, index) => {
+      if (img.degradationType === 'pixelated-light' || img.degradationType === 'pixelated-heavy') {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const image = new Image();
+        image.crossOrigin = 'anonymous';
+        image.onload = () => {
+          // Determine pixelation level
+          const pixelSize = img.degradationType === 'pixelated-heavy' ? 12 : 6;
+          
+          // Set canvas to small size for pixelation
+          const smallWidth = Math.floor(image.width / pixelSize);
+          const smallHeight = Math.floor(image.height / pixelSize);
+          
+          canvas.width = smallWidth;
+          canvas.height = smallHeight;
+          
+          // Draw small
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(image, 0, 0, smallWidth, smallHeight);
+          
+          // Create second canvas at full size
+          const canvas2 = document.createElement('canvas');
+          const ctx2 = canvas2.getContext('2d');
+          if (!ctx2) return;
+          
+          canvas2.width = image.width;
+          canvas2.height = image.height;
+          ctx2.imageSmoothingEnabled = false;
+          ctx2.drawImage(canvas, 0, 0, image.width, image.height);
+          
+          // Store the pixelated image
+          setPixelatedImages(prev => ({
+            ...prev,
+            [index]: canvas2.toDataURL('image/jpeg', 0.9)
+          }));
+        };
+        image.src = img.after;
+      }
+    });
+  }, [images]);
+
+  // Get the before image (pixelated or original with filter)
+  const getBeforeImage = () => {
+    if (currentImage && (currentDegradation === 'pixelated-light' || currentDegradation === 'pixelated-heavy')) {
+      return pixelatedImages[currentImageIndex] || currentAfter;
+    }
+    return currentAfter;
+  };
+
+  // Get degradation filter style
+  const getDegradationFilter = () => {
+    switch (currentDegradation) {
+      case 'blur':
+        return 'blur(3px) saturate(0.7) brightness(0.85)';
+      case 'pixelated-light':
+      case 'pixelated-heavy':
+        return 'saturate(0.8) brightness(0.9) contrast(0.95)';
+      case 'jpeg-artifacts':
+        return 'saturate(0.7) brightness(0.82) contrast(1.2)';
+      case 'noise':
+      default:
+        return 'blur(2px) saturate(0.7) brightness(0.85)';
+    }
+  };
 
   // Image rotation effect
   useEffect(() => {
     if (!images || images.length <= 1) return;
 
-    // Clear existing timer
     if (imageRotationRef.current) {
       clearInterval(imageRotationRef.current);
     }
 
-    // Set up rotation timer
     imageRotationRef.current = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % images.length);
     }, imageRotationInterval * 1000);
@@ -124,7 +176,6 @@ export function BeforeAfterSlider({
       const deltaTime = timestamp - lastTimeRef.current;
       lastTimeRef.current = timestamp;
 
-      // Calculate movement per frame (full sweep in autoPlaySpeed seconds)
       const movePerMs = 100 / (autoPlaySpeed * 1000);
       const movement = movePerMs * deltaTime;
 
@@ -159,10 +210,9 @@ export function BeforeAfterSlider({
     };
   }, [isAutoPlaying, isDragging, animationDirection, autoPlaySpeed]);
 
-  // Handle mouse/touch interactions
   const handleInteractionStart = useCallback(() => {
     setIsDragging(true);
-    setIsAutoPlaying(false); // Stop auto-play when user interacts
+    setIsAutoPlaying(false);
   }, []);
 
   const handleInteractionEnd = useCallback(() => {
@@ -171,7 +221,6 @@ export function BeforeAfterSlider({
 
   const updateSliderPosition = useCallback((clientX: number) => {
     if (!containerRef.current) return;
-    
     const rect = containerRef.current.getBoundingClientRect();
     const x = clientX - rect.left;
     const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
@@ -193,17 +242,17 @@ export function BeforeAfterSlider({
     updateSliderPosition(e.clientX);
   }, [updateSliderPosition]);
 
-  // Resume auto-play button
   const resumeAutoPlay = useCallback(() => {
     setIsAutoPlaying(true);
     setSliderPosition(50);
     setAnimationDirection('left');
   }, []);
 
-  // Pause auto-play button
   const pauseAutoPlay = useCallback(() => {
     setIsAutoPlaying(false);
   }, []);
+
+  const beforeImageSrc = getBeforeImage();
 
   return (
     <div className={`relative ${className}`}>
@@ -233,7 +282,7 @@ export function BeforeAfterSlider({
           />
         </div>
 
-        {/* Before Image (clipped using clip-path, top layer) - with degradation effect */}
+        {/* Before Image (clipped, top layer) - with degradation */}
         <div
           className="absolute inset-0"
           style={{
@@ -241,34 +290,26 @@ export function BeforeAfterSlider({
           }}
         >
           <img
-            src={currentAfter}
+            src={beforeImageSrc}
             alt={beforeLabel}
             className="w-full h-full object-cover transition-opacity duration-700"
             style={{
-              filter: degradationStyle.filter,
+              filter: getDegradationFilter(),
+              imageRendering: (currentDegradation === 'pixelated-light' || currentDegradation === 'pixelated-heavy') 
+                ? 'pixelated' 
+                : 'auto',
             }}
             draggable={false}
           />
-          {/* Degradation overlay - always visible with appropriate effect */}
+          {/* Noise/artifact overlay */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
-              opacity: degradationStyle.overlayOpacity,
+              opacity: currentDegradation === 'jpeg-artifacts' ? 0.3 : 0.15,
               backgroundImage: currentDegradation === 'jpeg-artifacts' 
-                ? `url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`
-                : currentDegradation === 'pixelated'
-                ? `repeating-linear-gradient(0deg, rgba(0,0,0,0.08) 0px, rgba(0,0,0,0.08) 3px, transparent 3px, transparent 6px),
-                   repeating-linear-gradient(90deg, rgba(0,0,0,0.08) 0px, rgba(0,0,0,0.08) 3px, transparent 3px, transparent 6px)`
-                : `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                ? `url("data:image/svg+xml,%3Csvg viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`
+                : `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`,
               mixBlendMode: 'overlay',
-            }}
-          />
-          {/* Additional grain overlay for more visible degradation */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              opacity: 0.08,
-              background: 'repeating-linear-gradient(45deg, transparent, transparent 1px, rgba(0,0,0,0.1) 1px, rgba(0,0,0,0.1) 2px)',
             }}
           />
         </div>
@@ -281,7 +322,6 @@ export function BeforeAfterSlider({
             transform: 'translateX(-50%)',
           }}
         >
-          {/* Glowing line */}
           <div
             className="absolute inset-0"
             style={{
@@ -289,8 +329,6 @@ export function BeforeAfterSlider({
               boxShadow: '0 0 20px var(--primary), 0 0 40px var(--secondary)',
             }}
           />
-          
-          {/* Handle circle */}
           <div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center pointer-events-auto"
             style={{
@@ -299,7 +337,6 @@ export function BeforeAfterSlider({
               border: '3px solid white',
             }}
           >
-            {/* Arrows */}
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white">
               <path d="M8 12L4 8M4 8L8 4M4 8H11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M16 12L20 16M20 16L16 20M20 16H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -321,9 +358,7 @@ export function BeforeAfterSlider({
 
         <div
           className="absolute top-4 right-4 flex flex-col items-end gap-1 transition-all duration-300"
-          style={{
-            opacity: sliderPosition < 85 ? 1 : 0,
-          }}
+          style={{ opacity: sliderPosition < 85 ? 1 : 0 }}
         >
           <div
             className="px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-md"
@@ -346,34 +381,25 @@ export function BeforeAfterSlider({
           </div>
         </div>
 
-        {/* Stats Overlay */}
-        {stats && (
-          <div
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 px-5 py-2.5 rounded-full backdrop-blur-md"
+        {/* Dynamic Stats Overlay */}
+        <div
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 px-5 py-2.5 rounded-full backdrop-blur-md"
+          style={{ background: 'rgba(0,0,0,0.8)' }}
+        >
+          <span className="text-gray-400 text-sm font-mono line-through">{currentStats.before}</span>
+          <span className="text-xl font-bold" style={{ color: 'var(--primary)' }}>→</span>
+          <span className="text-white text-sm font-mono font-medium">{currentStats.after}</span>
+          <span
+            className="px-2.5 py-1 rounded text-xs font-bold"
             style={{
-              background: 'rgba(0,0,0,0.8)',
+              background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+              color: 'white',
+              boxShadow: '0 0 15px color-mix(in oklab, var(--primary) 40%, transparent 60%)',
             }}
           >
-            <span className="text-gray-400 text-sm font-mono line-through">{stats.before}</span>
-            <span
-              className="text-xl font-bold"
-              style={{ color: 'var(--primary)' }}
-            >
-              →
-            </span>
-            <span className="text-white text-sm font-mono font-medium">{stats.after}</span>
-            <span
-              className="px-2.5 py-1 rounded text-xs font-bold"
-              style={{
-                background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-                color: 'white',
-                boxShadow: '0 0 15px color-mix(in oklab, var(--primary) 40%, transparent 60%)',
-              }}
-            >
-              {currentScale}
-            </span>
-          </div>
-        )}
+            {currentScale}
+          </span>
+        </div>
       </div>
 
       {/* Controls */}

@@ -466,11 +466,6 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
               afterImage="/images/aurora-mountains.webp"
               beforeLabel="Original"
               afterLabel="Enhanced"
-              stats={{
-                before: '480px',
-                after: '11,520px',
-                scale: '24x'
-              }}
               autoPlay={true}
               autoPlaySpeed={7}
               className="max-w-4xl mx-auto"
@@ -487,21 +482,21 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                   after: '/images/woman-portrait_1-1.webp',
                   scale: '4x',
                   type: 'Photos',
-                  degradationType: 'jpeg-artifacts',
+                  degradationType: 'pixelated-light',
                 },
                 {
                   before: '/images/abstract-eye_opt.webp',
                   after: '/images/abstract-eye_opt.webp',
                   scale: '8x',
                   type: 'Art & Illustration',
-                  degradationType: 'pixelated',
+                  degradationType: 'pixelated-heavy',
                 },
                 {
                   before: '/images/chibi-anime-korean-pop-singer_16-9_sm.webp',
                   after: '/images/chibi-anime-korean-pop-singer_16-9_sm.webp',
                   scale: '24x',
                   type: 'Anime & Cartoons',
-                  degradationType: 'noise',
+                  degradationType: 'jpeg-artifacts',
                 },
               ]}
               imageRotationInterval={9}
