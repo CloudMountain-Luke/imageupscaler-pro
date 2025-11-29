@@ -312,6 +312,10 @@ function App() {
          onAuthSuccess={handleAuthSuccess}
         />
         <Footer /> {/* Render footer on homepage */}
+        
+        {/* Cookie Consent - must be in both returns */}
+        <CookieConsent />
+        <CookieSettingsModal />
       </div>
     );
   }
