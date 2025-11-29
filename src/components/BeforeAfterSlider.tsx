@@ -126,31 +126,33 @@ export function BeforeAfterSlider({
     return currentAfter;
   };
 
-  // Get degradation filter style - subtle, realistic effects
+  // Get degradation filter style - visible but realistic effects
   const getDegradationFilter = () => {
     switch (currentDegradation) {
       case 'blur':
-        // Soft focus / slight motion blur
-        return 'blur(1.8px) saturate(0.85) brightness(0.92)';
+        // Soft focus / slight motion blur - noticeable but not extreme
+        return 'blur(2.2px) saturate(0.8) brightness(0.88)';
       case 'pixelated-subtle':
-        // Low resolution upscale look - slightly soft with reduced detail
-        return 'saturate(0.9) brightness(0.95) contrast(0.97)';
+        // Low resolution upscale look - soft with reduced detail
+        return 'blur(0.8px) saturate(0.85) brightness(0.92) contrast(0.95)';
       case 'jpeg-artifacts':
-        // JPEG compression - slight color banding, reduced saturation
-        return 'saturate(0.8) brightness(0.9) contrast(1.08)';
+        // JPEG compression - visible compression, color shift
+        return 'blur(0.5px) saturate(0.7) brightness(0.85) contrast(1.15)';
       case 'noise':
       default:
-        // General low quality - soft with grain
-        return 'blur(1.2px) saturate(0.85) brightness(0.9)';
+        // General low quality - soft with grain, visible degradation
+        return 'blur(1.5px) saturate(0.78) brightness(0.88)';
     }
   };
 
-  // Image rotation effect
+  // Image rotation effect - pauses when animation is paused
   useEffect(() => {
-    if (!images || images.length <= 1) return;
-
-    if (imageRotationRef.current) {
-      clearInterval(imageRotationRef.current);
+    if (!images || images.length <= 1 || !isAutoPlaying) {
+      if (imageRotationRef.current) {
+        clearInterval(imageRotationRef.current);
+        imageRotationRef.current = null;
+      }
+      return;
     }
 
     imageRotationRef.current = setInterval(() => {
@@ -162,7 +164,7 @@ export function BeforeAfterSlider({
         clearInterval(imageRotationRef.current);
       }
     };
-  }, [images, imageRotationInterval]);
+  }, [images, imageRotationInterval, isAutoPlaying]);
 
   // Auto-play animation
   useEffect(() => {
@@ -301,21 +303,33 @@ export function BeforeAfterSlider({
             }}
             draggable={false}
           />
-          {/* Subtle noise/artifact overlay for realism */}
+          {/* Visible noise/artifact overlay */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
               opacity: currentDegradation === 'jpeg-artifacts' 
-                ? 0.2 
+                ? 0.25 
                 : currentDegradation === 'noise' 
-                  ? 0.18 
-                  : 0.1,
+                  ? 0.22 
+                  : currentDegradation === 'blur'
+                    ? 0.12
+                    : 0.15,
               backgroundImage: currentDegradation === 'jpeg-artifacts' 
-                ? `url("data:image/svg+xml,%3Csvg viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.4' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`
-                : `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                ? `url("data:image/svg+xml,%3Csvg viewBox='0 0 50 50' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`
+                : `url("data:image/svg+xml,%3Csvg viewBox='0 0 150 150' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`,
               mixBlendMode: 'overlay',
             }}
           />
+          {/* Additional color shift for JPEG artifacts */}
+          {currentDegradation === 'jpeg-artifacts' && (
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,0,0,0.03), rgba(0,255,0,0.02), rgba(0,0,255,0.03))',
+                mixBlendMode: 'color',
+              }}
+            />
+          )}
         </div>
 
         {/* Slider Handle */}
