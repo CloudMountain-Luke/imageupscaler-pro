@@ -50,31 +50,40 @@ const CookieContext = createContext<CookieContextValue | undefined>(undefined);
 
 export function CookieProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<CookieConsentState>(defaultState);
-  const [showBanner, setShowBanner] = useState(false);
+  // Start with banner visible - hide only if valid consent exists
+  const [showBanner, setShowBanner] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Load saved consent on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem(COOKIE_CONSENT_KEY);
+      console.log('[Cookie] Checking saved consent:', saved ? 'found' : 'not found');
+      
       if (saved) {
         const parsed = JSON.parse(saved) as CookieConsentState;
+        console.log('[Cookie] Parsed consent:', parsed);
         
         // Check if consent version matches - if not, re-prompt
         if (parsed.consentVersion !== CONSENT_VERSION) {
+          console.log('[Cookie] Version mismatch, showing banner');
           setShowBanner(true);
-          return;
+        } else {
+          console.log('[Cookie] Valid consent found, hiding banner');
+          setState(parsed);
+          setShowBanner(false);
         }
-        
-        setState(parsed);
-        setShowBanner(false);
       } else {
         // No saved consent, show banner
+        console.log('[Cookie] No consent found, showing banner');
         setShowBanner(true);
       }
-    } catch {
+    } catch (e) {
+      console.error('[Cookie] Error loading consent:', e);
       setShowBanner(true);
     }
+    setIsInitialized(true);
   }, []);
 
   // Save consent to localStorage and set cookie

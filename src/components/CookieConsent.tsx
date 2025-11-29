@@ -5,6 +5,8 @@ import { useCookieConsent } from '../contexts/CookieContext';
 export function CookieConsent() {
   const { showBanner, acceptAll, rejectAll, openSettings, closeBanner } = useCookieConsent();
 
+  console.log('[CookieConsent] showBanner:', showBanner);
+
   if (!showBanner) return null;
 
   return (

@@ -125,7 +125,7 @@ export function FloatingGallery({
     <div 
       ref={containerRef}
       className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`}
-      style={{ padding: '0 50px' }} // 50px margin from edges
+      style={{ left: '50px', right: '50px', width: 'calc(100% - 100px)' }} // 50px margin from edges on desktop
     >
       {images.map((image, index) => {
         // Calculate parallax offset based on depth
