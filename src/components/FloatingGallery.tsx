@@ -117,9 +117,9 @@ export function FloatingGallery({
     return () => window.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
   
-  // Size classes - 3 distinct sizes (lg=256px, md=208px, sm=144px on desktop)
+  // Size classes - 3 distinct sizes (lg=256px, md=208px, sm=176px on desktop)
   const sizeClasses = {
-    sm: 'w-24 h-24 md:w-32 md:h-32 lg:w-36 lg:h-36',
+    sm: 'w-28 h-28 md:w-36 md:h-36 lg:w-44 lg:h-44',
     md: 'w-32 h-32 md:w-44 md:h-44 lg:w-52 lg:h-52',
     lg: 'w-40 h-40 md:w-56 md:h-56 lg:w-64 lg:h-64'
   };
