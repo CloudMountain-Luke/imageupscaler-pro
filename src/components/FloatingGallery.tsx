@@ -19,18 +19,18 @@ interface FloatingGalleryProps {
   className?: string;
 }
 
-// Default gallery images - reduced to 4 for performance, lower quality
+// Default gallery images - all local for performance
 export const defaultGalleryImages: GalleryImage[] = [
   {
-    src: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=350&q=60',
-    alt: 'Mountain landscape',
+    src: '/images/aurora-mountains.webp',
+    alt: 'Aurora mountains landscape',
     position: { top: '10%', left: '5%' },
     size: 'lg',
     depth: 1,
     delay: 0
   },
   {
-    src: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=250&q=60',
+    src: '/images/woman-portrait_1-1.webp',
     alt: 'Portrait with detail',
     position: { top: '15%', right: '8%' },
     size: 'md',
@@ -38,16 +38,16 @@ export const defaultGalleryImages: GalleryImage[] = [
     delay: 200
   },
   {
-    src: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=300&q=60',
-    alt: 'Ocean waves',
+    src: '/images/ocean-waves-sunset.webp',
+    alt: 'Ocean waves at sunset',
     position: { bottom: '20%', left: '10%' },
     size: 'md',
     depth: 3,
     delay: 400
   },
   {
-    src: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=220&q=60',
-    alt: 'Abstract art painting',
+    src: '/images/abstract-eye_opt.webp',
+    alt: 'Abstract eye painting',
     position: { bottom: '15%', right: '5%' },
     size: 'sm',
     depth: 2,

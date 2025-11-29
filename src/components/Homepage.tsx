@@ -5,7 +5,7 @@ import { ArrowRight, Sparkles, Shield, TrendingUp, LogIn, ChevronDown, ChevronUp
 const PricingPlans = lazy(() => import('./PricingPlans').then(m => ({ default: m.PricingPlans })));
 import { ThemeProvider, useThemeLab } from '../contexts/ThemeContext';
 import { ThemeControls } from './ThemeControls';
-import { HexagonGridCSS } from './HexagonGrid';
+// HexagonGridCSS removed for cleaner background
 import { BeforeAfterSlider } from './BeforeAfterSlider';
 import { FloatingGallery, defaultGalleryImages } from './FloatingGallery';
 import { EmberParticles } from './EmberParticles';
@@ -267,8 +267,7 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
     >
       {/* Background Effects Layer - Simplified for performance */}
       <div className="fixed inset-0 pointer-events-none">
-        {/* CSS-only Hexagon Grid (no SVG filters) */}
-        <HexagonGridCSS opacity={0.06} />
+        {/* Background removed - cleaner look */}
         
         {/* Ambient Glow from Bottom */}
         <div 
@@ -719,9 +718,9 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                 desc: 'Portraits, landscapes, products', 
                 images: [
                   '/images/dooze-test-123.jpg', // Your dog Dooze
-                  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&q=70', // Portrait
-                  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=70', // Mountain landscape
-                  'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=70', // Product (watch)
+                  '/images/woman-portrait_1-1.webp', // Woman portrait
+                  '/images/mountain-landscape_1-1_sm.webp', // Mountain landscape
+                  '/images/man-portrait_1-1_sm.webp', // Man portrait
                 ],
                 id: 'photo'
               },
@@ -730,10 +729,10 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                 icon: Sparkles, 
                 desc: 'Paintings, illustrations, designs', 
                 images: [
-                  '/images/art-illustrations_sm.webp', // Starry Night
-                  '/images/Fete_de_nuit_small.jpg', // Garden party painting
-                  'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&q=70', // Renaissance painting
-                  'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&q=70', // Abstract painting
+                  '/images/starry-night_crop.webp', // Starry Night
+                  '/images/Fete_de_nuit_small_opt.webp', // Garden party painting
+                  '/images/abstract-eye_opt.webp', // Abstract eye painting
+                  '/images/art-illustrations_sm.webp', // Art illustrations
                 ],
                 id: 'art'
               },
@@ -743,9 +742,9 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                 desc: 'Anime, cartoons, comics', 
                 images: [
                   '/images/anime-sm.webp', // Anime artwork
-                  'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400&q=70', // Colorful illustration
-                  'https://images.unsplash.com/photo-1618336753974-aae8e04506aa?w=400&q=70', // Digital art style
-                  'https://images.unsplash.com/photo-1569701813229-33284b643e3c?w=400&q=70', // Artistic illustration
+                  '/images/colorful-anime_1-1_sm.webp', // Colorful anime
+                  '/images/acfromspace_sm_1-1_sm.webp', // Digital art style
+                  '/images/chibi-anime-korean-pop-singer_1-1_sm.webp', // Artistic illustration (chibi)
                 ],
                 id: 'anime'
               },
@@ -755,9 +754,9 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                 desc: 'Documents, screenshots, logos', 
                 images: [
                   '/images/text-sm.webp', // Documents
-                  'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&q=70', // Charts/data
-                  'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=400&q=70', // Office docs
-                  'https://images.unsplash.com/photo-1568667256549-094345857637?w=400&q=70', // Books/text
+                  '/images/charts-data_1-1.webp', // Charts/data
+                  '/images/office-docs_1-1.webp', // Office docs
+                  '/images/books-text_1-1.webp', // Books/text
                 ],
                 id: 'text'
               },

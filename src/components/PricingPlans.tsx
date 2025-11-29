@@ -339,17 +339,24 @@ export function PricingPlans({ onGetStarted }: PricingPlansProps) {
               {/* CTA Button */}
               <button
                 onClick={() => onGetStarted(plan.id)}
-                className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-300 flex items-center justify-center space-x-2 ${
+                className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 ${
                   plan.popular ? 'neon-glow-subtle' : ''
                 }`}
                 style={{
                   background: plan.popular 
-                    ? 'linear-gradient(to right, var(--primary), var(--secondary))'
-                    : `linear-gradient(to right, ${gradient.replace('from-', '').replace(' to-', ', ').replace('-500', '').replace('-600', '')})`,
+                    ? 'linear-gradient(135deg, var(--primary), var(--secondary))'
+                    : plan.id === 'free' 
+                      ? 'linear-gradient(135deg, #6b7280, #4b5563)'
+                      : plan.id === 'starter'
+                        ? 'linear-gradient(135deg, #3b82f6, #06b6d4)'
+                        : plan.id === 'mega'
+                          ? 'linear-gradient(135deg, #a855f7, #ec4899)'
+                          : 'linear-gradient(135deg, var(--primary), var(--secondary))',
                   color: 'white',
                   boxShadow: plan.popular 
                     ? '0 8px 25px color-mix(in oklab, var(--primary) 40%, transparent 60%)'
-                    : undefined,
+                    : '0 4px 15px rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                 }}
               >
                 <span>{plan.isFree ? 'Start Free' : `Choose ${plan.name}`}</span>
