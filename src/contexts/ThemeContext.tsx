@@ -6,6 +6,12 @@ import React, {
   useMemo,
   useState,
 } from 'react';
+import { 
+  saveThemePreferencesToCookie, 
+  loadThemePreferencesFromCookie,
+  getCookie,
+  COOKIE_NAMES 
+} from '../utils/cookies';
 
 type ThemeMode = 'light' | 'dark';
 type ColorScheme = 'flame' | 'forge' | 'cyber' | 'space' | 'brand';
@@ -318,6 +324,16 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   const getStoredTone = useCallback(
     (key: string, fallback: number) => {
       if (typeof window === 'undefined') return fallback;
+      
+      // First try cookies (if user consented to preferences)
+      if (key === CURRENT_TONE_KEY) {
+        const cookiePrefs = loadThemePreferencesFromCookie();
+        if (cookiePrefs?.tone !== undefined && Number.isFinite(cookiePrefs.tone)) {
+          return clamp(Math.round(cookiePrefs.tone), 0, 100);
+        }
+      }
+      
+      // Fall back to localStorage
       const stored = window.localStorage.getItem(key);
       if (!stored) return fallback;
       const parsed = Number(stored);
@@ -328,8 +344,16 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
   const getStoredColorScheme = useCallback((): ColorScheme => {
     if (typeof window === 'undefined') return 'flame';
+    
+    // First try cookies (if user consented to preferences)
+    const cookiePrefs = loadThemePreferencesFromCookie();
+    if (cookiePrefs?.colorScheme && ['flame', 'forge', 'cyber', 'space', 'brand'].includes(cookiePrefs.colorScheme)) {
+      return cookiePrefs.colorScheme as ColorScheme;
+    }
+    
+    // Fall back to localStorage
     const stored = window.localStorage.getItem(COLOR_SCHEME_KEY);
-    if (stored && ['flame', 'forge', 'cyber', 'space'].includes(stored)) {
+    if (stored && ['flame', 'forge', 'cyber', 'space', 'brand'].includes(stored)) {
       return stored as ColorScheme;
     }
     return 'flame';
@@ -361,7 +385,20 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   useEffect(() => {
     if (typeof window === 'undefined') return;
     window.localStorage.setItem(COLOR_SCHEME_KEY, colorScheme);
-  }, [colorScheme]);
+    
+    // Also save to cookies if user has consented to preferences
+    const consentCookie = getCookie(COOKIE_NAMES.CONSENT);
+    if (consentCookie) {
+      try {
+        const consent = JSON.parse(consentCookie);
+        if (consent?.preferences) {
+          saveThemePreferencesToCookie({ colorScheme, tone });
+        }
+      } catch {
+        // Invalid consent cookie, skip
+      }
+    }
+  }, [colorScheme, tone]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;

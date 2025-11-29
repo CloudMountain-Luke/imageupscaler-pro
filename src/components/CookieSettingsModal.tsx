@@ -8,6 +8,7 @@ interface CookieCategory {
   description: string;
   icon: React.ReactNode;
   required: boolean;
+  comingSoon?: boolean;
   details: string[];
 }
 
@@ -19,9 +20,21 @@ const cookieCategories: CookieCategory[] = [
     icon: <Shield className="w-4 h-4" />,
     required: true,
     details: [
-      'User authentication and sessions',
-      'Security and fraud prevention',
+      'User authentication (Supabase)',
+      'Security and session management',
       'Cookie consent storage',
+    ],
+  },
+  {
+    id: 'preferences',
+    name: 'Preferences',
+    description: 'Remember your theme and display settings.',
+    icon: <Palette className="w-4 h-4" />,
+    required: false,
+    details: [
+      'Color scheme preference',
+      'Theme tone (light/dark)',
+      'UI customizations',
     ],
   },
   {
@@ -30,6 +43,7 @@ const cookieCategories: CookieCategory[] = [
     description: 'Help us understand how visitors use our site.',
     icon: <BarChart3 className="w-4 h-4" />,
     required: false,
+    comingSoon: true,
     details: [
       'Page view tracking',
       'Feature usage analytics',
@@ -42,22 +56,11 @@ const cookieCategories: CookieCategory[] = [
     description: 'Used for advertising and campaign tracking.',
     icon: <Megaphone className="w-4 h-4" />,
     required: false,
+    comingSoon: true,
     details: [
       'Personalized advertising',
       'Campaign performance',
       'Retargeting',
-    ],
-  },
-  {
-    id: 'preferences',
-    name: 'Preferences',
-    description: 'Remember your settings and preferences.',
-    icon: <Palette className="w-4 h-4" />,
-    required: false,
-    details: [
-      'Theme preferences',
-      'Language settings',
-      'UI customizations',
     ],
   },
 ];
@@ -172,6 +175,11 @@ export function CookieSettingsModal() {
                           Required
                         </span>
                       )}
+                      {category.comingSoon && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-500/20 text-gray-400">
+                          Coming Soon
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-gray-400 truncate">{category.description}</p>
                   </div>
@@ -179,12 +187,12 @@ export function CookieSettingsModal() {
                   {/* Toggle */}
                   <button
                     onClick={() => handleToggle(category.id)}
-                    disabled={category.required}
+                    disabled={category.required || category.comingSoon}
                     className={`relative w-10 h-5 rounded-full transition-all duration-200 shrink-0 ${
-                      category.required ? 'cursor-not-allowed' : 'cursor-pointer'
+                      category.required || category.comingSoon ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
                     }`}
                     style={{
-                      background: category.required || preferences[category.id]
+                      background: category.required || (preferences[category.id] && !category.comingSoon)
                         ? 'linear-gradient(135deg, var(--primary), var(--secondary))'
                         : 'rgba(255, 255, 255, 0.15)',
                     }}
@@ -192,7 +200,7 @@ export function CookieSettingsModal() {
                     <span
                       className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200"
                       style={{
-                        transform: category.required || preferences[category.id] 
+                        transform: category.required || (preferences[category.id] && !category.comingSoon)
                           ? 'translateX(22px)' 
                           : 'translateX(2px)',
                       }}

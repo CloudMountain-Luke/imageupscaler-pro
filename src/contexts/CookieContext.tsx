@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
+import { setCookie, getCookie, deleteCookie, COOKIE_NAMES } from '../utils/cookies';
 
 // Cookie consent categories
 export interface CookiePreferences {
@@ -98,10 +99,10 @@ export function CookieProvider({ children }: { children: ReactNode }) {
     setState(newState);
     localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify(newState));
     
-    // Also set a cookie for server-side detection
-    const expiryDate = new Date();
-    expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-    document.cookie = `cookie_consent=true; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
+    // Save consent preferences to a cookie (so other parts of the app can check)
+    setCookie(COOKIE_NAMES.CONSENT, JSON.stringify(preferences), { days: 365 });
+    
+    console.log('[Cookie] Consent saved:', preferences);
     
     setShowBanner(false);
     setShowSettings(false);
@@ -149,7 +150,7 @@ export function CookieProvider({ children }: { children: ReactNode }) {
 
   const resetConsent = useCallback(() => {
     localStorage.removeItem(COOKIE_CONSENT_KEY);
-    document.cookie = 'cookie_consent=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    deleteCookie(COOKIE_NAMES.CONSENT);
     setState(defaultState);
     setShowBanner(true);
   }, []);
