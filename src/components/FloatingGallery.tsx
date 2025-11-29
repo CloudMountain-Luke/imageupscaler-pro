@@ -22,14 +22,14 @@ interface FloatingGalleryProps {
 
 // Default gallery images - 6 images, 3 on each side
 // Each side has 3 DIFFERENT sizes: lg, md, sm
-// Left: Woman (lg top), Anime (md middle), Ocean (sm bottom)
-// Right: Abstract eye (md top), Man (sm middle), Aurora (lg bottom)
+// Uniform spacing: 8% from top, 8% gap between images, 8% from bottom
+// Left/Right padding: 30px from edges
 export const defaultGalleryImages: GalleryImage[] = [
-  // LEFT SIDE - lg, md, sm (top to bottom)
+  // LEFT SIDE - lg, md, sm (top to bottom) - evenly spaced
   {
     src: '/images/woman-portrait_1-1.webp',
     alt: 'Smiling woman portrait',
-    position: { top: '3%', left: '0' },
+    position: { top: '8%', left: '30px' },
     size: 'lg',
     depth: 1,
     delay: 0,
@@ -38,7 +38,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/colorful-anime_1-1_sm.webp',
     alt: 'Colorful anime artwork',
-    position: { top: '38%', left: '0' },
+    position: { top: '40%', left: '30px' },
     size: 'md',
     depth: 2,
     delay: 200,
@@ -47,17 +47,17 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/ocean-waves-sunset.webp',
     alt: 'Ocean waves at sunset',
-    position: { bottom: '3%', left: '0' },
+    position: { bottom: '12%', left: '30px' },
     size: 'sm',
     depth: 3,
     delay: 400,
     rotation: -1,
   },
-  // RIGHT SIDE - md, sm, lg (top to bottom)
+  // RIGHT SIDE - md, sm, lg (top to bottom) - evenly spaced
   {
     src: '/images/abstract-eye_opt.webp',
     alt: 'Abstract eye painting',
-    position: { top: '3%', right: '0' },
+    position: { top: '8%', right: '30px' },
     size: 'md',
     depth: 2,
     delay: 100,
@@ -66,7 +66,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/man-portrait_1-1_sm.webp',
     alt: 'Man portrait',
-    position: { top: '38%', right: '0' },
+    position: { top: '40%', right: '30px' },
     size: 'sm',
     depth: 3,
     delay: 300,
@@ -75,7 +75,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/aurora-mountains.webp',
     alt: 'Aurora mountains landscape',
-    position: { bottom: '3%', right: '0' },
+    position: { bottom: '8%', right: '30px' },
     size: 'lg',
     depth: 1,
     delay: 500,
@@ -126,7 +126,7 @@ export function FloatingGallery({
   return (
     <div 
       ref={containerRef}
-      className={`absolute inset-0 overflow-hidden pointer-events-none px-8 md:px-12 lg:px-16 ${className}`}
+      className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`}
     >
       {images.map((image, index) => {
         // Calculate parallax offset based on depth
