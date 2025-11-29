@@ -462,10 +462,10 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
           
           <FadeInOnScroll delay={0.2}>
             <BeforeAfterSlider
-              beforeImage="/images/mountain-landscape_1-1_sm.webp"
-              afterImage="/images/mountain-landscape_16-9_sm.jpeg"
+              beforeImage="/images/aurora-mountains.webp"
+              afterImage="/images/aurora-mountains.webp"
               beforeLabel="Original"
-              afterLabel="Enhanced 24x"
+              afterLabel="Enhanced"
               stats={{
                 before: '480px',
                 after: '11,520px',
@@ -476,20 +476,32 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
               className="max-w-4xl mx-auto"
               images={[
                 {
-                  before: '/images/mountain-landscape_1-1_sm.webp',
-                  after: '/images/mountain-landscape_16-9_sm.jpeg',
+                  before: '/images/aurora-mountains.webp',
+                  after: '/images/aurora-mountains.webp',
+                  scale: '2x',
+                  type: 'Photos',
+                  degradationType: 'blur',
                 },
                 {
                   before: '/images/woman-portrait_1-1.webp',
                   after: '/images/woman-portrait_1-1.webp',
+                  scale: '4x',
+                  type: 'Photos',
+                  degradationType: 'jpeg-artifacts',
                 },
                 {
                   before: '/images/abstract-eye_opt.webp',
                   after: '/images/abstract-eye_opt.webp',
+                  scale: '8x',
+                  type: 'Art & Illustration',
+                  degradationType: 'pixelated',
                 },
                 {
-                  before: '/images/colorful-anime_1-1_sm.webp',
-                  after: '/images/colorful-anime_1-1_sm.webp',
+                  before: '/images/chibi-anime-korean-pop-singer_16-9_sm.webp',
+                  after: '/images/chibi-anime-korean-pop-singer_16-9_sm.webp',
+                  scale: '24x',
+                  type: 'Anime & Cartoons',
+                  degradationType: 'noise',
                 },
               ]}
               imageRotationInterval={9}

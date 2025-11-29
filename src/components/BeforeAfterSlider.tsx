@@ -1,5 +1,13 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
+interface ImagePair {
+  before: string;
+  after: string;
+  scale: string; // e.g., "2x", "4x", "8x", "24x"
+  type: string; // e.g., "Photos", "Art & Illustration", "Anime & Cartoons"
+  degradationType?: 'blur' | 'pixelated' | 'jpeg-artifacts' | 'noise';
+}
+
 interface BeforeAfterSliderProps {
   beforeImage: string;
   afterImage: string;
@@ -14,23 +22,48 @@ interface BeforeAfterSliderProps {
   autoPlaySpeed?: number; // seconds for full sweep
   className?: string;
   // For image rotation
-  images?: Array<{
-    before: string;
-    after: string;
-  }>;
+  images?: ImagePair[];
   imageRotationInterval?: number; // seconds between image changes
 }
+
+// Different degradation effects for the "before" image
+const getDegradationStyle = (type?: 'blur' | 'pixelated' | 'jpeg-artifacts' | 'noise') => {
+  switch (type) {
+    case 'blur':
+      return {
+        filter: 'blur(2px) saturate(0.7) brightness(0.85)',
+        overlayOpacity: 0.05,
+      };
+    case 'pixelated':
+      return {
+        filter: 'saturate(0.75) brightness(0.9) contrast(0.95)',
+        overlayOpacity: 0.25,
+        imageRendering: 'pixelated' as const,
+      };
+    case 'jpeg-artifacts':
+      return {
+        filter: 'saturate(0.8) brightness(0.88) contrast(1.1)',
+        overlayOpacity: 0.2,
+      };
+    case 'noise':
+    default:
+      return {
+        filter: 'blur(1px) saturate(0.8) brightness(0.9)',
+        overlayOpacity: 0.15,
+      };
+  }
+};
 
 /**
  * Before/After image comparison slider
  * Auto-animates but stops when user interacts, allowing manual control
- * Supports rotating through multiple image pairs
+ * Supports rotating through multiple image pairs with different degradation effects
  */
 export function BeforeAfterSlider({
   beforeImage,
   afterImage,
-  beforeLabel = 'Before',
-  afterLabel = 'After',
+  beforeLabel = 'Original',
+  afterLabel = 'Enhanced',
   stats,
   autoPlay = true,
   autoPlaySpeed = 4,
@@ -48,9 +81,14 @@ export function BeforeAfterSlider({
   const lastTimeRef = useRef<number>(0);
   const imageRotationRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Get current images
-  const currentBefore = images && images.length > 0 ? images[currentImageIndex].before : beforeImage;
-  const currentAfter = images && images.length > 0 ? images[currentImageIndex].after : afterImage;
+  // Get current image data
+  const currentImage = images && images.length > 0 ? images[currentImageIndex] : null;
+  const currentBefore = currentImage ? currentImage.before : beforeImage;
+  const currentAfter = currentImage ? currentImage.after : afterImage;
+  const currentScale = currentImage ? currentImage.scale : '24x';
+  const currentType = currentImage ? currentImage.type : 'Photos';
+  const currentDegradation = currentImage?.degradationType || 'noise';
+  const degradationStyle = getDegradationStyle(currentDegradation);
 
   // Image rotation effect
   useEffect(() => {
@@ -184,12 +222,12 @@ export function BeforeAfterSlider({
         onTouchMove={handleTouchMove}
         onClick={handleClick}
       >
-        {/* After Image (full, bottom layer) */}
+        {/* After Image (full, bottom layer) - the "enhanced" version */}
         <div className="absolute inset-0">
           <img
             src={currentAfter}
             alt={afterLabel}
-            className="w-full h-full object-cover transition-opacity duration-500"
+            className="w-full h-full object-cover transition-opacity duration-700"
             style={{
               filter: 'saturate(1.05) contrast(1.02)',
             }}
@@ -197,27 +235,32 @@ export function BeforeAfterSlider({
           />
         </div>
 
-        {/* Before Image (clipped, top layer) */}
+        {/* Before Image (clipped, top layer) - with degradation effect */}
         <div
           className="absolute inset-0 overflow-hidden"
           style={{ width: `${sliderPosition}%` }}
         >
           <img
-            src={currentBefore}
+            src={currentAfter} // Use same image but with degradation filter
             alt={beforeLabel}
-            className="h-full object-cover transition-opacity duration-500"
+            className="w-full h-full object-cover transition-opacity duration-700"
             style={{
-              width: containerRef.current ? `${containerRef.current.offsetWidth}px` : '100vw',
-              maxWidth: 'none',
-              filter: 'blur(1.5px) saturate(0.8) brightness(0.9)',
+              filter: degradationStyle.filter,
+              imageRendering: degradationStyle.imageRendering,
             }}
             draggable={false}
           />
-          {/* Noise overlay for low-quality effect */}
+          {/* Noise/artifact overlay for low-quality effect */}
           <div
-            className="absolute inset-0 opacity-15"
+            className="absolute inset-0"
             style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+              opacity: degradationStyle.overlayOpacity,
+              backgroundImage: currentDegradation === 'jpeg-artifacts' 
+                ? `url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`
+                : currentDegradation === 'pixelated'
+                ? `repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 2px, transparent 2px, transparent 4px),
+                   repeating-linear-gradient(90deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 2px, transparent 2px, transparent 4px)`
+                : `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`,
               mixBlendMode: 'overlay',
             }}
           />
@@ -267,15 +310,30 @@ export function BeforeAfterSlider({
         </div>
 
         <div
-          className="absolute top-4 right-4 px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-md transition-all duration-300"
+          className="absolute top-4 right-4 flex flex-col items-end gap-1 transition-all duration-300"
           style={{
-            background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-            color: 'white',
             opacity: sliderPosition < 85 ? 1 : 0,
-            boxShadow: '0 0 20px color-mix(in oklab, var(--primary) 50%, transparent 50%)',
           }}
         >
-          {afterLabel}
+          <div
+            className="px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-md"
+            style={{
+              background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+              color: 'white',
+              boxShadow: '0 0 20px color-mix(in oklab, var(--primary) 50%, transparent 50%)',
+            }}
+          >
+            Enhanced {currentScale}
+          </div>
+          <div
+            className="px-2 py-1 rounded text-xs font-medium backdrop-blur-md"
+            style={{
+              background: 'rgba(0,0,0,0.6)',
+              color: 'rgba(255,255,255,0.8)',
+            }}
+          >
+            {currentType}
+          </div>
         </div>
 
         {/* Stats Overlay */}
@@ -302,7 +360,7 @@ export function BeforeAfterSlider({
                 boxShadow: '0 0 15px color-mix(in oklab, var(--primary) 40%, transparent 60%)',
               }}
             >
-              {stats.scale}
+              {currentScale}
             </span>
           </div>
         )}
