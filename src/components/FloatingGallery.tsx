@@ -23,14 +23,15 @@ interface FloatingGalleryProps {
 // Default gallery images - 6 images, 3 on each side
 // Left: Woman (lg top), Ocean (sm middle), Anime (md bottom)
 // Right: Eye (md top), Man (sm middle), Aurora (lg bottom)
-// All images centered horizontally on their column
-// Left/Right padding: 147px from edges
+// All images centered horizontally on the largest image in their column
+// Base padding: 147px from edges
+// Centering offsets: lg=0, md=+24px, sm=+40px (based on lg=256, md=208, sm=176)
 export const defaultGalleryImages: GalleryImage[] = [
-  // LEFT SIDE - lg, sm, md (top to bottom) - centered horizontally
+  // LEFT SIDE - lg, sm, md (top to bottom) - centered on lg
   {
     src: '/images/woman-portrait_1-1.webp',
     alt: 'Smiling woman portrait',
-    position: { top: '8%', left: '147px' },
+    position: { top: '8%', left: '147px' }, // lg: no offset
     size: 'lg',
     depth: 1,
     delay: 0,
@@ -39,7 +40,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/ocean-waves-sunset.webp',
     alt: 'Ocean waves at sunset',
-    position: { top: '40%', left: '161px' }, // offset to center: 147 + (256-144)/2 = 147 + 56 = 203... adjusted for visual centering
+    position: { top: '40%', left: '187px' }, // sm: 147 + 40 = 187px
     size: 'sm',
     depth: 3,
     delay: 200,
@@ -48,17 +49,17 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/colorful-anime_1-1_sm.webp',
     alt: 'Colorful anime artwork',
-    position: { bottom: '8%', left: '153px' }, // offset to center: 147 + (256-208)/2 = 147 + 24 = 171... adjusted
+    position: { bottom: '8%', left: '171px' }, // md: 147 + 24 = 171px
     size: 'md',
     depth: 2,
     delay: 400,
     rotation: 2,
   },
-  // RIGHT SIDE - md, sm, lg (top to bottom) - centered horizontally
+  // RIGHT SIDE - md, sm, lg (top to bottom) - centered on lg
   {
     src: '/images/abstract-eye_opt.webp',
     alt: 'Abstract eye painting',
-    position: { top: '8%', right: '153px' }, // offset to center
+    position: { top: '8%', right: '171px' }, // md: 147 + 24 = 171px
     size: 'md',
     depth: 2,
     delay: 100,
@@ -67,7 +68,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/man-portrait_1-1_sm.webp',
     alt: 'Man portrait',
-    position: { top: '40%', right: '161px' }, // offset to center
+    position: { top: '40%', right: '187px' }, // sm: 147 + 40 = 187px
     size: 'sm',
     depth: 3,
     delay: 300,
@@ -76,7 +77,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/aurora-mountains.webp',
     alt: 'Aurora mountains landscape',
-    position: { bottom: '8%', right: '147px' },
+    position: { bottom: '8%', right: '147px' }, // lg: no offset
     size: 'lg',
     depth: 1,
     delay: 500,
