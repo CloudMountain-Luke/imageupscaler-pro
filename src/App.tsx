@@ -13,13 +13,15 @@ import { BillingSection } from './components/BillingSection';
 import { ApiSetupGuide } from './components/ApiSetupGuide';
 import { ImageComparison } from './components/ImageComparison';
 import { PricingPlans } from './components/PricingPlans';
-import { Footer } from './components/Footer'; // Import the new Footer component
-import { TermsOfService } from './components/TermsOfService'; // Import new policy pages
+import { Footer } from './components/Footer';
+import { TermsOfService } from './components/TermsOfService';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { RefundPolicy } from './components/RefundPolicy';
 import { ThemeControls } from './components/ThemeControls';
 import { useThemeLab } from './contexts/ThemeContext';
 import { UpscaleTrackingService } from './services/upscaleTrackingService';
+import { CookieConsent } from './components/CookieConsent';
+import { CookieSettingsModal } from './components/CookieSettingsModal';
 
 import { Download, Clock, CheckCircle, AlertCircle, Upload, Sparkles, Plus } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
@@ -459,6 +461,10 @@ function App() {
       )}
       
       <Footer /> {/* Render footer globally */}
+      
+      {/* Cookie Consent Banner & Settings Modal */}
+      <CookieConsent />
+      <CookieSettingsModal />
     </div>
   );
 }

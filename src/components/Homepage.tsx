@@ -718,9 +718,9 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                 desc: 'Portraits, landscapes, products', 
                 images: [
                   '/images/dooze-test-123.jpg', // Your dog Dooze
-                  '/images/woman-portrait_1-1.webp', // Woman portrait
-                  '/images/mountain-landscape_1-1_sm.webp', // Mountain landscape
                   '/images/man-portrait_1-1_sm.webp', // Man portrait
+                  '/images/mountain-landscape_1-1_sm.webp', // Mountain landscape
+                  '/images/ocean-waves-sunset.webp', // Ocean waves sunset
                 ],
                 id: 'photo'
               },

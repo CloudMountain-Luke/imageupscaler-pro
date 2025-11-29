@@ -1,8 +1,10 @@
 import React, { useMemo } from 'react';
 import { useThemeLab } from '../contexts/ThemeContext';
+import { useCookieConsent } from '../contexts/CookieContext';
 
 export function Footer() {
   const { tone, colorScheme } = useThemeLab();
+  const { openSettings: openCookieSettings } = useCookieConsent();
   
   const handleNavigate = (eventName: string) => {
     window.dispatchEvent(new CustomEvent(eventName));
@@ -99,6 +101,13 @@ export function Footer() {
               style={{ color: policyLinkColor }}
             >
               Refund Policy
+            </button>
+            <button 
+              onClick={openCookieSettings}
+              className="transition-colors hover:opacity-80"
+              style={{ color: policyLinkColor }}
+            >
+              Cookie Settings
             </button>
           </div>
         </div>

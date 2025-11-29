@@ -15,7 +15,7 @@ interface RotatingImageCardProps {
 /**
  * Card component that rotates through multiple images with smooth crossfade
  * Cards rotate sequentially: Photo → Art → Anime → Text → repeat
- * Only ONE card changes at a time
+ * Only ONE card changes at a time with smooth transitions
  */
 export function RotatingImageCard({
   images,
@@ -26,9 +26,12 @@ export function RotatingImageCard({
   slotIndex = 0,
   totalSlots = 4
 }: RotatingImageCardProps) {
-  const [displayIndex, setDisplayIndex] = useState(0);
-  const [showNext, setShowNext] = useState(false);
-  const nextIndexRef = useRef(1);
+  // Use two image layers for seamless crossfade
+  const [bottomIndex, setBottomIndex] = useState(0);
+  const [topIndex, setTopIndex] = useState(1);
+  const [showTop, setShowTop] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  
   const hasInitializedRef = useRef(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const cycleTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -37,37 +40,48 @@ export function RotatingImageCard({
   useEffect(() => {
     if (!hasInitializedRef.current && images.length > 1) {
       const startIndex = Math.floor(Math.random() * images.length);
-      setDisplayIndex(startIndex);
-      nextIndexRef.current = (startIndex + 1) % images.length;
+      setBottomIndex(startIndex);
+      setTopIndex((startIndex + 1) % images.length);
       hasInitializedRef.current = true;
     }
   }, [images.length]);
   
-  // Transition function
+  // Transition function with proper sequencing
   const doTransition = useCallback(() => {
-    // Step 1: Show next image (fade in on top)
-    setShowNext(true);
+    if (isTransitioning || images.length <= 1) return;
     
-    // Step 2: After fade completes, make next the current (instant swap)
+    setIsTransitioning(true);
+    
+    // Step 1: Fade in the top layer
+    setShowTop(true);
+    
+    // Step 2: After fade completes, swap layers and prepare next image
     setTimeout(() => {
-      const nextIdx = nextIndexRef.current;
-      setDisplayIndex(nextIdx);
-      setShowNext(false);
-      
-      // Step 3: Prepare the next image in queue
-      nextIndexRef.current = (nextIdx + 1) % images.length;
-    }, 2100);
-  }, [images.length]);
+      // Use requestAnimationFrame for smoother visual update
+      requestAnimationFrame(() => {
+        setBottomIndex(topIndex);
+        setShowTop(false);
+        
+        // Prepare next image in the queue
+        requestAnimationFrame(() => {
+          setTopIndex((topIndex + 1) % images.length);
+          setIsTransitioning(false);
+        });
+      });
+    }, 2200); // Slightly longer than CSS transition to ensure completion
+  }, [images.length, topIndex, isTransitioning]);
   
   // Sequential rotation: each card waits for its turn
   useEffect(() => {
     if (images.length <= 1) return;
     
     // Total cycle time = interval per card × number of cards
-    const cycleTime = interval * totalSlots;
+    // Add extra buffer between cards to prevent overlap
+    const bufferTime = 500; // 500ms buffer between cards
+    const cycleTime = (interval + bufferTime) * totalSlots;
     
-    // This card's turn starts at: slotIndex × interval
-    const myTurnDelay = slotIndex * interval;
+    // This card's turn starts at: slotIndex × (interval + buffer)
+    const myTurnDelay = slotIndex * (interval + bufferTime);
     
     // Clear any existing timers
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -87,30 +101,31 @@ export function RotatingImageCard({
   
   if (images.length === 0) return null;
   
-  // Get the next index for rendering
-  const nextIndex = nextIndexRef.current;
-  
   return (
     <div className={`relative overflow-hidden ${className}`}>
-      {/* Base Image (current display) */}
+      {/* Bottom Layer (current display) */}
       <img
-        src={images[displayIndex]}
+        src={images[bottomIndex]}
         alt={alt}
         className="w-full h-full object-cover"
         loading="lazy"
+        decoding="async"
         draggable={false}
       />
       
-      {/* Next Image (fades in on top, then disappears after becoming current) */}
+      {/* Top Layer (fades in during transition) */}
       {images.length > 1 && (
         <img
-          src={images[nextIndex]}
+          src={images[topIndex]}
           alt={alt}
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ease-out"
+          className="absolute inset-0 w-full h-full object-cover"
           style={{
-            opacity: showNext ? 1 : 0,
+            opacity: showTop ? 1 : 0,
+            transition: 'opacity 2000ms ease-out',
+            willChange: 'opacity',
           }}
           loading="lazy"
+          decoding="async"
           draggable={false}
         />
       )}

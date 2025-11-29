@@ -5,6 +5,7 @@ import './index.css';
 import { AuthProvider } from './contexts/AuthContext';
 import { ImageProcessingProvider } from './contexts/ImageProcessingContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { CookieProvider } from './contexts/CookieContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import { logAsyncErrors } from './dev/logAsyncErrors';
 
@@ -16,13 +17,15 @@ if (import.meta.env.DEV) {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <AuthProvider>
-        <ThemeProvider>
-          <ImageProcessingProvider>
-            <App />
-          </ImageProcessingProvider>
-        </ThemeProvider>
-      </AuthProvider>
+      <CookieProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <ImageProcessingProvider>
+              <App />
+            </ImageProcessingProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </CookieProvider>
     </ErrorBoundary>
   </React.StrictMode>
 );
