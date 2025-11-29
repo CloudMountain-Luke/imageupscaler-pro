@@ -506,10 +506,10 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                   degradationType: 'jpeg-artifacts',
                 },
                 {
-                  before: '/images/anime-sm.webp',
-                  after: '/images/anime-sm.webp',
+                  before: '/images/dooze-test-123.jpg',
+                  after: '/images/dooze-test-123.jpg',
                   scale: '16x',
-                  type: 'Anime & Cartoons',
+                  type: 'Photos',
                   degradationType: 'blur',
                 },
                 {
