@@ -36,10 +36,16 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister, selectedPlan, 
   // Never destructure or access fields that might be undefined. Gate on isReady.
   if (!isReady) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 relative">
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div 
+          className="rounded-2xl max-w-md w-full p-6 relative"
+          style={{
+            background: 'var(--surface)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          }}
+        >
           <div role="dialog" aria-busy="true" className="text-center">
-            <p className="text-gray-900 dark:text-gray-100">Loading authentication…</p>
+            <p style={{ color: 'var(--text-primary)' }}>Loading authentication…</p>
           </div>
         </div>
       </div>
@@ -144,7 +150,7 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister, selectedPlan, 
       const result = await recoverPassword(forgotPasswordEmail);
       setRecoveryMessage(result.message);
       setRecoverySuccess(result.success);
-    } catch (error) {
+    } catch {
       setRecoveryMessage('Failed to send password reset email. Please try again.');
       setRecoverySuccess(false);
     }
@@ -161,26 +167,58 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister, selectedPlan, 
 
   const signedIn = !!user;
 
+  // Input field styles using theme colors
+  const inputStyle = {
+    background: 'rgba(255, 255, 255, 0.05)',
+    border: '1px solid rgba(255, 255, 255, 0.15)',
+    color: 'var(--text-primary)',
+  };
+
+  const inputErrorStyle = {
+    ...inputStyle,
+    border: '1px solid #ef4444',
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 relative">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div 
+        className="rounded-2xl max-w-md w-full p-6 relative shadow-2xl"
+        style={{
+          background: 'var(--surface)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+        }}
+      >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+          className="absolute top-4 right-4 p-2 rounded-full transition-colors"
+          style={{ 
+            color: 'var(--text-muted)',
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
         >
-          <X className="w-5 h-5 text-gray-500" />
+          <X className="w-5 h-5" />
         </button>
 
         {signedIn ? (
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            <h2 
+              className="text-2xl font-bold mb-4"
+              style={{ color: 'var(--text-primary)' }}
+            >
               Welcome back!
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
-              You are signed in as {userProfile.displayName}
+            <p 
+              className="mb-6"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              You are signed in as {userProfile?.displayName}
             </p>
             <button 
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white rounded-lg font-medium transition-all duration-200"
+              className="px-6 py-3 rounded-lg font-medium transition-all duration-200 text-white"
+              style={{
+                background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+              }}
               onClick={() => {
                 onClose();
                 onAuthSuccess?.();
@@ -192,17 +230,26 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister, selectedPlan, 
         ) : (
           <>
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              <h2 
+                className="text-2xl font-bold mb-2"
+                style={{ color: 'var(--text-primary)' }}
+              >
                 {showForgotPassword ? 'Reset Password' : isLoginMode ? 'Welcome Back' : 'Create Account'}
               </h2>
               {selectedPlan && (
-                <div className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-lg p-3 mb-4">
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                <div 
+                  className="rounded-lg p-3 mb-4"
+                  style={{
+                    background: 'linear-gradient(135deg, color-mix(in oklab, var(--primary) 20%, transparent 80%), color-mix(in oklab, var(--secondary) 20%, transparent 80%))',
+                    border: '1px solid color-mix(in oklab, var(--primary) 30%, transparent 70%)',
+                  }}
+                >
+                  <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
                     You've selected the <span className="font-semibold">{getPlanName(selectedPlan)}</span>
                   </p>
                 </div>
               )}
-              <p className="text-gray-600 dark:text-gray-300">
+              <p style={{ color: 'var(--text-muted)' }}>
                 {showForgotPassword
                   ? 'Enter your email address and we\'ll send you a link to reset your password'
                   : isLoginMode 
@@ -215,32 +262,42 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister, selectedPlan, 
             {showForgotPassword ? (
               <form onSubmit={handleForgotPassword} className="space-y-4">
                 {recoveryMessage && (
-                  <div className={`border rounded-lg p-3 mb-4 ${
-                    recoverySuccess 
-                      ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
-                      : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-                  }`}>
-                    <p className={`text-sm ${
-                      recoverySuccess 
-                        ? 'text-green-700 dark:text-green-300' 
-                        : 'text-red-700 dark:text-red-300'
-                    }`}>
+                  <div 
+                    className="rounded-lg p-3 mb-4"
+                    style={{
+                      background: recoverySuccess 
+                        ? 'rgba(34, 197, 94, 0.1)' 
+                        : 'rgba(239, 68, 68, 0.1)',
+                      border: `1px solid ${recoverySuccess ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                    }}
+                  >
+                    <p 
+                      className="text-sm"
+                      style={{ color: recoverySuccess ? '#22c55e' : '#ef4444' }}
+                    >
                       {recoveryMessage}
                     </p>
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label 
+                    className="block text-sm font-medium mb-1"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
                     Email Address
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: 'var(--text-muted)' }} />
                     <input
                       type="email"
                       value={forgotPasswordEmail}
                       onChange={(e) => setForgotPasswordEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      className="w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all"
+                      style={{
+                        ...inputStyle,
+                        '--tw-ring-color': 'var(--primary)',
+                      } as React.CSSProperties}
                       placeholder="Enter your email"
                     />
                   </div>
@@ -248,7 +305,10 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister, selectedPlan, 
 
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-3 rounded-lg font-medium transition-all duration-200"
+                  className="w-full py-3 rounded-lg font-medium transition-all duration-200 text-white"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                  }}
                 >
                   Send Reset Email
                 </button>
@@ -262,7 +322,8 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister, selectedPlan, 
                       setRecoverySuccess(false);
                       setForgotPasswordEmail('');
                     }}
-                    className="text-blue-600 hover:text-blue-700 font-medium"
+                    className="font-medium transition-opacity hover:opacity-80"
+                    style={{ color: 'var(--primary)' }}
                   >
                     Back to Sign In
                   </button>
@@ -271,129 +332,150 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister, selectedPlan, 
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
               {authError && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-4">
-                  <p className="text-red-700 dark:text-red-300 text-sm">{authError}</p>
+                <div 
+                  className="rounded-lg p-3 mb-4"
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                  }}
+                >
+                  <p className="text-sm" style={{ color: '#ef4444' }}>{authError}</p>
                 </div>
               )}
 
               {!isLoginMode && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label 
+                    className="block text-sm font-medium mb-1"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
                     Full Name
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: 'var(--text-muted)' }} />
                     <input
                       type="text"
                       value={formData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
-                        errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                      }`}
+                      className="w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all"
+                      style={errors.name ? inputErrorStyle : inputStyle}
                       placeholder="Enter your full name"
                     />
                   </div>
-                  {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                  {errors.name && <p className="text-sm mt-1" style={{ color: '#ef4444' }}>{errors.name}</p>}
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label 
+                  className="block text-sm font-medium mb-1"
+                  style={{ color: 'var(--text-muted)' }}
+                >
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: 'var(--text-muted)' }} />
                   <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
-                      errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                    }`}
+                    className="w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all"
+                    style={errors.email ? inputErrorStyle : inputStyle}
                     placeholder="Enter your email"
                   />
                 </div>
-                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                {errors.email && <p className="text-sm mt-1" style={{ color: '#ef4444' }}>{errors.email}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label 
+                  className="block text-sm font-medium mb-1"
+                  style={{ color: 'var(--text-muted)' }}
+                >
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: 'var(--text-muted)' }} />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
-                    className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
-                      errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                    }`}
+                    className="w-full pl-10 pr-12 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all"
+                    style={errors.password ? inputErrorStyle : inputStyle}
                     placeholder="Enter your password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 transition-opacity hover:opacity-80"
+                    style={{ color: 'var(--text-muted)' }}
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
-                {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+                {errors.password && <p className="text-sm mt-1" style={{ color: '#ef4444' }}>{errors.password}</p>}
               </div>
 
               {!isLoginMode && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label 
+                    className="block text-sm font-medium mb-1"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
                     Confirm Password
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: 'var(--text-muted)' }} />
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
                       value={formData.confirmPassword}
                       onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                      className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
-                        errors.confirmPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                      }`}
+                      className="w-full pl-10 pr-12 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all"
+                      style={errors.confirmPassword ? inputErrorStyle : inputStyle}
                       placeholder="Confirm your password"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 transition-opacity hover:opacity-80"
+                      style={{ color: 'var(--text-muted)' }}
                     >
                       {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
-                  {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+                  {errors.confirmPassword && <p className="text-sm mt-1" style={{ color: '#ef4444' }}>{errors.confirmPassword}</p>}
                 </div>
               )}
               
               {!isLoginMode && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label 
+                    className="block text-sm font-medium mb-1"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
                     Promo Code (Optional)
                   </label>
                   <div className="relative">
-                    <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: 'var(--text-muted)' }} />
                     <input
                       type="text"
                       value={formData.promoCode}
                       onChange={(e) => handleInputChange('promoCode', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
-                        errors.promoCode ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                      }`}
+                      className="w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all"
+                      style={errors.promoCode ? inputErrorStyle : inputStyle}
                       placeholder="Enter promo code"
                     />
                   </div>
-                  {errors.promoCode && <p className="text-red-500 text-sm mt-1">{errors.promoCode}</p>}
+                  {errors.promoCode && <p className="text-sm mt-1" style={{ color: '#ef4444' }}>{errors.promoCode}</p>}
                 </div>
               )}
 
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-3 rounded-lg font-medium transition-all duration-200"
+                className="w-full py-3 rounded-lg font-medium transition-all duration-200 text-white"
+                style={{
+                  background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                }}
               >
                 {isLoginMode ? 'Sign In' : 'Sign Up'}
               </button>
@@ -402,7 +484,7 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister, selectedPlan, 
 
             {!showForgotPassword && (
               <div className="mt-6 text-center">
-              <p className="text-gray-600 dark:text-gray-300">
+              <p style={{ color: 'var(--text-muted)' }}>
                 {isLoginMode ? "Don't have an account?" : "Already have an account?"}
                 <button
                   onClick={() => {
@@ -411,7 +493,8 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister, selectedPlan, 
                     setAuthError('');
                     setFormData({ email: '', password: '', name: '', confirmPassword: '', promoCode: '' });
                   }}
-                  className="ml-2 text-blue-600 hover:text-blue-700 font-medium"
+                  className="ml-2 font-medium transition-opacity hover:opacity-80"
+                  style={{ color: 'var(--primary)' }}
                 >
                   {isLoginMode ? 'Sign up' : 'Sign in'}
                 </button>
@@ -428,7 +511,8 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister, selectedPlan, 
                     setRecoveryMessage('');
                     setRecoverySuccess(false);
                   }}
-                  className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  className="text-sm transition-opacity hover:opacity-80"
+                  style={{ color: 'var(--text-muted)' }}
                 >
                   Forgot your password?
                 </button>
