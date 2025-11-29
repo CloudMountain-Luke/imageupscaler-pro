@@ -126,22 +126,22 @@ export function BeforeAfterSlider({
     return currentAfter;
   };
 
-  // Get degradation filter style - visible but realistic effects
+  // Get degradation filter style - noticeable but believable effects
   const getDegradationFilter = () => {
     switch (currentDegradation) {
       case 'blur':
-        // Soft focus / slight motion blur - noticeable but not extreme
-        return 'blur(2.2px) saturate(0.8) brightness(0.88)';
+        // Soft focus - moderate blur, not too extreme
+        return 'blur(1.5px) saturate(0.88) brightness(0.93)';
       case 'pixelated-subtle':
-        // Low resolution upscale look - soft with reduced detail
-        return 'blur(0.8px) saturate(0.85) brightness(0.92) contrast(0.95)';
+        // Low resolution look - slight softness
+        return 'blur(0.6px) saturate(0.9) brightness(0.94) contrast(0.96)';
       case 'jpeg-artifacts':
-        // JPEG compression - visible compression, color shift
-        return 'blur(0.5px) saturate(0.7) brightness(0.85) contrast(1.15)';
+        // JPEG compression - noticeable degradation with color issues
+        return 'blur(0.4px) saturate(0.75) brightness(0.88) contrast(1.12)';
       case 'noise':
       default:
-        // General low quality - soft with grain, visible degradation
-        return 'blur(1.5px) saturate(0.78) brightness(0.88)';
+        // General low quality - soft with grain
+        return 'blur(1px) saturate(0.85) brightness(0.92)';
     }
   };
 
@@ -451,6 +451,14 @@ export function BeforeAfterSlider({
           </button>
         )}
       </div>
+      
+      {/* Disclaimer */}
+      <p 
+        className="text-center text-xs mt-3 max-w-md mx-auto"
+        style={{ color: 'var(--muted)', opacity: 0.7 }}
+      >
+        *Results shown are for demonstration purposes. Actual enhancement quality varies based on source image.
+      </p>
     </div>
   );
 }

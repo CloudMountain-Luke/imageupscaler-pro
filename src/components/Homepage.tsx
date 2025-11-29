@@ -344,7 +344,7 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
           ============================================ */}
       <section className="relative min-h-[85vh] flex items-center overflow-hidden">
         {/* Floating Gallery Background */}
-        <FloatingGallery images={defaultGalleryImages} className="opacity-60" />
+        <FloatingGallery images={defaultGalleryImages} />
         
         {/* Ember Particles in Hero - reduced count */}
         <EmberParticles count={12} intensity="low" color="mixed" />
@@ -503,18 +503,18 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                   after: '/images/ocean-waves-sunset.webp',
                   scale: '12x',
                   type: 'Photos',
-                  degradationType: 'blur',
-                },
-                {
-                  before: '/images/colorful-anime_1-1_sm.webp',
-                  after: '/images/colorful-anime_1-1_sm.webp',
-                  scale: '16x',
-                  type: 'Anime & Cartoons',
                   degradationType: 'jpeg-artifacts',
                 },
                 {
-                  before: '/images/Fete_de_nuit_small_opt.webp',
-                  after: '/images/Fete_de_nuit_small_opt.webp',
+                  before: '/images/anime-sm.webp',
+                  after: '/images/anime-sm.webp',
+                  scale: '16x',
+                  type: 'Anime & Cartoons',
+                  degradationType: 'blur',
+                },
+                {
+                  before: '/images/starry-night_crop.webp',
+                  after: '/images/starry-night_crop.webp',
                   scale: '20x',
                   type: 'Art & Illustration',
                   degradationType: 'noise',
