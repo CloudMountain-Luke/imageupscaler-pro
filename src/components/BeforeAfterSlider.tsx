@@ -31,25 +31,24 @@ const getDegradationStyle = (type?: 'blur' | 'pixelated' | 'jpeg-artifacts' | 'n
   switch (type) {
     case 'blur':
       return {
-        filter: 'blur(2px) saturate(0.7) brightness(0.85)',
-        overlayOpacity: 0.05,
+        filter: 'blur(2.5px) saturate(0.7) brightness(0.85)',
+        overlayOpacity: 0.1,
       };
     case 'pixelated':
       return {
-        filter: 'saturate(0.75) brightness(0.9) contrast(0.95)',
-        overlayOpacity: 0.25,
-        imageRendering: 'pixelated' as const,
+        filter: 'saturate(0.7) brightness(0.88) contrast(0.9)',
+        overlayOpacity: 0.3,
       };
     case 'jpeg-artifacts':
       return {
-        filter: 'saturate(0.8) brightness(0.88) contrast(1.1)',
-        overlayOpacity: 0.2,
+        filter: 'saturate(0.75) brightness(0.85) contrast(1.15)',
+        overlayOpacity: 0.25,
       };
     case 'noise':
     default:
       return {
-        filter: 'blur(1px) saturate(0.8) brightness(0.9)',
-        overlayOpacity: 0.15,
+        filter: 'blur(1.5px) saturate(0.75) brightness(0.88)',
+        overlayOpacity: 0.2,
       };
   }
 };
@@ -83,7 +82,6 @@ export function BeforeAfterSlider({
 
   // Get current image data
   const currentImage = images && images.length > 0 ? images[currentImageIndex] : null;
-  const currentBefore = currentImage ? currentImage.before : beforeImage;
   const currentAfter = currentImage ? currentImage.after : afterImage;
   const currentScale = currentImage ? currentImage.scale : '24x';
   const currentType = currentImage ? currentImage.type : 'Photos';
@@ -235,41 +233,53 @@ export function BeforeAfterSlider({
           />
         </div>
 
-        {/* Before Image (clipped, top layer) - with degradation effect */}
+        {/* Before Image (clipped using clip-path, top layer) - with degradation effect */}
         <div
-          className="absolute inset-0 overflow-hidden"
-          style={{ width: `${sliderPosition}%` }}
+          className="absolute inset-0"
+          style={{
+            clipPath: `inset(0 ${100 - sliderPosition}% 0 0)`,
+          }}
         >
           <img
-            src={currentAfter} // Use same image but with degradation filter
+            src={currentAfter}
             alt={beforeLabel}
             className="w-full h-full object-cover transition-opacity duration-700"
             style={{
               filter: degradationStyle.filter,
-              imageRendering: degradationStyle.imageRendering,
             }}
             draggable={false}
           />
-          {/* Noise/artifact overlay for low-quality effect */}
+          {/* Degradation overlay - always visible with appropriate effect */}
           <div
-            className="absolute inset-0"
+            className="absolute inset-0 pointer-events-none"
             style={{
               opacity: degradationStyle.overlayOpacity,
               backgroundImage: currentDegradation === 'jpeg-artifacts' 
-                ? `url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`
+                ? `url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`
                 : currentDegradation === 'pixelated'
-                ? `repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 2px, transparent 2px, transparent 4px),
-                   repeating-linear-gradient(90deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 2px, transparent 2px, transparent 4px)`
-                : `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                ? `repeating-linear-gradient(0deg, rgba(0,0,0,0.08) 0px, rgba(0,0,0,0.08) 3px, transparent 3px, transparent 6px),
+                   repeating-linear-gradient(90deg, rgba(0,0,0,0.08) 0px, rgba(0,0,0,0.08) 3px, transparent 3px, transparent 6px)`
+                : `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`,
               mixBlendMode: 'overlay',
+            }}
+          />
+          {/* Additional grain overlay for more visible degradation */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              opacity: 0.08,
+              background: 'repeating-linear-gradient(45deg, transparent, transparent 1px, rgba(0,0,0,0.1) 1px, rgba(0,0,0,0.1) 2px)',
             }}
           />
         </div>
 
         {/* Slider Handle */}
         <div
-          className="absolute top-0 bottom-0 w-1 -ml-0.5 z-10"
-          style={{ left: `${sliderPosition}%` }}
+          className="absolute top-0 bottom-0 w-1 z-10 pointer-events-none"
+          style={{ 
+            left: `${sliderPosition}%`,
+            transform: 'translateX(-50%)',
+          }}
         >
           {/* Glowing line */}
           <div
@@ -282,7 +292,7 @@ export function BeforeAfterSlider({
           
           {/* Handle circle */}
           <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center pointer-events-auto"
             style={{
               background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
               boxShadow: '0 0 30px var(--primary), 0 4px 20px rgba(0,0,0,0.4)',
