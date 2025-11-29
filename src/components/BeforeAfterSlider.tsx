@@ -5,7 +5,7 @@ interface ImagePair {
   after: string;
   scale: string; // e.g., "2x", "4x", "8x", "24x"
   type: string; // e.g., "Photos", "Art & Illustration", "Anime & Cartoons"
-  degradationType?: 'blur' | 'pixelated-light' | 'pixelated-heavy' | 'jpeg-artifacts' | 'noise';
+  degradationType?: 'blur' | 'pixelated-subtle' | 'jpeg-artifacts' | 'noise';
 }
 
 interface BeforeAfterSliderProps {
@@ -70,12 +70,12 @@ export function BeforeAfterSlider({
   const currentDegradation = currentImage?.degradationType || 'noise';
   const currentStats = getStatsForScale(currentScale);
 
-  // Create pixelated version of image using canvas
+  // Create subtly pixelated version of image using canvas (realistic low-res look)
   useEffect(() => {
     if (!images) return;
 
     images.forEach((img, index) => {
-      if (img.degradationType === 'pixelated-light' || img.degradationType === 'pixelated-heavy') {
+      if (img.degradationType === 'pixelated-subtle') {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
@@ -83,17 +83,16 @@ export function BeforeAfterSlider({
         const image = new Image();
         image.crossOrigin = 'anonymous';
         image.onload = () => {
-          // Determine pixelation level
-          const pixelSize = img.degradationType === 'pixelated-heavy' ? 12 : 6;
+          // Subtle pixelation - only 3x downscale for realistic low-res look
+          const pixelSize = 3;
           
-          // Set canvas to small size for pixelation
           const smallWidth = Math.floor(image.width / pixelSize);
           const smallHeight = Math.floor(image.height / pixelSize);
           
           canvas.width = smallWidth;
           canvas.height = smallHeight;
           
-          // Draw small
+          // Draw small with smoothing OFF
           ctx.imageSmoothingEnabled = false;
           ctx.drawImage(image, 0, 0, smallWidth, smallHeight);
           
@@ -104,13 +103,14 @@ export function BeforeAfterSlider({
           
           canvas2.width = image.width;
           canvas2.height = image.height;
-          ctx2.imageSmoothingEnabled = false;
+          // Use bilinear interpolation for softer upscale (more realistic)
+          ctx2.imageSmoothingEnabled = true;
+          ctx2.imageSmoothingQuality = 'low';
           ctx2.drawImage(canvas, 0, 0, image.width, image.height);
           
-          // Store the pixelated image
           setPixelatedImages(prev => ({
             ...prev,
-            [index]: canvas2.toDataURL('image/jpeg', 0.9)
+            [index]: canvas2.toDataURL('image/jpeg', 0.85)
           }));
         };
         image.src = img.after;
@@ -120,25 +120,28 @@ export function BeforeAfterSlider({
 
   // Get the before image (pixelated or original with filter)
   const getBeforeImage = () => {
-    if (currentImage && (currentDegradation === 'pixelated-light' || currentDegradation === 'pixelated-heavy')) {
+    if (currentImage && currentDegradation === 'pixelated-subtle') {
       return pixelatedImages[currentImageIndex] || currentAfter;
     }
     return currentAfter;
   };
 
-  // Get degradation filter style
+  // Get degradation filter style - subtle, realistic effects
   const getDegradationFilter = () => {
     switch (currentDegradation) {
       case 'blur':
-        return 'blur(3px) saturate(0.7) brightness(0.85)';
-      case 'pixelated-light':
-      case 'pixelated-heavy':
-        return 'saturate(0.8) brightness(0.9) contrast(0.95)';
+        // Soft focus / slight motion blur
+        return 'blur(1.8px) saturate(0.85) brightness(0.92)';
+      case 'pixelated-subtle':
+        // Low resolution upscale look - slightly soft with reduced detail
+        return 'saturate(0.9) brightness(0.95) contrast(0.97)';
       case 'jpeg-artifacts':
-        return 'saturate(0.7) brightness(0.82) contrast(1.2)';
+        // JPEG compression - slight color banding, reduced saturation
+        return 'saturate(0.8) brightness(0.9) contrast(1.08)';
       case 'noise':
       default:
-        return 'blur(2px) saturate(0.7) brightness(0.85)';
+        // General low quality - soft with grain
+        return 'blur(1.2px) saturate(0.85) brightness(0.9)';
     }
   };
 
@@ -295,20 +298,21 @@ export function BeforeAfterSlider({
             className="w-full h-full object-cover transition-opacity duration-700"
             style={{
               filter: getDegradationFilter(),
-              imageRendering: (currentDegradation === 'pixelated-light' || currentDegradation === 'pixelated-heavy') 
-                ? 'pixelated' 
-                : 'auto',
             }}
             draggable={false}
           />
-          {/* Noise/artifact overlay */}
+          {/* Subtle noise/artifact overlay for realism */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
-              opacity: currentDegradation === 'jpeg-artifacts' ? 0.3 : 0.15,
+              opacity: currentDegradation === 'jpeg-artifacts' 
+                ? 0.2 
+                : currentDegradation === 'noise' 
+                  ? 0.18 
+                  : 0.1,
               backgroundImage: currentDegradation === 'jpeg-artifacts' 
-                ? `url("data:image/svg+xml,%3Csvg viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`
-                : `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                ? `url("data:image/svg+xml,%3Csvg viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.4' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`
+                : `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`,
               mixBlendMode: 'overlay',
             }}
           />
