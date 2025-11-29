@@ -136,8 +136,8 @@ export function BeforeAfterSlider({
         // Low resolution look - slight softness
         return 'blur(0.6px) saturate(0.9) brightness(0.94) contrast(0.96)';
       case 'jpeg-artifacts':
-        // JPEG compression - noticeable degradation with color issues
-        return 'blur(0.4px) saturate(0.75) brightness(0.88) contrast(1.12)';
+        // JPEG compression - very noticeable with blur, color loss, contrast boost
+        return 'blur(1.2px) saturate(0.65) brightness(0.85) contrast(1.18)';
       case 'noise':
       default:
         // General low quality - soft with grain
@@ -308,25 +308,25 @@ export function BeforeAfterSlider({
             className="absolute inset-0 pointer-events-none"
             style={{
               opacity: currentDegradation === 'jpeg-artifacts' 
-                ? 0.25 
+                ? 0.35 
                 : currentDegradation === 'noise' 
                   ? 0.22 
                   : currentDegradation === 'blur'
                     ? 0.12
                     : 0.15,
               backgroundImage: currentDegradation === 'jpeg-artifacts' 
-                ? `url("data:image/svg+xml,%3Csvg viewBox='0 0 50 50' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`
+                ? `url("data:image/svg+xml,%3Csvg viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.25' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`
                 : `url("data:image/svg+xml,%3Csvg viewBox='0 0 150 150' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`,
               mixBlendMode: 'overlay',
             }}
           />
-          {/* Additional color shift for JPEG artifacts */}
+          {/* Additional color banding for JPEG artifacts */}
           {currentDegradation === 'jpeg-artifacts' && (
             <div
               className="absolute inset-0 pointer-events-none"
               style={{
-                background: 'linear-gradient(135deg, rgba(255,0,0,0.03), rgba(0,255,0,0.02), rgba(0,0,255,0.03))',
-                mixBlendMode: 'color',
+                background: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.02) 0px, transparent 2px, transparent 8px)',
+                mixBlendMode: 'multiply',
               }}
             />
           )}

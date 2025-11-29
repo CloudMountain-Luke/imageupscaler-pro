@@ -514,7 +514,7 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                 },
                 {
                   before: '/images/starry-night_crop.webp',
-                  after: '/images/starry-night_crop.webp',
+                  after: '/images/starry-night_1920p.webp',
                   scale: '20x',
                   type: 'Art & Illustration',
                   degradationType: 'noise',
