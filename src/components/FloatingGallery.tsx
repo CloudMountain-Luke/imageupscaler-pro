@@ -21,43 +21,44 @@ interface FloatingGalleryProps {
 }
 
 // Default gallery images - 6 images, 3 on each side
-// Each side has 3 DIFFERENT sizes: lg, md, sm
-// Uniform spacing: 8% from top, 8% gap between images, 8% from bottom
-// Left/Right padding: 175px from edges
+// Left: Woman (lg top), Ocean (sm middle), Anime (md bottom)
+// Right: Eye (md top), Man (sm middle), Aurora (lg bottom)
+// All images centered horizontally on their column
+// Left/Right padding: 147px from edges
 export const defaultGalleryImages: GalleryImage[] = [
-  // LEFT SIDE - lg, md, sm (top to bottom) - evenly spaced
+  // LEFT SIDE - lg, sm, md (top to bottom) - centered horizontally
   {
     src: '/images/woman-portrait_1-1.webp',
     alt: 'Smiling woman portrait',
-    position: { top: '8%', left: '175px' },
+    position: { top: '8%', left: '147px' },
     size: 'lg',
     depth: 1,
     delay: 0,
     rotation: -2,
   },
   {
-    src: '/images/colorful-anime_1-1_sm.webp',
-    alt: 'Colorful anime artwork',
-    position: { top: '40%', left: '175px' },
-    size: 'md',
-    depth: 2,
-    delay: 200,
-    rotation: 2,
-  },
-  {
     src: '/images/ocean-waves-sunset.webp',
     alt: 'Ocean waves at sunset',
-    position: { bottom: '12%', left: '175px' },
+    position: { top: '40%', left: '161px' }, // offset to center: 147 + (256-144)/2 = 147 + 56 = 203... adjusted for visual centering
     size: 'sm',
     depth: 3,
-    delay: 400,
+    delay: 200,
     rotation: -1,
   },
-  // RIGHT SIDE - md, sm, lg (top to bottom) - evenly spaced
+  {
+    src: '/images/colorful-anime_1-1_sm.webp',
+    alt: 'Colorful anime artwork',
+    position: { bottom: '8%', left: '153px' }, // offset to center: 147 + (256-208)/2 = 147 + 24 = 171... adjusted
+    size: 'md',
+    depth: 2,
+    delay: 400,
+    rotation: 2,
+  },
+  // RIGHT SIDE - md, sm, lg (top to bottom) - centered horizontally
   {
     src: '/images/abstract-eye_opt.webp',
     alt: 'Abstract eye painting',
-    position: { top: '8%', right: '175px' },
+    position: { top: '8%', right: '153px' }, // offset to center
     size: 'md',
     depth: 2,
     delay: 100,
@@ -66,7 +67,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/man-portrait_1-1_sm.webp',
     alt: 'Man portrait',
-    position: { top: '40%', right: '175px' },
+    position: { top: '40%', right: '161px' }, // offset to center
     size: 'sm',
     depth: 3,
     delay: 300,
@@ -75,7 +76,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/aurora-mountains.webp',
     alt: 'Aurora mountains landscape',
-    position: { bottom: '8%', right: '175px' },
+    position: { bottom: '8%', right: '147px' },
     size: 'lg',
     depth: 1,
     delay: 500,
@@ -116,7 +117,7 @@ export function FloatingGallery({
     return () => window.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
   
-  // Size classes - 3 distinct sizes
+  // Size classes - 3 distinct sizes (lg=256px, md=208px, sm=144px on desktop)
   const sizeClasses = {
     sm: 'w-24 h-24 md:w-32 md:h-32 lg:w-36 lg:h-36',
     md: 'w-32 h-32 md:w-44 md:h-44 lg:w-52 lg:h-52',
