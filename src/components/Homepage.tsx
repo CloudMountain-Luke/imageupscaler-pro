@@ -7,7 +7,8 @@ import { ThemeProvider, useThemeLab } from '../contexts/ThemeContext';
 import { ThemeControls } from './ThemeControls';
 // HexagonGridCSS removed for cleaner background
 import { BeforeAfterSlider } from './BeforeAfterSlider';
-import { FloatingGallery, defaultGalleryImages } from './FloatingGallery';
+// FloatingGallery kept as backup - uncomment to restore original hero layout
+// import { FloatingGallery, defaultGalleryImages } from './FloatingGallery';
 import { ForgeConveyor } from './ForgeConveyor';
 import { EmberParticles } from './EmberParticles';
 import { FadeInOnScroll } from './ParallaxSection';
@@ -341,30 +342,17 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
       )}
 
       {/* ============================================
-          SECTION 1: HERO WITH FLOATING GALLERY / FORGE CONVEYOR
+          SECTION 1: HERO WITH FORGE CONVEYOR
           ============================================ */}
-      <section className="relative min-h-[85vh] flex items-center overflow-hidden">
-        {/* Floating Gallery Background - xl+ screens only */}
-        <FloatingGallery images={defaultGalleryImages} />
-        
-        {/* Forge Conveyor Animation - mobile/tablet only (below xl) */}
-        <div className="xl:hidden">
-          <ForgeConveyor />
-        </div>
-        
+      {/* NOTE: FloatingGallery kept as backup - can restore by uncommenting and removing ForgeConveyor */}
+      {/* <FloatingGallery images={defaultGalleryImages} /> */}
+      
+      <section className="relative min-h-[85vh] flex flex-col justify-center overflow-hidden">
         {/* Ember Particles in Hero - reduced count */}
         <EmberParticles count={12} intensity="low" color="mixed" />
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 pt-4 pb-12 relative z-20" style={{ marginTop: '-60px' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 pt-4 pb-8 relative z-20">
           <div className="text-center relative">
-            {/* Subtle backdrop for text readability on xl+ when images are visible */}
-            <div 
-              className="absolute inset-0 -mx-8 -my-4 rounded-3xl hidden xl:block"
-              style={{
-                background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 50%, transparent 80%)',
-                backdropFilter: 'blur(2px)',
-              }}
-            />
             {/* Exclusivity Badge */}
             <FadeInOnScroll delay={0}>
               <div 
@@ -425,7 +413,7 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
             
             {/* Feature Badges */}
             <FadeInOnScroll delay={0.4}>
-              <div className="flex flex-wrap justify-center gap-4">
+              <div className="flex flex-wrap justify-center gap-4 mb-8">
                 {[
                   { icon: Zap, text: 'No Watermarks', color: 'var(--primary)' },
                   { icon: Download, text: 'No Downloads', color: 'var(--secondary)' },
@@ -445,8 +433,13 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
           </div>
         </div>
         
+        {/* Forge Conveyor Animation - positioned below hero content */}
+        <div className="relative z-10 mt-4">
+          <ForgeConveyor />
+        </div>
+        
         {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce z-30">
           <ChevronDown className="w-8 h-8" style={{ color: mutedTextColor }} />
         </div>
       </section>
