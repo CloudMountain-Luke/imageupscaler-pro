@@ -75,7 +75,7 @@ export const defaultGalleryImages: GalleryImage[] = [
     size: 'sm',
     depth: 3,
     delay: 300,
-    rotation: 18,
+    rotation: 13,
   },
   {
     src: '/images/aurora-mountains.webp',
