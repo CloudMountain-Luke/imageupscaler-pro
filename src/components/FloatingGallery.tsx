@@ -111,7 +111,7 @@ function MobileFanGallery() {
       `}</style>
       <div className="mobile-fan-container flex justify-center items-end mb-4 relative h-40 sm:h-48 mx-auto">
       {mobileFanImages.map((image, index) => {
-        // Eye painting (center, index 1) is larger
+        // Eye painting (center, index 1) is larger and moved up
         const isEye = index === 1;
         const size = isEye ? 'w-[130px] h-[130px] sm:w-[160px] sm:h-[160px]' : 'w-[120px] h-[120px] sm:w-[150px] sm:h-[150px]';
         
@@ -120,7 +120,7 @@ function MobileFanGallery() {
           key={index}
           className={`${size} rounded-xl overflow-hidden relative flex-shrink-0`}
           style={{
-            transform: `rotate(${image.rotation}deg)`,
+            transform: `rotate(${image.rotation}deg)${isEye ? ' translateY(-10px)' : ''}`,
             zIndex: index === 1 ? 20 : 10,
             marginLeft: index > 0 ? '-28px' : '0',
             opacity: isLoaded ? 1 : 0,

@@ -380,7 +380,7 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
             {/* Headline with Drop Shadow that works on gradient */}
             <FadeInOnScroll delay={0.1}>
               <h1 
-                className="text-[39px] md:text-7xl font-bold mb-6"
+                className="text-[42px] md:text-7xl font-bold mb-6"
                 style={{ 
                   filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8))',
                   paddingTop: 'var(--mobile-headline-padding, 0)',
@@ -397,8 +397,8 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                 className="text-[20px] md:text-2xl font-medium mb-8 max-w-2xl mx-auto"
                 style={{ color: mutedTextColor }}
               >
-                <span className="block sm:inline">AI upscaling up to <span style={{ color: 'var(--primary)' }}>24x</span>.</span>
-                <span className="block sm:inline">{' '}No other web tool comes close.</span>
+                AI upscaling up to <span style={{ color: 'var(--primary)' }}>24x</span>.<br className="sm:hidden" />
+                <span className="sm:inline"> No other web tool comes close.</span>
               </h2>
             </FadeInOnScroll>
             
