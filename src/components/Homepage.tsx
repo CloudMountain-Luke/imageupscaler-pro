@@ -380,7 +380,7 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
             {/* Headline with Drop Shadow that works on gradient */}
             <FadeInOnScroll delay={0.1}>
               <h1 
-                className="text-4xl md:text-7xl font-bold mb-6 mt-9 sm:mt-0"
+                className="text-4xl md:text-7xl font-bold mb-6 mt-[30px]"
                 style={{ 
                   filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8))',
                 }}
