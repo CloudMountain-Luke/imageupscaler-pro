@@ -71,7 +71,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/man-portrait_1-1_sm.webp',
     alt: 'Man portrait',
-    position: { top: '40%', right: '20px' },
+    position: { top: 'calc(40% - 27px)', right: '20px' },
     size: 'sm',
     depth: 3,
     delay: 300,
