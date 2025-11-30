@@ -380,7 +380,7 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
             {/* Headline with Drop Shadow that works on gradient */}
             <FadeInOnScroll delay={0.1}>
               <h1 
-                className="text-[42px] md:text-7xl font-bold mb-6"
+                className="text-[39px] md:text-7xl font-bold mb-6"
                 style={{ 
                   filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8))',
                   paddingTop: 'var(--mobile-headline-padding, 0)',
@@ -394,7 +394,7 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
             
             <FadeInOnScroll delay={0.2}>
               <h2 
-                className="text-[19px] md:text-2xl font-medium mb-8 max-w-2xl mx-auto"
+                className="text-[18px] md:text-2xl font-medium mb-8 max-w-2xl mx-auto tracking-tight md:tracking-normal whitespace-nowrap md:whitespace-normal"
                 style={{ color: mutedTextColor }}
               >
                 AI upscaling up to <span style={{ color: 'var(--primary)' }}>24x</span>.

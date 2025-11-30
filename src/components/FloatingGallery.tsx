@@ -113,7 +113,7 @@ function MobileFanGallery() {
       {mobileFanImages.map((image, index) => {
         // Eye painting (center, index 1) is larger
         const isEye = index === 1;
-        const size = isEye ? 'w-[140px] h-[140px] sm:w-[170px] sm:h-[170px]' : 'w-[120px] h-[120px] sm:w-[150px] sm:h-[150px]';
+        const size = isEye ? 'w-[130px] h-[130px] sm:w-[160px] sm:h-[160px]' : 'w-[120px] h-[120px] sm:w-[150px] sm:h-[150px]';
         
         return (
         <div
