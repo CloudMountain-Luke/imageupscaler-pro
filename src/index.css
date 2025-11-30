@@ -25,7 +25,7 @@
   --cyber-cyan: hsl(195, 100%, 65%);
   
   /* Mobile headline padding */
-  --mobile-headline-padding: 30px;
+  --mobile-headline-padding: 20px;
 }
 
 @media (min-width: 640px) {

@@ -105,7 +105,7 @@ function MobileFanGallery() {
       <style>{`
         @media (max-width: 639px) {
           .mobile-fan-container {
-            margin-top: -36px !important;
+            margin-top: -46px !important;
           }
         }
       `}</style>
