@@ -21,16 +21,14 @@ interface FloatingGalleryProps {
 }
 
 // Default gallery images - 6 images, 3 on each side
-// Responsive: shows on all screen sizes with adjusted positioning
-// Mobile: smaller images, tighter to edges
-// Tablet: medium images
-// Desktop: full size images
+// Responsive positioning handled via CSS classes
+// Desktop uses 147px padding, mobile/tablet uses smaller padding
 export const defaultGalleryImages: GalleryImage[] = [
   // LEFT SIDE - lg, sm, md (top to bottom)
   {
     src: '/images/woman-portrait_1-1.webp',
     alt: 'Smiling woman portrait',
-    position: { top: '5%', left: '8px' },
+    position: { top: '5%', left: '20px' },
     size: 'lg',
     depth: 1,
     delay: 0,
@@ -39,7 +37,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/ocean-waves-sunset.webp',
     alt: 'Ocean waves at sunset',
-    position: { top: '38%', left: '16px' },
+    position: { top: '38%', left: '28px' },
     size: 'sm',
     depth: 3,
     delay: 200,
@@ -48,7 +46,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/colorful-anime_1-1_sm.webp',
     alt: 'Colorful anime artwork',
-    position: { bottom: '5%', left: '8px' },
+    position: { bottom: '5%', left: '20px' },
     size: 'md',
     depth: 2,
     delay: 400,
@@ -58,7 +56,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/abstract-eye_opt.webp',
     alt: 'Abstract eye painting',
-    position: { top: '5%', right: '8px' },
+    position: { top: '5%', right: '20px' },
     size: 'md',
     depth: 2,
     delay: 100,
@@ -67,7 +65,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/man-portrait_1-1_sm.webp',
     alt: 'Man portrait',
-    position: { top: '38%', right: '16px' },
+    position: { top: '38%', right: '28px' },
     size: 'sm',
     depth: 3,
     delay: 300,
@@ -76,7 +74,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/aurora-mountains.webp',
     alt: 'Aurora mountains landscape',
-    position: { bottom: '5%', right: '8px' },
+    position: { bottom: '5%', right: '20px' },
     size: 'lg',
     depth: 1,
     delay: 500,
@@ -118,13 +116,20 @@ export function FloatingGallery({
   }, [handleScroll]);
   
   // Size classes - responsive sizes for all screen sizes
-  // Mobile: smaller to fit on screen edges
+  // Mobile: slightly larger, moved in from edges
   // Tablet: medium
-  // Desktop: full size
+  // Desktop (xl+): full size with 147px padding
   const sizeClasses = {
-    sm: 'w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-36 lg:h-36 xl:w-44 xl:h-44',
-    md: 'w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-44 lg:h-44 xl:w-52 xl:h-52',
-    lg: 'w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-52 lg:h-52 xl:w-64 xl:h-64'
+    sm: 'w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-44 xl:h-44',
+    md: 'w-24 h-24 sm:w-28 sm:h-28 md:w-36 md:h-36 lg:w-48 lg:h-48 xl:w-52 xl:h-52',
+    lg: 'w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 lg:w-56 lg:h-56 xl:w-64 xl:h-64'
+  };
+  
+  // Desktop (xl+) uses 147px padding, smaller screens use the position values
+  const getResponsivePosition = (position: GalleryImage['position']) => {
+    // For xl+ screens, override left/right with 147px base
+    // This is handled via CSS media query approach
+    return position;
   };
   
   return (
@@ -132,15 +137,37 @@ export function FloatingGallery({
       ref={containerRef}
       className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`}
     >
+      {/* Desktop padding wrapper - only affects xl+ */}
+      <style>{`
+        @media (min-width: 1280px) {
+          .floating-image-left { left: 147px !important; }
+          .floating-image-left-offset { left: 171px !important; }
+          .floating-image-left-offset-sm { left: 187px !important; }
+          .floating-image-right { right: 147px !important; }
+          .floating-image-right-offset { right: 171px !important; }
+          .floating-image-right-offset-sm { right: 187px !important; }
+        }
+      `}</style>
       {images.map((image, index) => {
         // Calculate parallax offset based on depth
         const parallaxSpeed = image.depth * 0.06;
         const parallaxY = scrollY * parallaxSpeed;
         
+        // Determine position class for desktop override
+        const isLeft = 'left' in image.position;
+        const isSmall = image.size === 'sm';
+        const isMedium = image.size === 'md';
+        let positionClass = '';
+        if (isLeft) {
+          positionClass = isSmall ? 'floating-image-left-offset-sm' : isMedium ? 'floating-image-left-offset' : 'floating-image-left';
+        } else {
+          positionClass = isSmall ? 'floating-image-right-offset-sm' : isMedium ? 'floating-image-right-offset' : 'floating-image-right';
+        }
+        
         return (
           <div
             key={index}
-            className={`absolute ${sizeClasses[image.size]} rounded-xl overflow-hidden`}
+            className={`absolute ${sizeClasses[image.size]} ${positionClass} rounded-xl overflow-hidden`}
             style={{
               ...image.position,
               zIndex: 10 + image.depth,
