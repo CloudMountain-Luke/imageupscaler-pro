@@ -109,11 +109,16 @@ function MobileFanGallery() {
           }
         }
       `}</style>
-      <div className="mobile-fan-container flex justify-center items-end mb-4 relative h-36 sm:h-44 mx-auto">
-      {mobileFanImages.map((image, index) => (
+      <div className="mobile-fan-container flex justify-center items-end mb-4 relative h-40 sm:h-48 mx-auto">
+      {mobileFanImages.map((image, index) => {
+        // Eye painting (center, index 1) is larger
+        const isEye = index === 1;
+        const size = isEye ? 'w-[140px] h-[140px] sm:w-[170px] sm:h-[170px]' : 'w-[120px] h-[120px] sm:w-[150px] sm:h-[150px]';
+        
+        return (
         <div
           key={index}
-          className="w-[120px] h-[120px] sm:w-[150px] sm:h-[150px] rounded-xl overflow-hidden relative flex-shrink-0"
+          className={`${size} rounded-xl overflow-hidden relative flex-shrink-0`}
           style={{
             transform: `rotate(${image.rotation}deg)`,
             zIndex: index === 1 ? 20 : 10,
@@ -135,7 +140,8 @@ function MobileFanGallery() {
             style={{ border: '1px solid rgba(255, 255, 255, 0.15)' }}
           />
         </div>
-      ))}
+        );
+      })}
       </div>
     </>
   );
