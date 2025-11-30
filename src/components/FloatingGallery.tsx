@@ -90,7 +90,7 @@ export const defaultGalleryImages: GalleryImage[] = [
 
 /**
  * Mobile/Tablet Fan Layout - 3 images in a fan above the headline
- * Width matches "Forge Stunning Detail" text (~320px on mobile, ~400px on tablet)
+ * Width matches "Forge Stunning Detail" text
  */
 function MobileFanGallery() {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -101,15 +101,15 @@ function MobileFanGallery() {
   }, []);
   
   return (
-    <div className="flex justify-center items-end mb-4 relative h-28 sm:h-32 max-w-[320px] sm:max-w-[400px] mx-auto">
+    <div className="flex justify-center items-end mb-4 relative h-36 sm:h-44 mx-auto">
       {mobileFanImages.map((image, index) => (
         <div
           key={index}
-          className="w-[88px] h-[88px] sm:w-[110px] sm:h-[110px] rounded-xl overflow-hidden relative flex-shrink-0"
+          className="w-[120px] h-[120px] sm:w-[150px] sm:h-[150px] rounded-xl overflow-hidden relative flex-shrink-0"
           style={{
             transform: `rotate(${image.rotation}deg)`,
             zIndex: index === 1 ? 20 : 10,
-            marginLeft: index > 0 ? '-20px' : '0',
+            marginLeft: index > 0 ? '-28px' : '0',
             opacity: isLoaded ? 1 : 0,
             transition: `opacity 0.5s ease-out ${index * 100}ms`,
             boxShadow: '0 15px 30px -8px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 0, 0, 0.3)',
