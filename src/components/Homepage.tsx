@@ -380,7 +380,7 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
             {/* Headline with Drop Shadow that works on gradient */}
             <FadeInOnScroll delay={0.1}>
               <h1 
-                className="text-4xl md:text-7xl font-bold mb-6"
+                className="text-4xl md:text-7xl font-bold mb-6 mt-9 sm:mt-0"
                 style={{ 
                   filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8))',
                 }}
@@ -424,9 +424,10 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
               </div>
             </FadeInOnScroll>
             
-            {/* Feature Badges */}
+            {/* Feature Badges - All 3 on tablet+, only "Try Free" on mobile */}
             <FadeInOnScroll delay={0.4}>
-              <div className="flex flex-wrap justify-center gap-4 mb-8">
+              {/* Desktop/Tablet: All 3 badges */}
+              <div className="hidden sm:flex flex-wrap justify-center gap-4 mb-8">
                 {[
                   { icon: Zap, text: 'No Watermarks', color: 'var(--primary)' },
                   { icon: Download, text: 'No Install', color: 'var(--secondary)' },
@@ -441,6 +442,16 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                     <span className="text-sm font-medium" style={{ color: textColor }}>{badge.text}</span>
                   </div>
                 ))}
+              </div>
+              {/* Mobile: Only "Try Free" centered above chevron */}
+              <div className="sm:hidden flex justify-center mb-4">
+                <div 
+                  className="flex items-center space-x-2 rounded-full px-5 py-2.5 glass-card"
+                  style={{ borderColor: 'color-mix(in oklab, var(--accent) 30%, transparent 70%)' }}
+                >
+                  <Shield className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+                  <span className="text-sm font-medium" style={{ color: textColor }}>Try Free</span>
+                </div>
               </div>
             </FadeInOnScroll>
           </div>
