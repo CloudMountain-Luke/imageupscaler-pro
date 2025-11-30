@@ -23,6 +23,15 @@
   --flame-magenta: hsl(330, 100%, 60%);
   --forge-orange: hsl(24, 100%, 55%);
   --cyber-cyan: hsl(195, 100%, 65%);
+  
+  /* Mobile headline padding */
+  --mobile-headline-padding: 30px;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --mobile-headline-padding: 0px;
+  }
 }
 
 .tone-slider {
