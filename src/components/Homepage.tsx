@@ -8,6 +8,7 @@ import { ThemeControls } from './ThemeControls';
 // HexagonGridCSS removed for cleaner background
 import { BeforeAfterSlider } from './BeforeAfterSlider';
 import { FloatingGallery, defaultGalleryImages } from './FloatingGallery';
+import { ForgeConveyor } from './ForgeConveyor';
 import { EmberParticles } from './EmberParticles';
 import { FadeInOnScroll } from './ParallaxSection';
 import { RotatingImageCard } from './RotatingImageCard';
@@ -340,11 +341,16 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
       )}
 
       {/* ============================================
-          SECTION 1: HERO WITH FLOATING GALLERY
+          SECTION 1: HERO WITH FLOATING GALLERY / FORGE CONVEYOR
           ============================================ */}
       <section className="relative min-h-[85vh] flex items-center overflow-hidden">
-        {/* Floating Gallery Background */}
+        {/* Floating Gallery Background - xl+ screens only */}
         <FloatingGallery images={defaultGalleryImages} />
+        
+        {/* Forge Conveyor Animation - mobile/tablet only (below xl) */}
+        <div className="xl:hidden">
+          <ForgeConveyor />
+        </div>
         
         {/* Ember Particles in Hero - reduced count */}
         <EmberParticles count={12} intensity="low" color="mixed" />
