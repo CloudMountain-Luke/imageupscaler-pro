@@ -457,8 +457,8 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
           </div>
         </div>
         
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce z-30">
+        {/* Scroll Indicator - centered */}
+        <div className="absolute bottom-8 left-0 right-0 flex justify-center animate-bounce z-30">
           <ChevronDown className="w-8 h-8" style={{ color: mutedTextColor }} />
         </div>
       </section>
