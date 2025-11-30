@@ -173,13 +173,17 @@ export function FloatingGallery({
             height: 9rem !important;
           }
           .mobile-larger-girl {
-            width: 7.5rem !important;
-            height: 7.5rem !important;
+            width: 8.25rem !important;
+            height: 8.25rem !important;
           }
           .mobile-larger-tracer {
             width: 8rem !important;
             height: 8rem !important;
-            transform: rotate(8deg) !important;
+            transform: rotate(8deg) translateY(35px) !important;
+          }
+          .mobile-aurora {
+            bottom: 12% !important;
+            transform: rotate(-3deg) !important;
           }
         }
         
@@ -248,6 +252,8 @@ export function FloatingGallery({
           mobileSizeClass = 'mobile-larger-eye';
         } else if (image.src.includes('acfromspace')) {
           mobileSizeClass = 'mobile-larger-tracer';
+        } else if (image.src.includes('aurora-mountains')) {
+          mobileSizeClass = 'mobile-aurora';
         }
         
         // Hide on mobile class (hidden below md breakpoint)

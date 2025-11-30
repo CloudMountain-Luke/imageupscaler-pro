@@ -358,10 +358,10 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                 background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 50%, transparent 80%)',
               }}
             />
-            {/* Exclusivity Badge */}
+            {/* Exclusivity Badge - hidden on mobile */}
             <FadeInOnScroll delay={0}>
               <div 
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 glass-card animate-pulse-glow"
+                className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 glass-card animate-pulse-glow"
                 style={{ borderColor: 'color-mix(in oklab, var(--primary) 40%, transparent 60%)' }}
               >
                 <Sparkles className="w-4 h-4" style={{ color: 'var(--primary)' }} />
