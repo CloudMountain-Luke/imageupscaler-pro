@@ -393,13 +393,13 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
               </FadeInOnScroll>
             
             <FadeInOnScroll delay={0.2}>
-              <h2 
+              <div 
                 className="text-[20px] md:text-2xl font-medium mb-8 max-w-2xl mx-auto"
                 style={{ color: mutedTextColor }}
               >
-                AI upscaling up to <span style={{ color: 'var(--primary)' }}>24x</span>.<br className="sm:hidden" />
-                <span className="sm:inline"> No other web tool comes close.</span>
-              </h2>
+                <div className="sm:inline">AI upscaling up to <span style={{ color: 'var(--primary)' }}>24x</span>.</div>
+                <div className="sm:inline"> No other web tool comes close.</div>
+              </div>
             </FadeInOnScroll>
             
             {/* CTA Button */}
