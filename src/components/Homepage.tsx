@@ -377,26 +377,21 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
               </div>
             </FadeInOnScroll>
             
-            {/* Headline with Drop Shadow that works on gradient */}
-            <style>{`
-              @media (max-width: 639px) {
-                .hero-headline {
-                  margin-top: 30px !important;
-                }
-              }
-            `}</style>
-            <FadeInOnScroll delay={0.1}>
-              <h1 
-                className="hero-headline text-4xl md:text-7xl font-bold mb-6"
-                style={{ 
-                  filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8))',
-                }}
-              >
-                <span style={{ color: textColor }}>Forge</span>{' '}
-                <span className="gradient-text">Stunning</span>
-                {' '}<span style={{ color: textColor }}>Detail</span>
-              </h1>
-            </FadeInOnScroll>
+            {/* Wrapper to push content down on mobile */}
+            <div className="pt-[30px] sm:pt-0">
+              {/* Headline with Drop Shadow that works on gradient */}
+              <FadeInOnScroll delay={0.1}>
+                <h1 
+                  className="text-4xl md:text-7xl font-bold mb-6"
+                  style={{ 
+                    filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8))',
+                  }}
+                >
+                  <span style={{ color: textColor }}>Forge</span>{' '}
+                  <span className="gradient-text">Stunning</span>
+                  {' '}<span style={{ color: textColor }}>Detail</span>
+                </h1>
+              </FadeInOnScroll>
             
             <FadeInOnScroll delay={0.2}>
               <h2 
@@ -461,6 +456,7 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                 </div>
               </div>
             </FadeInOnScroll>
+            </div>{/* End mobile push-down wrapper */}
           </div>
         </div>
         
