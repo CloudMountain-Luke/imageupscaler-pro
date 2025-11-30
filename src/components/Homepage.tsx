@@ -421,8 +421,8 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
               <div className="flex flex-wrap justify-center gap-4 mb-8">
                 {[
                   { icon: Zap, text: 'No Watermarks', color: 'var(--primary)' },
-                  { icon: Download, text: 'No Downloads', color: 'var(--secondary)' },
-                  { icon: Shield, text: 'No Limits', color: 'var(--accent)' },
+                  { icon: Download, text: 'No Install', color: 'var(--secondary)' },
+                  { icon: Shield, text: 'Try Free', color: 'var(--accent)' },
                 ].map((badge, i) => (
                   <div 
                     key={i}

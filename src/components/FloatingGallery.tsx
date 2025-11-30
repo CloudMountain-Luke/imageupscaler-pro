@@ -14,6 +14,12 @@ interface GalleryImage {
   delay: number; // Animation delay in ms
   rotation?: number; // Initial rotation in degrees
   hideOnMobile?: boolean; // Hide this image on mobile screens
+  mobilePosition?: { // Custom position for mobile (overrides position on small screens)
+    top?: string;
+    bottom?: string;
+    left?: string;
+    right?: string;
+  };
 }
 
 interface FloatingGalleryProps {
@@ -23,8 +29,9 @@ interface FloatingGalleryProps {
 
 // Default gallery images - 6 images, 3 on each side
 // Mobile: only shows 4 images (top + bottom), middle row hidden
+// Bottom images moved up and toward center on mobile (behind badges)
 // Tablet+: shows all 6 images
-// Desktop uses 147px padding
+// Desktop uses 147px padding, scales down proportionally for smaller screens
 export const defaultGalleryImages: GalleryImage[] = [
   // LEFT SIDE - top and bottom (middle hidden on mobile)
   {
@@ -50,12 +57,13 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/acfromspace_sm_1-1_sm.webp',
     alt: 'Tracer figurine',
-    position: { bottom: '8%', left: '12px' },
+    position: { bottom: '12%', left: '15%' }, // Moved up and toward center on mobile
     size: 'md',
     depth: 2,
     delay: 400,
     rotation: 2,
     hideOnMobile: false,
+    mobilePosition: { bottom: '5%', left: '8%' }, // Custom mobile position
   },
   // RIGHT SIDE - top and bottom (middle hidden on mobile)
   {
@@ -81,12 +89,13 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/aurora-mountains.webp',
     alt: 'Aurora mountains landscape',
-    position: { bottom: '8%', right: '12px' },
+    position: { bottom: '12%', right: '15%' }, // Moved up and toward center on mobile
     size: 'lg',
     depth: 1,
     delay: 500,
     rotation: 1,
     hideOnMobile: false,
+    mobilePosition: { bottom: '5%', right: '8%' }, // Custom mobile position
   },
 ];
 
@@ -138,8 +147,41 @@ export function FloatingGallery({
       ref={containerRef}
       className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`}
     >
-      {/* Desktop padding wrapper - only affects xl+ */}
+      {/* Responsive padding - scales from mobile to desktop */}
       <style>{`
+        /* Mobile: bottom images moved up and toward center */
+        @media (max-width: 767px) {
+          .floating-bottom-left { 
+            bottom: 5% !important; 
+            left: 10% !important; 
+          }
+          .floating-bottom-right { 
+            bottom: 5% !important; 
+            right: 10% !important; 
+          }
+        }
+        
+        /* Tablet (md): moderate padding */
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .floating-image-left { left: 40px !important; }
+          .floating-image-left-offset { left: 56px !important; }
+          .floating-image-left-offset-sm { left: 68px !important; }
+          .floating-image-right { right: 40px !important; }
+          .floating-image-right-offset { right: 56px !important; }
+          .floating-image-right-offset-sm { right: 68px !important; }
+        }
+        
+        /* Large tablet / small laptop (lg): increased padding */
+        @media (min-width: 1024px) and (max-width: 1279px) {
+          .floating-image-left { left: 80px !important; }
+          .floating-image-left-offset { left: 100px !important; }
+          .floating-image-left-offset-sm { left: 116px !important; }
+          .floating-image-right { right: 80px !important; }
+          .floating-image-right-offset { right: 100px !important; }
+          .floating-image-right-offset-sm { right: 116px !important; }
+        }
+        
+        /* Desktop (xl+): full 147px padding */
         @media (min-width: 1280px) {
           .floating-image-left { left: 147px !important; }
           .floating-image-left-offset { left: 171px !important; }
@@ -156,13 +198,20 @@ export function FloatingGallery({
         
         // Determine position class for desktop override
         const isLeft = 'left' in image.position;
+        const isBottom = 'bottom' in image.position;
         const isSmall = image.size === 'sm';
         const isMedium = image.size === 'md';
+        
         let positionClass = '';
         if (isLeft) {
           positionClass = isSmall ? 'floating-image-left-offset-sm' : isMedium ? 'floating-image-left-offset' : 'floating-image-left';
         } else {
           positionClass = isSmall ? 'floating-image-right-offset-sm' : isMedium ? 'floating-image-right-offset' : 'floating-image-right';
+        }
+        
+        // Add bottom position class for mobile centering
+        if (isBottom && !image.hideOnMobile) {
+          positionClass += isLeft ? ' floating-bottom-left' : ' floating-bottom-right';
         }
         
         // Hide on mobile class (hidden below md breakpoint)
