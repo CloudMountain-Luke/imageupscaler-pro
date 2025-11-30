@@ -7,7 +7,7 @@ import { ThemeProvider, useThemeLab } from '../contexts/ThemeContext';
 import { ThemeControls } from './ThemeControls';
 // HexagonGridCSS removed for cleaner background
 import { BeforeAfterSlider } from './BeforeAfterSlider';
-import { FloatingGallery, defaultGalleryImages } from './FloatingGallery';
+import { FloatingGallery, defaultGalleryImages, MobileFanGallery } from './FloatingGallery';
 import { EmberParticles } from './EmberParticles';
 import { FadeInOnScroll } from './ParallaxSection';
 import { RotatingImageCard } from './RotatingImageCard';
@@ -343,21 +343,27 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
           SECTION 1: HERO WITH FLOATING GALLERY
           ============================================ */}
       <section className="relative min-h-[85vh] flex items-center overflow-hidden">
-        {/* Floating Gallery Background - all screen sizes */}
+        {/* Floating Gallery Background - tablet+ only */}
         <FloatingGallery images={defaultGalleryImages} />
         
         {/* Ember Particles in Hero - reduced count */}
         <EmberParticles count={12} intensity="low" color="mixed" />
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 pt-4 pb-12 relative z-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 pt-8 md:pt-4 pb-12 relative z-20">
           <div className="text-center relative">
-            {/* Dark backdrop for text readability on all screens */}
+            {/* Dark backdrop for text readability - tablet+ only */}
             <div 
-              className="absolute inset-0 -mx-4 -my-4 rounded-3xl"
+              className="absolute inset-0 -mx-4 -my-4 rounded-3xl hidden md:block"
               style={{
                 background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 50%, transparent 80%)',
               }}
             />
+            
+            {/* Mobile Fan Gallery - shown only on mobile */}
+            <div className="md:hidden mb-6">
+              <MobileFanGallery />
+            </div>
+            
             {/* Exclusivity Badge - hidden on mobile (below 768px) */}
             <FadeInOnScroll delay={0}>
               <div 
@@ -371,18 +377,17 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
               </div>
             </FadeInOnScroll>
             
-            {/* Headline with Glow and Drop Shadow */}
+            {/* Headline with Drop Shadow that works on gradient */}
             <FadeInOnScroll delay={0.1}>
               <h1 
-                className="text-5xl md:text-7xl font-bold mb-6 glow-text"
+                className="text-4xl md:text-7xl font-bold mb-6"
                 style={{ 
-                  color: textColor,
-                  textShadow: '0 4px 20px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.9)',
+                  filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8))',
                 }}
               >
-                Forge{' '}
+                <span style={{ color: textColor }}>Forge</span>{' '}
                 <span className="gradient-text">Stunning</span>
-                {' '}Detail
+                {' '}<span style={{ color: textColor }}>Detail</span>
               </h1>
             </FadeInOnScroll>
             

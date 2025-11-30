@@ -13,13 +13,6 @@ interface GalleryImage {
   depth: number; // 1-3, affects parallax speed and z-index
   delay: number; // Animation delay in ms
   rotation?: number; // Initial rotation in degrees
-  hideOnMobile?: boolean; // Hide this image on mobile screens
-  mobilePosition?: { // Custom position for mobile (overrides position on small screens)
-    top?: string;
-    bottom?: string;
-    left?: string;
-    right?: string;
-  };
 }
 
 interface FloatingGalleryProps {
@@ -27,13 +20,17 @@ interface FloatingGalleryProps {
   className?: string;
 }
 
-// Default gallery images - 6 images, 3 on each side
-// Mobile: only shows 4 images (top + bottom), middle row hidden
-// Bottom images moved up and toward center on mobile (behind badges)
-// Tablet+: shows all 6 images
+// Mobile fan images - 3 images in a fan layout above the headline
+const mobileFanImages = [
+  { src: '/images/woman-portrait_1-1.webp', alt: 'Portrait', rotation: -12 },
+  { src: '/images/abstract-eye_opt.webp', alt: 'Art', rotation: 0 },
+  { src: '/images/aurora-mountains.webp', alt: 'Landscape', rotation: 12 },
+];
+
+// Default gallery images - 6 images, 3 on each side (tablet+ only)
 // Desktop uses 147px padding, scales down proportionally for smaller screens
 export const defaultGalleryImages: GalleryImage[] = [
-  // LEFT SIDE - top and bottom (middle hidden on mobile)
+  // LEFT SIDE
   {
     src: '/images/woman-portrait_1-1.webp',
     alt: 'Smiling woman portrait',
@@ -42,7 +39,6 @@ export const defaultGalleryImages: GalleryImage[] = [
     depth: 1,
     delay: 0,
     rotation: -2,
-    hideOnMobile: false,
   },
   {
     src: '/images/ocean-waves-sunset.webp',
@@ -52,20 +48,17 @@ export const defaultGalleryImages: GalleryImage[] = [
     depth: 3,
     delay: 200,
     rotation: -1,
-    hideOnMobile: true, // Middle row - hide on mobile
   },
   {
     src: '/images/acfromspace_sm_1-1_sm.webp',
     alt: 'Tracer figurine',
-    position: { bottom: '12%', left: '15%' }, // Moved up and toward center on mobile
+    position: { bottom: '8%', left: '12px' },
     size: 'md',
     depth: 2,
     delay: 400,
     rotation: 2,
-    hideOnMobile: false,
-    mobilePosition: { bottom: '5%', left: '8%' }, // Custom mobile position
   },
-  // RIGHT SIDE - top and bottom (middle hidden on mobile)
+  // RIGHT SIDE
   {
     src: '/images/abstract-eye_opt.webp',
     alt: 'Abstract eye painting',
@@ -74,7 +67,6 @@ export const defaultGalleryImages: GalleryImage[] = [
     depth: 2,
     delay: 100,
     rotation: 2,
-    hideOnMobile: false,
   },
   {
     src: '/images/man-portrait_1-1_sm.webp',
@@ -84,25 +76,65 @@ export const defaultGalleryImages: GalleryImage[] = [
     depth: 3,
     delay: 300,
     rotation: -2,
-    hideOnMobile: true, // Middle row - hide on mobile
   },
   {
     src: '/images/aurora-mountains.webp',
     alt: 'Aurora mountains landscape',
-    position: { bottom: '12%', right: '15%' }, // Moved up and toward center on mobile
+    position: { bottom: '8%', right: '12px' },
     size: 'lg',
     depth: 1,
     delay: 500,
     rotation: 1,
-    hideOnMobile: false,
-    mobilePosition: { bottom: '5%', right: '8%' }, // Custom mobile position
   },
 ];
 
 /**
+ * Mobile Fan Layout - 3 images in a fan above the headline
+ */
+function MobileFanGallery() {
+  const [isLoaded, setIsLoaded] = useState(false);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoaded(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+  
+  return (
+    <div className="flex justify-center items-end gap-[-20px] mb-4 relative h-32">
+      {mobileFanImages.map((image, index) => (
+        <div
+          key={index}
+          className="w-24 h-24 rounded-xl overflow-hidden relative"
+          style={{
+            transform: `rotate(${image.rotation}deg)`,
+            zIndex: index === 1 ? 20 : 10, // Center image on top
+            marginLeft: index > 0 ? '-16px' : '0',
+            opacity: isLoaded ? 1 : 0,
+            transition: `opacity 0.5s ease-out ${index * 100}ms`,
+            boxShadow: '0 15px 30px -8px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 0, 0, 0.3)',
+          }}
+        >
+          <img
+            src={image.src}
+            alt={image.alt}
+            className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+          <div 
+            className="absolute inset-0 rounded-xl pointer-events-none"
+            style={{ border: '1px solid rgba(255, 255, 255, 0.15)' }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
  * Floating image gallery with parallax effect
- * 6 images positioned 3 on each side of the hero content
- * No Ken Burns or scale animations to prevent flashing
+ * Mobile: Shows fan layout (handled separately in Homepage)
+ * Tablet+: 6 images positioned 3 on each side of the hero content
  */
 export function FloatingGallery({ 
   images = defaultGalleryImages,
@@ -113,16 +145,14 @@ export function FloatingGallery({
   const containerRef = useRef<HTMLDivElement>(null);
   const lastScrollTime = useRef(0);
   
-  // Mark as loaded after mount for entrance animation
   useEffect(() => {
     const timer = setTimeout(() => setIsLoaded(true), 100);
     return () => clearTimeout(timer);
   }, []);
   
-  // Throttled scroll handler for parallax (max 60fps)
   const handleScroll = useCallback(() => {
     const now = performance.now();
-    if (now - lastScrollTime.current < 16) return; // ~60fps throttle
+    if (now - lastScrollTime.current < 16) return;
     lastScrollTime.current = now;
     setScrollY(window.scrollY);
   }, []);
@@ -132,62 +162,18 @@ export function FloatingGallery({
     return () => window.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
   
-  // Size classes - responsive sizes for all screen sizes
-  // Mobile: slightly larger, moved in from edges
-  // Tablet: medium
-  // Desktop (xl+): full size with 147px padding
   const sizeClasses = {
-    sm: 'w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-44 xl:h-44',
-    md: 'w-24 h-24 sm:w-28 sm:h-28 md:w-36 md:h-36 lg:w-48 lg:h-48 xl:w-52 xl:h-52',
-    lg: 'w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 lg:w-56 lg:h-56 xl:w-64 xl:h-64'
+    sm: 'w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-44 xl:h-44',
+    md: 'w-28 h-28 md:w-36 md:h-36 lg:w-48 lg:h-48 xl:w-52 xl:h-52',
+    lg: 'w-36 h-36 md:w-44 md:h-44 lg:w-56 lg:h-56 xl:w-64 xl:h-64'
   };
   
   return (
     <div 
       ref={containerRef}
-      className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`}
+      className={`absolute inset-0 overflow-hidden pointer-events-none hidden md:block ${className}`}
     >
-      {/* Responsive padding - scales from mobile to desktop */}
       <style>{`
-        /* Mobile: all images use 10% padding, top images moved up 35px */
-        @media (max-width: 767px) {
-          .floating-top-left { 
-            top: calc(8% - 35px) !important; 
-            left: 10% !important; 
-          }
-          .floating-top-right { 
-            top: calc(8% - 35px) !important; 
-            right: 10% !important; 
-          }
-          .floating-bottom-left { 
-            bottom: 12% !important; 
-            left: 10% !important; 
-          }
-          .floating-bottom-right { 
-            bottom: 5% !important; 
-            right: 10% !important; 
-          }
-          /* Larger sizes for specific images on mobile */
-          .mobile-larger-eye {
-            width: 10rem !important;
-            height: 10rem !important;
-          }
-          .mobile-larger-girl {
-            width: 9.5rem !important;
-            height: 9.5rem !important;
-          }
-          .mobile-larger-tracer {
-            width: 9rem !important;
-            height: 9rem !important;
-            transform: rotate(8deg) translateY(25px) !important;
-          }
-          .mobile-aurora {
-            width: 9rem !important;
-            height: 9rem !important;
-            transform: rotate(-3deg) translateY(-50px) !important;
-          }
-        }
-        
         /* Tablet (md): moderate padding */
         @media (min-width: 768px) and (max-width: 1023px) {
           .floating-image-left { left: 40px !important; }
@@ -219,14 +205,10 @@ export function FloatingGallery({
         }
       `}</style>
       {images.map((image, index) => {
-        // Calculate parallax offset based on depth
         const parallaxSpeed = image.depth * 0.06;
         const parallaxY = scrollY * parallaxSpeed;
         
-        // Determine position class for desktop override
         const isLeft = 'left' in image.position;
-        const isTop = 'top' in image.position && !('bottom' in image.position);
-        const isBottom = 'bottom' in image.position;
         const isSmall = image.size === 'sm';
         const isMedium = image.size === 'md';
         
@@ -237,33 +219,10 @@ export function FloatingGallery({
           positionClass = isSmall ? 'floating-image-right-offset-sm' : isMedium ? 'floating-image-right-offset' : 'floating-image-right';
         }
         
-        // Add top/bottom position class for mobile positioning
-        if (isTop && !image.hideOnMobile) {
-          positionClass += isLeft ? ' floating-top-left' : ' floating-top-right';
-        }
-        if (isBottom && !image.hideOnMobile) {
-          positionClass += isLeft ? ' floating-bottom-left' : ' floating-bottom-right';
-        }
-        
-        // Add mobile-specific size classes based on image
-        let mobileSizeClass = '';
-        if (image.src.includes('woman-portrait')) {
-          mobileSizeClass = 'mobile-larger-girl';
-        } else if (image.src.includes('abstract-eye')) {
-          mobileSizeClass = 'mobile-larger-eye';
-        } else if (image.src.includes('acfromspace')) {
-          mobileSizeClass = 'mobile-larger-tracer';
-        } else if (image.src.includes('aurora-mountains')) {
-          mobileSizeClass = 'mobile-aurora';
-        }
-        
-        // Hide on mobile class (hidden below md breakpoint)
-        const mobileHideClass = image.hideOnMobile ? 'hidden md:block' : '';
-        
         return (
           <div
             key={index}
-            className={`absolute ${sizeClasses[image.size]} ${positionClass} ${mobileSizeClass} ${mobileHideClass} rounded-xl overflow-hidden`}
+            className={`absolute ${sizeClasses[image.size]} ${positionClass} rounded-xl overflow-hidden`}
             style={{
               ...image.position,
               zIndex: 10 + image.depth,
@@ -273,7 +232,6 @@ export function FloatingGallery({
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 0, 0, 0.3)',
             }}
           >
-            {/* Image - fully opaque, no overlays, no Ken Burns */}
             <img
               src={image.src}
               alt={image.alt}
@@ -281,13 +239,9 @@ export function FloatingGallery({
               loading="lazy"
               decoding="async"
             />
-            
-            {/* Subtle border glow */}
             <div 
               className="absolute inset-0 rounded-xl pointer-events-none"
-              style={{
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-              }}
+              style={{ border: '1px solid rgba(255, 255, 255, 0.15)' }}
             />
           </div>
         );
@@ -295,5 +249,8 @@ export function FloatingGallery({
     </div>
   );
 }
+
+// Export the mobile fan component
+export { MobileFanGallery };
 
 export default FloatingGallery;
