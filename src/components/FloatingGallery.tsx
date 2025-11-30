@@ -169,16 +169,16 @@ export function FloatingGallery({
           }
           /* Larger sizes for specific images on mobile */
           .mobile-larger-eye {
-            width: 7rem !important;
-            height: 7rem !important;
+            width: 9rem !important;
+            height: 9rem !important;
           }
           .mobile-larger-girl {
-            width: 8rem !important;
-            height: 8rem !important;
+            width: 7.5rem !important;
+            height: 7.5rem !important;
           }
           .mobile-larger-tracer {
-            width: 7rem !important;
-            height: 7rem !important;
+            width: 8rem !important;
+            height: 8rem !important;
             transform: rotate(8deg) !important;
           }
         }
