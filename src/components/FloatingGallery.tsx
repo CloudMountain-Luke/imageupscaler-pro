@@ -149,15 +149,37 @@ export function FloatingGallery({
     >
       {/* Responsive padding - scales from mobile to desktop */}
       <style>{`
-        /* Mobile: bottom images moved up and toward center */
+        /* Mobile: all images use 10% padding, top images moved up 35px */
         @media (max-width: 767px) {
+          .floating-top-left { 
+            top: calc(8% - 35px) !important; 
+            left: 10% !important; 
+          }
+          .floating-top-right { 
+            top: calc(8% - 35px) !important; 
+            right: 10% !important; 
+          }
           .floating-bottom-left { 
-            bottom: 5% !important; 
+            bottom: 12% !important; 
             left: 10% !important; 
           }
           .floating-bottom-right { 
             bottom: 5% !important; 
             right: 10% !important; 
+          }
+          /* Larger sizes for specific images on mobile */
+          .mobile-larger-eye {
+            width: 7rem !important;
+            height: 7rem !important;
+          }
+          .mobile-larger-girl {
+            width: 8rem !important;
+            height: 8rem !important;
+          }
+          .mobile-larger-tracer {
+            width: 7rem !important;
+            height: 7rem !important;
+            transform: rotate(8deg) !important;
           }
         }
         
@@ -198,6 +220,7 @@ export function FloatingGallery({
         
         // Determine position class for desktop override
         const isLeft = 'left' in image.position;
+        const isTop = 'top' in image.position && !('bottom' in image.position);
         const isBottom = 'bottom' in image.position;
         const isSmall = image.size === 'sm';
         const isMedium = image.size === 'md';
@@ -209,9 +232,22 @@ export function FloatingGallery({
           positionClass = isSmall ? 'floating-image-right-offset-sm' : isMedium ? 'floating-image-right-offset' : 'floating-image-right';
         }
         
-        // Add bottom position class for mobile centering
+        // Add top/bottom position class for mobile positioning
+        if (isTop && !image.hideOnMobile) {
+          positionClass += isLeft ? ' floating-top-left' : ' floating-top-right';
+        }
         if (isBottom && !image.hideOnMobile) {
           positionClass += isLeft ? ' floating-bottom-left' : ' floating-bottom-right';
+        }
+        
+        // Add mobile-specific size classes based on image
+        let mobileSizeClass = '';
+        if (image.src.includes('woman-portrait')) {
+          mobileSizeClass = 'mobile-larger-girl';
+        } else if (image.src.includes('abstract-eye')) {
+          mobileSizeClass = 'mobile-larger-eye';
+        } else if (image.src.includes('acfromspace')) {
+          mobileSizeClass = 'mobile-larger-tracer';
         }
         
         // Hide on mobile class (hidden below md breakpoint)
@@ -220,7 +256,7 @@ export function FloatingGallery({
         return (
           <div
             key={index}
-            className={`absolute ${sizeClasses[image.size]} ${positionClass} ${mobileHideClass} rounded-xl overflow-hidden`}
+            className={`absolute ${sizeClasses[image.size]} ${positionClass} ${mobileSizeClass} ${mobileHideClass} rounded-xl overflow-hidden`}
             style={{
               ...image.position,
               zIndex: 10 + image.depth,
