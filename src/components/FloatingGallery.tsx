@@ -21,17 +21,16 @@ interface FloatingGalleryProps {
 }
 
 // Default gallery images - 6 images, 3 on each side
-// Left: Woman (lg top), Ocean (sm middle), Anime (md bottom)
-// Right: Eye (md top), Man (sm middle), Aurora (lg bottom)
-// All images centered horizontally on the largest image in their column
-// Base padding: 40px from edges on xl+, hidden below xl (1280px)
-// Centering offsets: lg=0, md=+24px, sm=+40px (based on lg=256, md=208, sm=176)
+// Responsive: shows on all screen sizes with adjusted positioning
+// Mobile: smaller images, tighter to edges
+// Tablet: medium images
+// Desktop: full size images
 export const defaultGalleryImages: GalleryImage[] = [
-  // LEFT SIDE - lg, sm, md (top to bottom) - centered on lg
+  // LEFT SIDE - lg, sm, md (top to bottom)
   {
     src: '/images/woman-portrait_1-1.webp',
     alt: 'Smiling woman portrait',
-    position: { top: '8%', left: '40px' }, // lg: no offset
+    position: { top: '5%', left: '8px' },
     size: 'lg',
     depth: 1,
     delay: 0,
@@ -40,7 +39,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/ocean-waves-sunset.webp',
     alt: 'Ocean waves at sunset',
-    position: { top: '40%', left: '80px' }, // sm: 40 + 40 = 80px
+    position: { top: '38%', left: '16px' },
     size: 'sm',
     depth: 3,
     delay: 200,
@@ -49,17 +48,17 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/colorful-anime_1-1_sm.webp',
     alt: 'Colorful anime artwork',
-    position: { bottom: '8%', left: '64px' }, // md: 40 + 24 = 64px
+    position: { bottom: '5%', left: '8px' },
     size: 'md',
     depth: 2,
     delay: 400,
     rotation: 2,
   },
-  // RIGHT SIDE - md, sm, lg (top to bottom) - centered on lg
+  // RIGHT SIDE - md, sm, lg (top to bottom)
   {
     src: '/images/abstract-eye_opt.webp',
     alt: 'Abstract eye painting',
-    position: { top: '8%', right: '64px' }, // md: 40 + 24 = 64px
+    position: { top: '5%', right: '8px' },
     size: 'md',
     depth: 2,
     delay: 100,
@@ -68,7 +67,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/man-portrait_1-1_sm.webp',
     alt: 'Man portrait',
-    position: { top: 'calc(40% - 30px)', right: '80px' }, // sm: 40 + 40 = 80px, moved up 30px
+    position: { top: '38%', right: '16px' },
     size: 'sm',
     depth: 3,
     delay: 300,
@@ -77,7 +76,7 @@ export const defaultGalleryImages: GalleryImage[] = [
   {
     src: '/images/aurora-mountains.webp',
     alt: 'Aurora mountains landscape',
-    position: { bottom: '8%', right: '40px' }, // lg: no offset
+    position: { bottom: '5%', right: '8px' },
     size: 'lg',
     depth: 1,
     delay: 500,
@@ -118,17 +117,20 @@ export function FloatingGallery({
     return () => window.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
   
-  // Size classes - 3 distinct sizes (lg=256px, md=208px, sm=176px on desktop)
+  // Size classes - responsive sizes for all screen sizes
+  // Mobile: smaller to fit on screen edges
+  // Tablet: medium
+  // Desktop: full size
   const sizeClasses = {
-    sm: 'w-28 h-28 md:w-36 md:h-36 lg:w-44 lg:h-44',
-    md: 'w-32 h-32 md:w-44 md:h-44 lg:w-52 lg:h-52',
-    lg: 'w-40 h-40 md:w-56 md:h-56 lg:w-64 lg:h-64'
+    sm: 'w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-36 lg:h-36 xl:w-44 xl:h-44',
+    md: 'w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-44 lg:h-44 xl:w-52 xl:h-52',
+    lg: 'w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-52 lg:h-52 xl:w-64 xl:h-64'
   };
   
   return (
     <div 
       ref={containerRef}
-      className={`absolute inset-0 overflow-hidden pointer-events-none hidden xl:block ${className}`}
+      className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`}
     >
       {images.map((image, index) => {
         // Calculate parallax offset based on depth

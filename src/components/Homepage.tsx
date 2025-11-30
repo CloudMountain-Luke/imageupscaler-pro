@@ -7,9 +7,7 @@ import { ThemeProvider, useThemeLab } from '../contexts/ThemeContext';
 import { ThemeControls } from './ThemeControls';
 // HexagonGridCSS removed for cleaner background
 import { BeforeAfterSlider } from './BeforeAfterSlider';
-// FloatingGallery kept as backup - uncomment to restore original hero layout
-// import { FloatingGallery, defaultGalleryImages } from './FloatingGallery';
-import { ForgeConveyor } from './ForgeConveyor';
+import { FloatingGallery, defaultGalleryImages } from './FloatingGallery';
 import { EmberParticles } from './EmberParticles';
 import { FadeInOnScroll } from './ParallaxSection';
 import { RotatingImageCard } from './RotatingImageCard';
@@ -342,17 +340,24 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
       )}
 
       {/* ============================================
-          SECTION 1: HERO WITH FORGE CONVEYOR
+          SECTION 1: HERO WITH FLOATING GALLERY
           ============================================ */}
-      {/* NOTE: FloatingGallery kept as backup - can restore by uncommenting and removing ForgeConveyor */}
-      {/* <FloatingGallery images={defaultGalleryImages} /> */}
-      
-      <section className="relative min-h-[85vh] flex flex-col justify-center overflow-hidden">
+      <section className="relative min-h-[85vh] flex items-center overflow-hidden">
+        {/* Floating Gallery Background - all screen sizes */}
+        <FloatingGallery images={defaultGalleryImages} />
+        
         {/* Ember Particles in Hero - reduced count */}
         <EmberParticles count={12} intensity="low" color="mixed" />
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 pt-4 pb-8 relative z-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 pt-4 pb-12 relative z-20">
           <div className="text-center relative">
+            {/* Dark backdrop for text readability on all screens */}
+            <div 
+              className="absolute inset-0 -mx-4 -my-4 rounded-3xl"
+              style={{
+                background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 50%, transparent 80%)',
+              }}
+            />
             {/* Exclusivity Badge */}
             <FadeInOnScroll delay={0}>
               <div 
@@ -431,11 +436,6 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
               </div>
             </FadeInOnScroll>
           </div>
-        </div>
-        
-        {/* Forge Conveyor Animation - positioned below hero content */}
-        <div className="relative z-10 mt-4">
-          <ForgeConveyor />
         </div>
         
         {/* Scroll Indicator */}
