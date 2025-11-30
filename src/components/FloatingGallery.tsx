@@ -101,7 +101,7 @@ function MobileFanGallery() {
   }, []);
   
   return (
-    <div className="flex justify-center items-end mb-4 relative h-36 sm:h-44 mx-auto">
+    <div className="flex justify-center items-end mb-4 relative h-36 sm:h-44 mx-auto -mt-9 sm:mt-0">
       {mobileFanImages.map((image, index) => (
         <div
           key={index}
