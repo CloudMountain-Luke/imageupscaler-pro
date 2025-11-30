@@ -394,11 +394,11 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
             
             <FadeInOnScroll delay={0.2}>
               <h2 
-                className="text-[18px] md:text-2xl font-medium mb-8 max-w-2xl mx-auto tracking-tight md:tracking-normal whitespace-nowrap md:whitespace-normal"
+                className="text-[20px] md:text-2xl font-medium mb-8 max-w-2xl mx-auto"
                 style={{ color: mutedTextColor }}
               >
-                AI upscaling up to <span style={{ color: 'var(--primary)' }}>24x</span>.
-                {' '}No other web tool comes close.
+                <span className="block sm:inline">AI upscaling up to <span style={{ color: 'var(--primary)' }}>24x</span>.</span>
+                <span className="block sm:inline">{' '}No other web tool comes close.</span>
               </h2>
             </FadeInOnScroll>
             
