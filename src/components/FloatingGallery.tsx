@@ -179,7 +179,7 @@ export function FloatingGallery({
   }, [handleScroll]);
   
   const sizeClasses = {
-    sm: 'w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-44 xl:h-44',
+    sm: 'w-24 h-24 md:w-32 md:h-32 lg:w-44 lg:h-44 xl:w-48 xl:h-48',
     md: 'w-28 h-28 md:w-36 md:h-36 lg:w-48 lg:h-48 xl:w-52 xl:h-52',
     lg: 'w-36 h-36 md:w-44 md:h-44 lg:w-56 lg:h-56 xl:w-64 xl:h-64'
   };
