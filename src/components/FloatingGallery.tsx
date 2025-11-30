@@ -169,21 +169,22 @@ export function FloatingGallery({
           }
           /* Larger sizes for specific images on mobile */
           .mobile-larger-eye {
-            width: 9rem !important;
-            height: 9rem !important;
+            width: 10rem !important;
+            height: 10rem !important;
           }
           .mobile-larger-girl {
-            width: 8.25rem !important;
-            height: 8.25rem !important;
+            width: 9.5rem !important;
+            height: 9.5rem !important;
           }
           .mobile-larger-tracer {
-            width: 8rem !important;
-            height: 8rem !important;
-            transform: rotate(8deg) translateY(35px) !important;
+            width: 9rem !important;
+            height: 9rem !important;
+            transform: rotate(8deg) translateY(-15px) !important;
           }
           .mobile-aurora {
-            bottom: 12% !important;
-            transform: rotate(-3deg) !important;
+            width: 9rem !important;
+            height: 9rem !important;
+            transform: rotate(-3deg) translateY(35px) !important;
           }
         }
         
