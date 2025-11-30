@@ -179,12 +179,12 @@ export function FloatingGallery({
           .mobile-larger-tracer {
             width: 9rem !important;
             height: 9rem !important;
-            transform: rotate(8deg) translateY(-15px) !important;
+            transform: rotate(8deg) translateY(25px) !important;
           }
           .mobile-aurora {
             width: 9rem !important;
             height: 9rem !important;
-            transform: rotate(-3deg) translateY(35px) !important;
+            transform: rotate(-3deg) translateY(-50px) !important;
           }
         }
         

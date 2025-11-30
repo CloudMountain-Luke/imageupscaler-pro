@@ -371,11 +371,14 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
               </div>
             </FadeInOnScroll>
             
-            {/* Headline with Glow */}
+            {/* Headline with Glow and Drop Shadow */}
             <FadeInOnScroll delay={0.1}>
               <h1 
                 className="text-5xl md:text-7xl font-bold mb-6 glow-text"
-                style={{ color: textColor }}
+                style={{ 
+                  color: textColor,
+                  textShadow: '0 4px 20px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.9)',
+                }}
               >
                 Forge{' '}
                 <span className="gradient-text">Stunning</span>
