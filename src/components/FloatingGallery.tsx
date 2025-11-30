@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 
 interface GalleryImage {
   src: string;
@@ -13,6 +13,7 @@ interface GalleryImage {
   depth: number; // 1-3, affects parallax speed and z-index
   delay: number; // Animation delay in ms
   rotation?: number; // Initial rotation in degrees
+  hideOnMobile?: boolean; // Hide this image on mobile screens
 }
 
 interface FloatingGalleryProps {
@@ -21,64 +22,71 @@ interface FloatingGalleryProps {
 }
 
 // Default gallery images - 6 images, 3 on each side
-// Responsive positioning handled via CSS classes
-// Desktop uses 147px padding, mobile/tablet uses smaller padding
+// Mobile: only shows 4 images (top + bottom), middle row hidden
+// Tablet+: shows all 6 images
+// Desktop uses 147px padding
 export const defaultGalleryImages: GalleryImage[] = [
-  // LEFT SIDE - lg, sm, md (top to bottom)
+  // LEFT SIDE - top and bottom (middle hidden on mobile)
   {
     src: '/images/woman-portrait_1-1.webp',
     alt: 'Smiling woman portrait',
-    position: { top: '5%', left: '20px' },
+    position: { top: '8%', left: '12px' },
     size: 'lg',
     depth: 1,
     delay: 0,
     rotation: -2,
+    hideOnMobile: false,
   },
   {
     src: '/images/ocean-waves-sunset.webp',
     alt: 'Ocean waves at sunset',
-    position: { top: '38%', left: '28px' },
+    position: { top: '40%', left: '20px' },
     size: 'sm',
     depth: 3,
     delay: 200,
     rotation: -1,
+    hideOnMobile: true, // Middle row - hide on mobile
   },
   {
-    src: '/images/colorful-anime_1-1_sm.webp',
-    alt: 'Colorful anime artwork',
-    position: { bottom: '5%', left: '20px' },
+    src: '/images/acfromspace_sm_1-1_sm.webp',
+    alt: 'Tracer figurine',
+    position: { bottom: '8%', left: '12px' },
     size: 'md',
     depth: 2,
     delay: 400,
     rotation: 2,
+    hideOnMobile: false,
   },
-  // RIGHT SIDE - md, sm, lg (top to bottom)
+  // RIGHT SIDE - top and bottom (middle hidden on mobile)
   {
     src: '/images/abstract-eye_opt.webp',
     alt: 'Abstract eye painting',
-    position: { top: '5%', right: '20px' },
+    position: { top: '8%', right: '12px' },
     size: 'md',
     depth: 2,
     delay: 100,
     rotation: 2,
+    hideOnMobile: false,
   },
   {
     src: '/images/man-portrait_1-1_sm.webp',
     alt: 'Man portrait',
-    position: { top: '38%', right: '28px' },
+    position: { top: '40%', right: '20px' },
     size: 'sm',
     depth: 3,
     delay: 300,
     rotation: -2,
+    hideOnMobile: true, // Middle row - hide on mobile
   },
   {
     src: '/images/aurora-mountains.webp',
     alt: 'Aurora mountains landscape',
-    position: { bottom: '5%', right: '20px' },
+    position: { bottom: '8%', right: '12px' },
     size: 'lg',
     depth: 1,
     delay: 500,
     rotation: 1,
+    hideOnMobile: false,
   },
 ];
 
@@ -125,13 +133,6 @@ export function FloatingGallery({
     lg: 'w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 lg:w-56 lg:h-56 xl:w-64 xl:h-64'
   };
   
-  // Desktop (xl+) uses 147px padding, smaller screens use the position values
-  const getResponsivePosition = (position: GalleryImage['position']) => {
-    // For xl+ screens, override left/right with 147px base
-    // This is handled via CSS media query approach
-    return position;
-  };
-  
   return (
     <div 
       ref={containerRef}
@@ -164,10 +165,13 @@ export function FloatingGallery({
           positionClass = isSmall ? 'floating-image-right-offset-sm' : isMedium ? 'floating-image-right-offset' : 'floating-image-right';
         }
         
+        // Hide on mobile class (hidden below md breakpoint)
+        const mobileHideClass = image.hideOnMobile ? 'hidden md:block' : '';
+        
         return (
           <div
             key={index}
-            className={`absolute ${sizeClasses[image.size]} ${positionClass} rounded-xl overflow-hidden`}
+            className={`absolute ${sizeClasses[image.size]} ${positionClass} ${mobileHideClass} rounded-xl overflow-hidden`}
             style={{
               ...image.position,
               zIndex: 10 + image.depth,
