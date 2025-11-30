@@ -89,7 +89,8 @@ export const defaultGalleryImages: GalleryImage[] = [
 ];
 
 /**
- * Mobile Fan Layout - 3 images in a fan above the headline
+ * Mobile/Tablet Fan Layout - 3 images in a fan above the headline
+ * Width matches "Forge Stunning Detail" text (~320px on mobile, ~400px on tablet)
  */
 function MobileFanGallery() {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -100,15 +101,15 @@ function MobileFanGallery() {
   }, []);
   
   return (
-    <div className="flex justify-center items-end gap-[-20px] mb-4 relative h-32">
+    <div className="flex justify-center items-end mb-4 relative h-28 sm:h-32 max-w-[320px] sm:max-w-[400px] mx-auto">
       {mobileFanImages.map((image, index) => (
         <div
           key={index}
-          className="w-24 h-24 rounded-xl overflow-hidden relative"
+          className="w-[88px] h-[88px] sm:w-[110px] sm:h-[110px] rounded-xl overflow-hidden relative flex-shrink-0"
           style={{
             transform: `rotate(${image.rotation}deg)`,
-            zIndex: index === 1 ? 20 : 10, // Center image on top
-            marginLeft: index > 0 ? '-16px' : '0',
+            zIndex: index === 1 ? 20 : 10,
+            marginLeft: index > 0 ? '-20px' : '0',
             opacity: isLoaded ? 1 : 0,
             transition: `opacity 0.5s ease-out ${index * 100}ms`,
             boxShadow: '0 15px 30px -8px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 0, 0, 0.3)',
@@ -171,7 +172,7 @@ export function FloatingGallery({
   return (
     <div 
       ref={containerRef}
-      className={`absolute inset-0 overflow-hidden pointer-events-none hidden md:block ${className}`}
+      className={`absolute inset-0 overflow-hidden pointer-events-none hidden lg:block ${className}`}
     >
       <style>{`
         /* Tablet (md): moderate padding */

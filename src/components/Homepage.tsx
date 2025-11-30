@@ -351,23 +351,23 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 pt-8 md:pt-4 pb-12 relative z-20">
           <div className="text-center relative">
-            {/* Dark backdrop for text readability - tablet+ only */}
+            {/* Dark backdrop for text readability - desktop only (lg+) */}
             <div 
-              className="absolute inset-0 -mx-4 -my-4 rounded-3xl hidden md:block"
+              className="absolute inset-0 -mx-4 -my-4 rounded-3xl hidden lg:block"
               style={{
                 background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 50%, transparent 80%)',
               }}
             />
             
-            {/* Mobile Fan Gallery - shown only on mobile */}
-            <div className="md:hidden mb-6">
+            {/* Mobile/Tablet Fan Gallery - shown on mobile and tablet (below lg) */}
+            <div className="lg:hidden mb-6">
               <MobileFanGallery />
             </div>
             
-            {/* Exclusivity Badge - hidden on mobile (below 768px) */}
+            {/* Exclusivity Badge - desktop only (lg+) */}
             <FadeInOnScroll delay={0}>
               <div 
-                className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 glass-card animate-pulse-glow"
+                className="hidden lg:inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 glass-card animate-pulse-glow"
                 style={{ borderColor: 'color-mix(in oklab, var(--primary) 40%, transparent 60%)' }}
               >
                 <Sparkles className="w-4 h-4" style={{ color: 'var(--primary)' }} />
