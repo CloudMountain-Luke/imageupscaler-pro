@@ -397,11 +397,11 @@ function HomepageContent({ onGetStarted, onLogin }: HomepageProps) {
                 className="text-[20px] md:text-2xl font-medium mb-8 max-w-2xl mx-auto"
                 style={{ color: mutedTextColor }}
               >
-                {/* Mobile: two separate lines */}
-                <p className="block sm:hidden">AI upscaling up to <span style={{ color: 'var(--primary)' }}>24x</span>.</p>
-                <p className="block sm:hidden">No other web tool comes close.</p>
-                {/* Tablet+: one line */}
-                <span className="hidden sm:block">
+                {/* Mobile/Tablet: two separate lines (below 1024px) */}
+                <p className="block lg:hidden">AI upscaling up to <span style={{ color: 'var(--primary)' }}>24x</span>.</p>
+                <p className="block lg:hidden">No other web tool comes close.</p>
+                {/* Desktop: one line */}
+                <span className="hidden lg:block">
                   AI upscaling up to <span style={{ color: 'var(--primary)' }}>24x</span>. No other web tool comes close.
                 </span>
               </div>

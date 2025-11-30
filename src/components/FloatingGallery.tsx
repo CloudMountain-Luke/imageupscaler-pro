@@ -103,9 +103,9 @@ function MobileFanGallery() {
   return (
     <>
       <style>{`
-        @media (max-width: 639px) {
+        @media (max-width: 1023px) {
           .mobile-fan-container {
-            margin-top: -46px !important;
+            margin-top: -36px !important;
           }
         }
       `}</style>
