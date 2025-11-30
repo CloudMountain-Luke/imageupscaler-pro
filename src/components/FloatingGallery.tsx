@@ -47,7 +47,7 @@ export const defaultGalleryImages: GalleryImage[] = [
     size: 'sm',
     depth: 3,
     delay: 200,
-    rotation: -1,
+    rotation: -10,
   },
   {
     src: '/images/acfromspace_sm_1-1_sm.webp',
